@@ -8,33 +8,47 @@ Do not commit real tokens. Copy `.env.example` to `.env`.
 2. `/newbot` — pick name and username.
 3. Copy the token into `.env` as `BOT_TOKEN=...`.
 4. Optional: `/setmenubutton` → choose bot → set button text + HTTPS Mini App URL.
-   The server also calls `setChatMenuButton` on startup when `BOT_TOKEN` and `WEBAPP_URL` are set.
+   Locally, `npm run start` also calls `setChatMenuButton` when `BOT_TOKEN` and `WEBAPP_URL` are set.
+   After a Vercel deploy, run `npm run bot:menu` once (or use BotFather).
 
 ## 2. Local HTTPS tunnel
 
-Telegram Mini Apps require HTTPS in production. For local testing:
+Telegram Mini Apps require HTTPS. For local testing:
 
 ```bash
 # terminal A
 npm run dev
 
 # terminal B — expose Vite (5173)
-npx cloudflared tunnel --url http://localhost:5173
+npx cloudflared tunnel --protocol http2 --url http://localhost:5173
 # or: ngrok http 5173
 ```
 
-Put the tunnel HTTPS URL into:
+Put the tunnel HTTPS URL into `.env` → `WEBAPP_URL` and `CORS_ORIGIN`, then restart the server.
 
-- `.env` → `WEBAPP_URL` and `CORS_ORIGIN`
-- BotFather Menu Button / restart server so `/start` buttons use the new URL
+API calls use the Vite proxy (`/api` → `:3001`) in dev.
 
-API calls from the Mini App go to the same origin via Vite proxy (`/api` → `:3001`) in dev. In production, point the frontend `fetch` base or reverse-proxy `/api` to the Node server.
+## 3. Production on Vercel (recommended)
 
-## 3. Production
+Static Mini App + `/api` serverless in one project. Bot **polling** does not run on Vercel — Menu Button / BotFather is enough to open the app; run `npm run start` locally only if you need `/start` replies.
 
-1. Build: `npm run build`
-2. Host `web/dist` on HTTPS (Cloudflare Pages, Vercel, Nginx, etc.).
-3. Run `server` with `BOT_TOKEN`, `WEBAPP_URL`, `CORS_ORIGIN`, `SESSION_SECRET`.
-4. Reverse-proxy `/api` to the Node process, or set the frontend API origin.
-5. Set Menu Button / `WEBAPP_URL` to the production Mini App URL.
-6. Open the bot in Telegram → `/start` → Open App.
+1. Install deps: `npm install`
+2. Deploy:
+   ```bash
+   npx vercel login
+   npx vercel --prod
+   ```
+3. In Vercel → Project → Settings → Environment Variables (Production):
+   - `BOT_TOKEN`
+   - `SESSION_SECRET` (long random string)
+   - `WEBAPP_URL` = `https://<your-project>.vercel.app` (stable production URL)
+   - `CORS_ORIGIN` = same URL (optionally also `http://localhost:5173`)
+4. Redeploy after setting env (`npx vercel --prod`).
+5. Disable **Deployment Protection** for Production (Settings → Deployment Protection), otherwise Telegram shows “Log in to Vercel”.
+6. Put the same production URL into local `.env` as `WEBAPP_URL` / `CORS_ORIGIN`, then:
+   ```bash
+   npm run bot:menu
+   ```
+7. Open the bot in Telegram → Menu / Open App.
+
+`users.json` persistence is in-memory on Vercel (ephemeral). Auth still works via JWT; `/me` falls back to the token payload.

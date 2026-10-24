@@ -3,8 +3,14 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { TelegramUser } from "./telegramAuth.js";
 
+const isServerless = Boolean(
+  process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME,
+);
+
 const dataDir = resolve(dirname(fileURLToPath(import.meta.url)), "../../data");
-mkdirSync(dataDir, { recursive: true });
+if (!isServerless) {
+  mkdirSync(dataDir, { recursive: true });
+}
 const dbPath = resolve(dataDir, "users.json");
 
 export type StoredUser = {
@@ -22,7 +28,10 @@ export type StoredUser = {
 
 type Store = Record<string, StoredUser>;
 
+let memoryStore: Store = {};
+
 function load(): Store {
+  if (isServerless) return memoryStore;
   if (!existsSync(dbPath)) return {};
   try {
     return JSON.parse(readFileSync(dbPath, "utf8")) as Store;
@@ -32,6 +41,10 @@ function load(): Store {
 }
 
 function save(store: Store): void {
+  if (isServerless) {
+    memoryStore = store;
+    return;
+  }
   writeFileSync(dbPath, JSON.stringify(store, null, 2), "utf8");
 }
 

@@ -10,9 +10,12 @@
     "dev:web": "npm run dev -w web",
     "dev:server": "npm run dev -w server",
     "build": "npm run build -w web && npm run build -w server",
-    "start": "npm run start -w server"
+    "start": "npm run start -w server",
+    "bot:menu": "npm run bot:menu -w server",
+    "deploy": "npx vercel --prod"
   },
   "devDependencies": {
+    "@vercel/node": "^5.3.6",
     "concurrently": "^9.1.2"
   }
 }

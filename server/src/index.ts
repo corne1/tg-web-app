@@ -1,35 +1,14 @@
-import express from "express";
-import cors from "cors";
 import { existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import express from "express";
 import { config } from "./config.js";
-import { apiRouter } from "./routes.js";
-import { parseCookies } from "./middleware.js";
+import { createApp } from "./app.js";
 import { configureMenuButton, createBot } from "./bot.js";
 
-const app = express();
+const app = createApp();
 const rootDir = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const webDist = resolve(rootDir, "web/dist");
-
-app.use(
-  cors({
-    origin: config.corsOrigin,
-    credentials: true,
-  }),
-);
-app.use(express.json({ limit: "64kb" }));
-app.use(parseCookies);
-
-app.use("/api", apiRouter);
-
-app.get("/api", (_req, res) => {
-  res.json({
-    service: "tg-app-server",
-    webAppUrl: config.webAppUrl,
-    botReady: !config.isDevToken,
-  });
-});
 
 if (existsSync(webDist)) {
   app.use(express.static(webDist));
