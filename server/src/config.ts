@@ -2,8 +2,15 @@ import { config as loadEnv } from "dotenv";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
-loadEnv({ path: resolve(root, ".env") });
+// Local .env only — on Vercel use Project Environment Variables.
+if (!process.env.VERCEL) {
+  try {
+    const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
+    loadEnv({ path: resolve(root, ".env") });
+  } catch {
+    loadEnv();
+  }
+}
 
 function required(name: string, fallback?: string): string {
   const value = process.env[name] ?? fallback;

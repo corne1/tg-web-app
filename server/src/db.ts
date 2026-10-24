@@ -7,11 +7,12 @@ const isServerless = Boolean(
   process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME,
 );
 
-const dataDir = resolve(dirname(fileURLToPath(import.meta.url)), "../../data");
+let dbPath = "";
 if (!isServerless) {
+  const dataDir = resolve(dirname(fileURLToPath(import.meta.url)), "../../data");
   mkdirSync(dataDir, { recursive: true });
+  dbPath = resolve(dataDir, "users.json");
 }
-const dbPath = resolve(dataDir, "users.json");
 
 export type StoredUser = {
   id: number;
