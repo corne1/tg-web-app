@@ -1,4 +1,4 @@
-import { Bot } from "grammy";
+import { createBot, configureMenuButton, configureWebhook } from "./bot.js";
 import { config } from "./config.js";
 
 if (config.isDevToken) {
@@ -6,15 +6,14 @@ if (config.isDevToken) {
   process.exit(1);
 }
 
-const bot = new Bot(config.botToken);
+const bot = createBot();
+if (!bot) {
+  console.error("Bot failed to initialize");
+  process.exit(1);
+}
 
-await bot.api.setChatMenuButton({
-  menu_button: {
-    type: "web_app",
-    text: "Open",
-    web_app: { url: config.webAppUrl },
-  },
-});
+await configureMenuButton(bot);
+await configureWebhook(bot);
 
-console.log(`[bot] Menu button set to ${config.webAppUrl}`);
+console.log("[bot] Menu + webhook configured for", config.webAppUrl);
 process.exit(0);

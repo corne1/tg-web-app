@@ -35,6 +35,12 @@ const bot = createBot();
 if (bot) {
   void (async () => {
     try {
+      await bot.api.deleteWebhook({ drop_pending_updates: false });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.warn("[bot] deleteWebhook:", message);
+    }
+    try {
       await configureMenuButton(bot);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);

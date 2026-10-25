@@ -52,3 +52,17 @@ Static Mini App + `/api` serverless in one project. Bot **polling** does not run
 7. Open the bot in Telegram → Menu / Open App.
 
 `users.json` persistence is in-memory on Vercel (ephemeral). Auth still works via JWT; `/me` falls back to the token payload.
+
+### Bot replies on Vercel
+
+Polling does not run on Vercel. After deploy, register the webhook once:
+
+```bash
+# WEBAPP_URL must be the production Vercel URL
+npm run bot:menu
+```
+
+This sets Menu Button + `setWebhook` → `https://<app>/api/telegram/webhook`.  
+Then `/start` in Telegram is handled by the serverless function.
+
+Local `npm run start` deletes the webhook and uses polling again — re-run `npm run bot:menu` before relying on production `/start`.

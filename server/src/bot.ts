@@ -1,11 +1,16 @@
 import { Bot, InlineKeyboard, Keyboard } from "grammy";
 import { config } from "./config.js";
 
+let botSingleton: Bot | null | undefined;
+
 export function createBot(): Bot | null {
+  if (botSingleton !== undefined) return botSingleton;
+
   if (config.isDevToken) {
     console.warn(
-      "[bot] BOT_TOKEN is placeholder — bot polling disabled. Set BOT_TOKEN in .env",
+      "[bot] BOT_TOKEN is placeholder — bot disabled. Set BOT_TOKEN in .env",
     );
+    botSingleton = null;
     return null;
   }
 
@@ -17,10 +22,9 @@ export function createBot(): Bot | null {
       .webApp("Open Mini App", config.webAppUrl)
       .resized();
 
-    await ctx.reply(
-      "Welcome. Open the Mini App with the button below.",
-      { reply_markup: keyboard },
-    );
+    await ctx.reply("Welcome. Open the Mini App with the button below.", {
+      reply_markup: keyboard,
+    });
     await ctx.reply("Or use the persistent keyboard:", {
       reply_markup: replyKeyboard,
     });
@@ -30,6 +34,7 @@ export function createBot(): Bot | null {
     console.error("[bot] error", err.error);
   });
 
+  botSingleton = bot;
   return bot;
 }
 
@@ -43,4 +48,17 @@ export async function configureMenuButton(bot: Bot): Promise<void> {
     },
   });
   console.log(`[bot] Menu button set to ${config.webAppUrl}`);
+}
+
+export function webhookUrl(): string {
+  return `${config.webAppUrl.replace(/\/$/, "")}/api/telegram/webhook`;
+}
+
+export async function configureWebhook(bot: Bot): Promise<void> {
+  const url = webhookUrl();
+  await bot.api.setWebhook(url, {
+    drop_pending_updates: true,
+    allowed_updates: ["message", "callback_query"],
+  });
+  console.log(`[bot] Webhook set to ${url}`);
 }

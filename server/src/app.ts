@@ -1,8 +1,10 @@
 import express from "express";
 import cors from "cors";
+import { webhookCallback } from "grammy";
 import { config } from "./config.js";
 import { apiRouter } from "./routes.js";
 import { parseCookies } from "./middleware.js";
+import { createBot } from "./bot.js";
 
 export function createApp() {
   const app = express();
@@ -13,8 +15,13 @@ export function createApp() {
       credentials: true,
     }),
   );
-  app.use(express.json({ limit: "64kb" }));
+  app.use(express.json({ limit: "256kb" }));
   app.use(parseCookies);
+
+  const bot = createBot();
+  if (bot) {
+    app.post("/api/telegram/webhook", webhookCallback(bot, "express"));
+  }
 
   app.use("/api", apiRouter);
 
