@@ -11,14 +11,17 @@ export function useMainButton({ text, visible = true, onClick }: Options) {
     const btn = window.Telegram?.WebApp?.MainButton;
     if (!btn) return;
 
+    if (!visible) {
+      btn.hide();
+      return () => {
+        btn.hide();
+      };
+    }
+
     btn.setText(text);
     btn.onClick(onClick);
-    if (visible) {
-      btn.show();
-      btn.enable();
-    } else {
-      btn.hide();
-    }
+    btn.show();
+    btn.enable();
 
     return () => {
       btn.offClick(onClick);
