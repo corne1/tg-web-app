@@ -9,6 +9,7 @@ import {
 } from "./api";
 import { useTelegram } from "./hooks/useTelegram";
 import { cacheProfile, isOnboardingDone } from "./lib/profileStorage";
+import { masterHomePath } from "./lib/masterDraft";
 import { parsePsychologistStartParam } from "./lib/startParam";
 import type { PsychologistProfile } from "./types";
 import { BookingConfirmScreen } from "./screens/BookingConfirmScreen";
@@ -16,21 +17,36 @@ import { EmptyStateScreen } from "./screens/EmptyStateScreen";
 import { MyBookingsScreen } from "./screens/MyBookingsScreen";
 import { NotificationsScreen } from "./screens/NotificationsScreen";
 import { OnboardingScreen } from "./screens/OnboardingScreen";
-import { RoleHubScreen } from "./screens/RoleHubScreen";
 import { ScheduleScreen } from "./screens/ScheduleScreen";
 import { HoursPlaceholderScreen } from "./screens/HoursPlaceholderScreen";
 import { ServiceFormScreen } from "./screens/ServiceFormScreen";
 import { ServicesStepScreen } from "./screens/ServicesStepScreen";
 import { SlotSelectionScreen } from "./screens/SlotSelectionScreen";
 
-function DeepLinkRedirect({ psychologistId }: { psychologistId: number }) {
+function HomeRedirect({
+  deepPsychologistId,
+  hasServerProfile,
+}: {
+  deepPsychologistId: number | null;
+  hasServerProfile: boolean;
+}) {
   const navigate = useNavigate();
+
   useEffect(() => {
-    navigate(`/client/${psychologistId}`, { replace: true });
-  }, [navigate, psychologistId]);
+    if (deepPsychologistId) {
+      navigate(`/client/${deepPsychologistId}`, { replace: true });
+      return;
+    }
+    if (hasServerProfile) {
+      navigate("/cabinet", { replace: true });
+      return;
+    }
+    navigate(masterHomePath(), { replace: true });
+  }, [deepPsychologistId, hasServerProfile, navigate]);
+
   return (
     <main className="screen">
-      <p className="screen-subtitle">Открываем запись…</p>
+      <p className="screen-subtitle">Открываем…</p>
     </main>
   );
 }
@@ -131,14 +147,10 @@ export function App() {
           <Route
             path="/"
             element={
-              deepPsychologistId ? (
-                <DeepLinkRedirect psychologistId={deepPsychologistId} />
-              ) : (
-                <RoleHubScreen
-                  user={user}
-                  hasProfile={isOnboardingDone(profile)}
-                />
-              )
+              <HomeRedirect
+                deepPsychologistId={deepPsychologistId}
+                hasServerProfile={isOnboardingDone(profile)}
+              />
             }
           />
           <Route path="/onboarding" element={<OnboardingScreen />} />

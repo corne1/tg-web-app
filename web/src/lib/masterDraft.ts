@@ -125,6 +125,23 @@ export function clearMasterDraft(): void {
   localStorage.removeItem(KEY);
 }
 
+/** Step 1 done: identity filled. */
+export function isMasterStep1Done(draft = loadMasterDraft()): boolean {
+  return Boolean(draft.name.trim() && draft.specialty);
+}
+
+/** Ready for cabinet: identity + at least one service (hours step optional for now). */
+export function isMasterReady(draft = loadMasterDraft()): boolean {
+  return isMasterStep1Done(draft) && draft.services.length > 0;
+}
+
+/** Resume path inside master setup. */
+export function masterHomePath(draft = loadMasterDraft()): string {
+  if (isMasterReady(draft)) return "/cabinet";
+  if (isMasterStep1Done(draft)) return "/onboarding/services";
+  return "/onboarding";
+}
+
 export function upsertService(service: MasterService): MasterDraft {
   const draft = loadMasterDraft();
   const idx = draft.services.findIndex((s) => s.id === service.id);
