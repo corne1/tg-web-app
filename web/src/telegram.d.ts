@@ -33,6 +33,7 @@ type TelegramWebApp = {
     auth_date?: number;
     hash?: string;
     query_id?: string;
+    start_param?: string;
   };
   version: string;
   platform: string;

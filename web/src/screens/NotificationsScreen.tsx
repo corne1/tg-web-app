@@ -1,18 +1,26 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { fetchMe } from "../api";
 import { ScreenShell } from "../components/calendar/ScreenShell";
 import { SecondaryButton } from "../components/calendar/SecondaryButton";
 import { UiMainButton } from "../components/calendar/UiMainButton";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
-import { getDisplayPsychologistName } from "../lib/profileStorage";
 
 type Toast = string | null;
 
 export function NotificationsScreen() {
   const navigate = useNavigate();
   const [toast, setToast] = useState<Toast>(null);
-  const name = getDisplayPsychologistName();
+  const [name, setName] = useState("психологом");
+
+  useEffect(() => {
+    void fetchMe()
+      .then((me) => {
+        if (me.profile?.name) setName(me.profile.name);
+      })
+      .catch(() => undefined);
+  }, []);
 
   function flash(msg: string) {
     setToast(msg);
@@ -24,7 +32,7 @@ export function NotificationsScreen() {
   useMainButton({ text: "", visible: false, onClick: () => undefined });
 
   return (
-    <ScreenShell title="Уведомления" subtitle="Превью сообщений клиенту и психологу">
+    <ScreenShell title="Уведомления" subtitle="Превью сообщений бота (реальные приходят в чат)">
       {toast && <div className="toast">{toast}</div>}
 
       <section className="notif-block">
@@ -38,14 +46,14 @@ export function NotificationsScreen() {
             <UiMainButton
               fullWidth={false}
               className="btn-sm"
-              onClick={() => flash("Запись подтверждена")}
+              onClick={() => flash("В проде это сообщение бота")}
             >
               Подтвердить
             </UiMainButton>
             <SecondaryButton
               fullWidth={false}
               className="btn-sm"
-              onClick={() => flash("Открыть перенос")}
+              onClick={() => flash("Перенос — в «Мои записи»")}
             >
               Перенести
             </SecondaryButton>
@@ -61,17 +69,10 @@ export function NotificationsScreen() {
             <UiMainButton
               fullWidth={false}
               className="btn-sm"
-              onClick={() => flash("Принято")}
+              onClick={() => flash("В проде бот пишет в личку")}
             >
               Ок
             </UiMainButton>
-            <button
-              type="button"
-              className="btn btn-ghost btn-sm"
-              onClick={() => flash("Запись отменена")}
-            >
-              Отменить
-            </button>
           </div>
         </div>
       </section>

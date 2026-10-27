@@ -1,37 +1,54 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { cancelBooking, fetchMyBookings } from "../api";
 import { ScreenShell } from "../components/calendar/ScreenShell";
 import { SecondaryButton } from "../components/calendar/SecondaryButton";
 import { UiMainButton } from "../components/calendar/UiMainButton";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
 import { useTelegram } from "../hooks/useTelegram";
-import {
-  loadClientBookings,
-  saveClientBookings,
-} from "../lib/profileStorage";
 import type { ClientBooking } from "../types";
 
 export function MyBookingsScreen() {
   const navigate = useNavigate();
   const { isTelegram } = useTelegram();
-  const [bookings, setBookings] = useState<ClientBooking[]>(() => loadClientBookings());
+  const [bookings, setBookings] = useState<ClientBooking[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  function cancel(id: string) {
-    setBookings((list) => {
-      const next = list.filter((b) => b.id !== id);
-      saveClientBookings(next);
-      return next;
-    });
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await fetchMyBookings();
+      setBookings(data.bookings);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Ошибка загрузки");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  async function cancel(id: string) {
+    try {
+      await cancelBooking(id);
+      setBookings((list) => list.filter((b) => b.id !== id));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Не удалось отменить");
+    }
   }
 
-  const goClient = useCallback(() => navigate("/client"), [navigate]);
+  const goHome = useCallback(() => navigate("/"), [navigate]);
   const bookAgain = useCallback(() => navigate("/client"), [navigate]);
 
-  useBackButton(goClient);
+  useBackButton(goHome);
   useMainButton({
     text: "Записаться",
-    visible: isTelegram && bookings.length === 0,
+    visible: isTelegram && !loading && bookings.length === 0,
     onClick: bookAgain,
   });
 
@@ -41,20 +58,23 @@ export function MyBookingsScreen() {
       subtitle="Предстоящие консультации"
       footer={
         <div className="footer-links">
-          <Link to="/notifications" className="text-link">
-            Уведомления →
-          </Link>
           <Link to="/" className="text-link">
             На главную
           </Link>
         </div>
       }
     >
-      {bookings.length === 0 ? (
+      {error && <p className="error">{error}</p>}
+      {loading ? (
+        <p className="screen-subtitle">Загрузка…</p>
+      ) : bookings.length === 0 ? (
         <div className="empty-inline">
           <p>Нет предстоящих записей</p>
+          <p className="screen-subtitle">
+            Откройте ссылку психолога в Telegram, чтобы выбрать слот.
+          </p>
           {!isTelegram && (
-            <UiMainButton onClick={bookAgain}>Записаться</UiMainButton>
+            <UiMainButton onClick={bookAgain}>Как записаться</UiMainButton>
           )}
         </div>
       ) : (
@@ -71,14 +91,18 @@ export function MyBookingsScreen() {
                 <SecondaryButton
                   fullWidth={false}
                   className="btn-sm"
-                  onClick={() => navigate("/client")}
+                  onClick={() =>
+                    navigate(
+                      `/client/${b.psychologistId}?reschedule=${encodeURIComponent(b.id)}`,
+                    )
+                  }
                 >
                   Перенести
                 </SecondaryButton>
                 <button
                   type="button"
                   className="btn btn-ghost btn-sm"
-                  onClick={() => cancel(b.id)}
+                  onClick={() => void cancel(b.id)}
                 >
                   Отменить
                 </button>

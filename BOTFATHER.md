@@ -40,9 +40,12 @@ Static Mini App + `/api` serverless in one project. Bot **polling** does not run
    ```
 3. In Vercel → Project → Settings → Environment Variables (Production):
    - `BOT_TOKEN`
+   - `BOT_USERNAME` (без `@`, для deep link `t.me/<bot>?startapp=p_<id>`)
    - `SESSION_SECRET` (long random string)
    - `WEBAPP_URL` = `https://<your-project>.vercel.app` (stable production URL)
    - `CORS_ORIGIN` = same URL (optionally also `http://localhost:5173`)
+   - `DATABASE_URL` + `DATABASE_AUTH_TOKEN` — Turso libSQL (обязательно на Vercel; локально без них используется `./data/app.db`)
+   - `CRON_SECRET` (опционально, для `/api/cron/reminders`)
 4. Redeploy after setting env (`npx vercel --prod`).
 5. Disable **Deployment Protection** for Production (Settings → Deployment Protection), otherwise Telegram shows “Log in to Vercel”.
 6. Put the same production URL into local `.env` as `WEBAPP_URL` / `CORS_ORIGIN`, then:
@@ -51,7 +54,7 @@ Static Mini App + `/api` serverless in one project. Bot **polling** does not run
    ```
 7. Open the bot in Telegram → Menu / Open App.
 
-`users.json` persistence is in-memory on Vercel (ephemeral). Auth still works via JWT; `/me` falls back to the token payload.
+See `env.example` for the full list. Local DB file: `./data/app.db` (gitignored).
 
 ### Bot replies on Vercel
 

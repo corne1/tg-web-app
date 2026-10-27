@@ -52,6 +52,7 @@ export function useTelegram() {
       webApp,
       user: webApp?.initDataUnsafe?.user,
       initData: webApp?.initData ?? "",
+      startParam: webApp?.initDataUnsafe?.start_param,
       colorScheme,
       isTelegram: Boolean(webApp?.initData),
     }),

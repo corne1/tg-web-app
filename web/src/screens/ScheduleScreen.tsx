@@ -1,8 +1,8 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { fetchCabinetSessions, markBookingPaid } from "../api";
 import { ScreenShell } from "../components/calendar/ScreenShell";
 import { UiMainButton } from "../components/calendar/UiMainButton";
-import { todaySessions, tomorrowSessions, weekSessions } from "../data/mock";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
 import type { SchedulePeriod, Session } from "../types";
@@ -29,13 +29,29 @@ function statusLabel(status: Session["status"]) {
 export function ScheduleScreen() {
   const navigate = useNavigate();
   const [period, setPeriod] = useState<SchedulePeriod>("today");
-  const [paidIds, setPaidIds] = useState<Set<string>>(new Set());
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [bookingLink, setBookingLink] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const sessions = useMemo(() => {
-    if (period === "today") return todaySessions;
-    if (period === "tomorrow") return tomorrowSessions;
-    return weekSessions;
-  }, [period]);
+  const load = useCallback(async (p: SchedulePeriod) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await fetchCabinetSessions(p);
+      setSessions(data.sessions);
+      setBookingLink(data.bookingLink);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Ошибка загрузки");
+      setSessions([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void load(period);
+  }, [load, period]);
 
   const grouped = useMemo(() => {
     const map = new Map<string, Session[]>();
@@ -47,13 +63,24 @@ export function ScheduleScreen() {
     return [...map.entries()];
   }, [sessions]);
 
-  function markPaid(id: string) {
-    setPaidIds((prev) => new Set(prev).add(id));
+  async function markPaid(id: string) {
+    try {
+      await markBookingPaid(id);
+      setSessions((prev) =>
+        prev.map((s) =>
+          s.id === id ? { ...s, paid: true, status: "paid" } : s,
+        ),
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Не удалось отметить оплату");
+    }
   }
 
   const goHome = useCallback(() => navigate("/"), [navigate]);
   useBackButton(goHome);
   useMainButton({ text: "", visible: false, onClick: () => undefined });
+
+  const empty = !loading && sessions.filter((s) => s.status !== "cancelled").length === 0;
 
   return (
     <ScreenShell
@@ -62,11 +89,13 @@ export function ScheduleScreen() {
       footer={
         <div className="footer-links">
           <Link to="/cabinet/empty" className="text-link">
-            Пустое состояние
+            Поделиться ссылкой
           </Link>
-          <Link to="/notifications" className="text-link">
-            Уведомления →
-          </Link>
+          {bookingLink && (
+            <Link to="/notifications" className="text-link">
+              Уведомления →
+            </Link>
+          )}
         </div>
       }
     >
@@ -85,44 +114,57 @@ export function ScheduleScreen() {
         ))}
       </div>
 
-      <div className="session-groups">
-        {grouped.map(([label, items]) => (
-          <section key={label} className="session-group">
-            <h2 className="group-title">{label}</h2>
-            <ul className="session-list">
-              {items.map((session) => {
-                const paid = paidIds.has(session.id);
-                const cancelled = session.status === "cancelled";
-                return (
-                  <li
-                    key={session.id}
-                    className={`session-card ${cancelled ? "is-cancelled" : ""}`}
-                  >
-                    <div className="session-meta">
-                      <span className="session-time">{session.time}</span>
-                      <span className="session-name">{session.clientName}</span>
-                      <span
-                        className={`session-status status-${paid ? "paid" : session.status}`}
-                      >
-                        {paid ? "оплачена" : statusLabel(session.status)}
-                      </span>
-                    </div>
-                    {!cancelled && !paid && (
-                      <UiMainButton
-                        fullWidth={false}
-                        className="btn-sm"
-                        onClick={() => markPaid(session.id)}
-                      >
-                        Отметить оплату
-                      </UiMainButton>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
-        ))}
-      </div>
+      {error && <p className="error">{error}</p>}
+
+      {loading ? (
+        <p className="screen-subtitle">Загрузка…</p>
+      ) : empty ? (
+        <div className="empty-inline">
+          <p>Нет записей за выбранный период</p>
+          <Link to="/cabinet/empty" className="text-link">
+            Отправить ссылку клиентам →
+          </Link>
+        </div>
+      ) : (
+        <div className="session-groups">
+          {grouped.map(([label, items]) => (
+            <section key={label} className="session-group">
+              <h2 className="group-title">{label}</h2>
+              <ul className="session-list">
+                {items.map((session) => {
+                  const paid = Boolean(session.paid) || session.status === "paid";
+                  const cancelled = session.status === "cancelled";
+                  return (
+                    <li
+                      key={session.id}
+                      className={`session-card ${cancelled ? "is-cancelled" : ""}`}
+                    >
+                      <div className="session-meta">
+                        <span className="session-time">{session.time}</span>
+                        <span className="session-name">{session.clientName}</span>
+                        <span
+                          className={`session-status status-${paid ? "paid" : session.status}`}
+                        >
+                          {paid ? "оплачена" : statusLabel(session.status)}
+                        </span>
+                      </div>
+                      {!cancelled && !paid && (
+                        <UiMainButton
+                          fullWidth={false}
+                          className="btn-sm"
+                          onClick={() => void markPaid(session.id)}
+                        >
+                          Отметить оплату
+                        </UiMainButton>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          ))}
+        </div>
+      )}
     </ScreenShell>
   );
 }

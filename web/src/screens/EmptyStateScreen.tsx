@@ -1,8 +1,8 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { fetchMe } from "../api";
 import { ScreenShell } from "../components/calendar/ScreenShell";
 import { UiMainButton } from "../components/calendar/UiMainButton";
-import { bookingLink } from "../data/mock";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
 import { useTelegram } from "../hooks/useTelegram";
@@ -11,8 +11,33 @@ export function EmptyStateScreen() {
   const navigate = useNavigate();
   const { isTelegram, webApp } = useTelegram();
   const [copied, setCopied] = useState(false);
+  const [bookingLink, setBookingLink] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetchMe()
+      .then((me) => {
+        if (cancelled) return;
+        setBookingLink(me.profile?.bookingLink ?? null);
+        if (!me.profile) {
+          setError("Сначала завершите онбординг");
+        } else if (!me.profile.bookingLink) {
+          setError("Задайте BOT_USERNAME в env, чтобы генерировать ссылку");
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Ошибка");
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const copyLink = useCallback(async () => {
+    if (!bookingLink) return;
     try {
       await navigator.clipboard.writeText(bookingLink);
       setCopied(true);
@@ -20,14 +45,15 @@ export function EmptyStateScreen() {
       setTimeout(() => setCopied(false), 2000);
     } catch {
       setCopied(false);
+      webApp?.showAlert?.(bookingLink);
     }
-  }, [webApp]);
+  }, [bookingLink, webApp]);
 
   const goCabinet = useCallback(() => navigate("/cabinet"), [navigate]);
   useBackButton(goCabinet);
   useMainButton({
     text: copied ? "Ссылка скопирована" : "Скопировать ссылку",
-    visible: isTelegram,
+    visible: isTelegram && Boolean(bookingLink),
     onClick: () => {
       void copyLink();
     },
@@ -37,7 +63,7 @@ export function EmptyStateScreen() {
     <ScreenShell
       footer={
         !isTelegram ? (
-          <UiMainButton onClick={() => void copyLink()}>
+          <UiMainButton onClick={() => void copyLink()} disabled={!bookingLink}>
             {copied ? "Ссылка скопирована" : "Скопировать ссылку"}
           </UiMainButton>
         ) : undefined
@@ -65,6 +91,12 @@ export function EmptyStateScreen() {
         </div>
         <h1 className="empty-title">Пока нет записей</h1>
         <p className="empty-text">Отправьте ссылку клиентам — они запишутся сами</p>
+        {bookingLink && (
+          <p className="screen-subtitle" style={{ wordBreak: "break-all" }}>
+            {bookingLink}
+          </p>
+        )}
+        {error && <p className="error">{error}</p>}
         <Link to="/cabinet" className="text-link">
           ← К расписанию
         </Link>

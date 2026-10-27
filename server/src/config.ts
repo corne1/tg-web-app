@@ -7,6 +7,7 @@ if (!process.env.VERCEL) {
   try {
     const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
     loadEnv({ path: resolve(root, ".env") });
+    loadEnv();
   } catch {
     loadEnv();
   }
@@ -34,6 +35,7 @@ function isPlaceholderToken(token: string): boolean {
 export const config = {
   port: Number(process.env.PORT ?? 3001),
   botToken,
+  botUsername: (process.env.BOT_USERNAME ?? "").replace(/^@/, ""),
   webAppUrl: required("WEBAPP_URL", "http://localhost:5173"),
   corsOrigin: (process.env.CORS_ORIGIN ?? "http://localhost:5173")
     .split(",")
@@ -41,4 +43,12 @@ export const config = {
     .filter(Boolean),
   sessionSecret: required("SESSION_SECRET", "dev-session-secret-change-me"),
   isDevToken: isPlaceholderToken(botToken),
+  databaseUrl: process.env.DATABASE_URL ?? "",
+  databaseAuthToken: process.env.DATABASE_AUTH_TOKEN ?? undefined,
+  cronSecret: process.env.CRON_SECRET ?? "",
 };
+
+export function psychologistDeepLink(psychologistId: number): string | null {
+  if (!config.botUsername) return null;
+  return `https://t.me/${config.botUsername}?startapp=p_${psychologistId}`;
+}

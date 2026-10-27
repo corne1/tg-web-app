@@ -1,13 +1,19 @@
-import { psychologistName } from "../data/mock";
-import type { ClientBooking, PsychologistProfile } from "../types";
-import { defaultClientBookings } from "../data/mock";
+import type { PsychologistProfile } from "../types";
 
-const PROFILE_KEY = "psychologistProfile";
-const BOOKINGS_KEY = "clientBookings";
+const PROFILE_CACHE_KEY = "psychologistProfileCache";
 
-export function getPsychologistProfile(): PsychologistProfile | null {
+/** Local cache of server profile (optional offline hint for hub routing). */
+export function cacheProfile(profile: PsychologistProfile | null): void {
+  if (!profile) {
+    localStorage.removeItem(PROFILE_CACHE_KEY);
+    return;
+  }
+  localStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(profile));
+}
+
+export function getCachedProfile(): PsychologistProfile | null {
   try {
-    const raw = localStorage.getItem(PROFILE_KEY);
+    const raw = localStorage.getItem(PROFILE_CACHE_KEY);
     if (!raw) return null;
     return JSON.parse(raw) as PsychologistProfile;
   } catch {
@@ -15,35 +21,7 @@ export function getPsychologistProfile(): PsychologistProfile | null {
   }
 }
 
-export function savePsychologistProfile(profile: PsychologistProfile): void {
-  localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
-}
-
-export function isOnboardingDone(): boolean {
-  const p = getPsychologistProfile();
+export function isOnboardingDone(profile?: PsychologistProfile | null): boolean {
+  const p = profile ?? getCachedProfile();
   return Boolean(p?.name && p.duration && p.price && p.schedule);
-}
-
-export function getDisplayPsychologistName(): string {
-  return getPsychologistProfile()?.name ?? psychologistName;
-}
-
-export function loadClientBookings(): ClientBooking[] {
-  try {
-    const raw = localStorage.getItem(BOOKINGS_KEY);
-    if (!raw) return [...defaultClientBookings];
-    return JSON.parse(raw) as ClientBooking[];
-  } catch {
-    return [...defaultClientBookings];
-  }
-}
-
-export function saveClientBookings(bookings: ClientBooking[]): void {
-  localStorage.setItem(BOOKINGS_KEY, JSON.stringify(bookings));
-}
-
-export function addClientBooking(booking: ClientBooking): void {
-  const list = loadClientBookings();
-  list.unshift(booking);
-  saveClientBookings(list);
 }

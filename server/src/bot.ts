@@ -17,15 +17,16 @@ export function createBot(): Bot | null {
   const bot = new Bot(config.botToken);
 
   bot.command("start", async (ctx) => {
-    const keyboard = new InlineKeyboard().webApp("Open App", config.webAppUrl);
+    const keyboard = new InlineKeyboard().webApp("Открыть", config.webAppUrl);
     const replyKeyboard = new Keyboard()
-      .webApp("Open Mini App", config.webAppUrl)
+      .webApp("Открыть календарь", config.webAppUrl)
       .resized();
 
-    await ctx.reply("Welcome. Open the Mini App with the button below.", {
-      reply_markup: keyboard,
-    });
-    await ctx.reply("Or use the persistent keyboard:", {
+    await ctx.reply(
+      "Календарь записи к психологу.\nОткройте Mini App кнопкой ниже.",
+      { reply_markup: keyboard },
+    );
+    await ctx.reply("Или через клавиатуру:", {
       reply_markup: replyKeyboard,
     });
   });

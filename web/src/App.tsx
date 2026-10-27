@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import {
   authenticate,
   clearStoredToken,
@@ -8,6 +8,9 @@ import {
   type AppUser,
 } from "./api";
 import { useTelegram } from "./hooks/useTelegram";
+import { cacheProfile, isOnboardingDone } from "./lib/profileStorage";
+import { parsePsychologistStartParam } from "./lib/startParam";
+import type { PsychologistProfile } from "./types";
 import { BookingConfirmScreen } from "./screens/BookingConfirmScreen";
 import { EmptyStateScreen } from "./screens/EmptyStateScreen";
 import { MyBookingsScreen } from "./screens/MyBookingsScreen";
@@ -15,13 +18,31 @@ import { NotificationsScreen } from "./screens/NotificationsScreen";
 import { OnboardingScreen } from "./screens/OnboardingScreen";
 import { RoleHubScreen } from "./screens/RoleHubScreen";
 import { ScheduleScreen } from "./screens/ScheduleScreen";
+import { HoursPlaceholderScreen } from "./screens/HoursPlaceholderScreen";
+import { ServiceFormScreen } from "./screens/ServiceFormScreen";
+import { ServicesStepScreen } from "./screens/ServicesStepScreen";
 import { SlotSelectionScreen } from "./screens/SlotSelectionScreen";
 
+function DeepLinkRedirect({ psychologistId }: { psychologistId: number }) {
+  const navigate = useNavigate();
+  useEffect(() => {
+    navigate(`/client/${psychologistId}`, { replace: true });
+  }, [navigate, psychologistId]);
+  return (
+    <main className="screen">
+      <p className="screen-subtitle">Открываем запись…</p>
+    </main>
+  );
+}
+
 export function App() {
-  const { initData, user: tgUser } = useTelegram();
+  const { initData, user: tgUser, startParam } = useTelegram();
   const [user, setUser] = useState<AppUser | null>(null);
+  const [profile, setProfile] = useState<PsychologistProfile | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const deepPsychologistId = parsePsychologistStartParam(startParam);
 
   useEffect(() => {
     let cancelled = false;
@@ -32,13 +53,22 @@ export function App() {
       try {
         if (initData) {
           const { user: authed } = await authenticate(initData);
-          if (!cancelled) setUser(authed);
+          const me = await fetchMe();
+          if (!cancelled) {
+            setUser(me.user ?? authed);
+            setProfile(me.profile);
+            cacheProfile(me.profile);
+          }
           return;
         }
 
         if (getStoredToken()) {
           const me = await fetchMe();
-          if (!cancelled) setUser(me);
+          if (!cancelled) {
+            setUser(me.user);
+            setProfile(me.profile);
+            cacheProfile(me.profile);
+          }
           return;
         }
 
@@ -98,13 +128,40 @@ export function App() {
     <BrowserRouter>
       <div className="app-frame">
         <Routes>
-          <Route path="/" element={<RoleHubScreen user={user} />} />
+          <Route
+            path="/"
+            element={
+              deepPsychologistId ? (
+                <DeepLinkRedirect psychologistId={deepPsychologistId} />
+              ) : (
+                <RoleHubScreen
+                  user={user}
+                  hasProfile={isOnboardingDone(profile)}
+                />
+              )
+            }
+          />
           <Route path="/onboarding" element={<OnboardingScreen />} />
+          <Route path="/onboarding/services" element={<ServicesStepScreen />} />
+          <Route
+            path="/onboarding/services/new"
+            element={<ServiceFormScreen mode="new" />}
+          />
+          <Route
+            path="/onboarding/services/:serviceId/edit"
+            element={<ServiceFormScreen mode="edit" />}
+          />
+          <Route
+            path="/onboarding/services/:serviceId/duplicate"
+            element={<ServiceFormScreen mode="duplicate" />}
+          />
+          <Route path="/onboarding/hours" element={<HoursPlaceholderScreen />} />
           <Route path="/cabinet" element={<ScheduleScreen />} />
           <Route path="/cabinet/empty" element={<EmptyStateScreen />} />
-          <Route path="/client" element={<SlotSelectionScreen />} />
           <Route path="/client/confirm" element={<BookingConfirmScreen />} />
           <Route path="/client/bookings" element={<MyBookingsScreen />} />
+          <Route path="/client" element={<SlotSelectionScreen />} />
+          <Route path="/client/:psychologistId" element={<SlotSelectionScreen />} />
           <Route path="/notifications" element={<NotificationsScreen />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
