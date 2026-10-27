@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { completeMasterOnboarding, deleteMasterService } from "../api";
 import { MasterSetupChrome } from "../components/master/MasterSetupChrome";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
@@ -13,6 +14,7 @@ import {
   serviceInitials,
   type MasterService,
 } from "../lib/masterDraft";
+import { cacheProfile } from "../lib/profileStorage";
 
 function EmptyIllustration() {
   return (
@@ -86,17 +88,33 @@ export function ServicesStepScreen() {
     navigate("/");
   }, [navigate, webApp]);
 
-  const handleSaveExit = useCallback(() => {
+  const handleSaveExit = useCallback(async () => {
     const draft = loadMasterDraft();
     saveMasterDraft({ ...draft, services });
-    webApp?.HapticFeedback?.notificationOccurred("success");
-    navigate("/");
+    try {
+      if (services.length > 0) {
+        const profile = await completeMasterOnboarding();
+        cacheProfile(profile);
+      }
+      webApp?.HapticFeedback?.notificationOccurred("success");
+      navigate("/");
+    } catch (err) {
+      setToast(err instanceof Error ? err.message : "Не удалось сохранить");
+      setTimeout(() => setToast(null), 2500);
+    }
   }, [navigate, services, webApp]);
 
-  const handleContinue = useCallback(() => {
+  const handleContinue = useCallback(async () => {
     if (services.length === 0) return;
-    webApp?.HapticFeedback?.impactOccurred("light");
-    navigate("/onboarding/hours");
+    try {
+      const profile = await completeMasterOnboarding();
+      cacheProfile(profile);
+      webApp?.HapticFeedback?.impactOccurred("light");
+      navigate("/onboarding/hours");
+    } catch (err) {
+      setToast(err instanceof Error ? err.message : "Не удалось продолжить");
+      setTimeout(() => setToast(null), 2500);
+    }
   }, [navigate, services.length, webApp]);
 
   const openForm = useCallback(
@@ -110,15 +128,22 @@ export function ServicesStepScreen() {
     [navigate],
   );
 
-  const confirmDelete = useCallback(() => {
+  const confirmDelete = useCallback(async () => {
     if (!deleteId) return;
-    removeService(deleteId);
-    setDeleteId(null);
-    setMenuId(null);
-    refresh();
-    setToast("Услуга удалена");
-    webApp?.HapticFeedback?.notificationOccurred("success");
-    setTimeout(() => setToast(null), 2500);
+    const id = deleteId;
+    try {
+      await deleteMasterService(id);
+      removeService(id);
+      setDeleteId(null);
+      setMenuId(null);
+      refresh();
+      setToast("Услуга удалена");
+      webApp?.HapticFeedback?.notificationOccurred("success");
+      setTimeout(() => setToast(null), 2500);
+    } catch (err) {
+      setToast(err instanceof Error ? err.message : "Не удалось удалить");
+      setTimeout(() => setToast(null), 2500);
+    }
   }, [deleteId, refresh, webApp]);
 
   useBackButton(goBack);
@@ -141,7 +166,7 @@ export function ServicesStepScreen() {
             type="button"
             className="ms-btn-primary"
             disabled={!hasServices}
-            onClick={handleContinue}
+            onClick={() => void handleContinue()}
           >
             Продолжить
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden>
@@ -154,7 +179,11 @@ export function ServicesStepScreen() {
               />
             </svg>
           </button>
-          <button type="button" className="ms-btn-secondary" onClick={handleSaveExit}>
+          <button
+            type="button"
+            className="ms-btn-secondary"
+            onClick={() => void handleSaveExit()}
+          >
             Сохранить и выйти
           </button>
         </>
@@ -295,7 +324,11 @@ export function ServicesStepScreen() {
               Услуга перестанет быть доступной для онлайн-записи. Это действие можно отменить,
               добавив услугу снова.
             </p>
-            <button type="button" className="ms-btn-danger" onClick={confirmDelete}>
+            <button
+              type="button"
+              className="ms-btn-danger"
+              onClick={() => void confirmDelete()}
+            >
               Удалить
             </button>
             <button

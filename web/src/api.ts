@@ -1,5 +1,6 @@
 import type {
   ClientBooking,
+  MasterServiceDto,
   PsychologistProfile,
   PublicPsychologist,
   SchedulePeriod,
@@ -71,8 +72,18 @@ export async function authenticate(initData: string): Promise<{
 export async function fetchMe(): Promise<{
   user: AppUser;
   profile: PsychologistProfile | null;
+  services: MasterServiceDto[];
 }> {
-  return request("/api/me");
+  const data = await request<{
+    user: AppUser;
+    profile: PsychologistProfile | null;
+    services?: MasterServiceDto[];
+  }>("/api/me");
+  return {
+    user: data.user,
+    profile: data.profile,
+    services: data.services ?? [],
+  };
 }
 
 export async function saveProfile(
@@ -85,13 +96,72 @@ export async function saveProfile(
   return data.profile;
 }
 
-export async function fetchPsychologist(
-  id: number,
-): Promise<PublicPsychologist> {
-  return request(`/api/psychologists/${id}`);
+export async function saveMasterProfile(input: {
+  name: string;
+  specialty: string;
+  city?: string;
+}): Promise<PsychologistProfile> {
+  const data = await request<{ profile: PsychologistProfile }>(
+    "/api/master/profile",
+    {
+      method: "PUT",
+      body: JSON.stringify(input),
+    },
+  );
+  return data.profile;
 }
 
-export async function fetchSlots(psychologistId: number): Promise<{
+export async function saveMasterService(
+  service: MasterServiceDto,
+): Promise<MasterServiceDto> {
+  const data = await request<{ service: MasterServiceDto }>(
+    `/api/master/services/${encodeURIComponent(service.id)}`,
+    {
+      method: "PUT",
+      body: JSON.stringify(service),
+    },
+  );
+  return data.service;
+}
+
+export async function deleteMasterService(id: string): Promise<void> {
+  await request(`/api/master/services/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  });
+}
+
+export async function completeMasterOnboarding(): Promise<PsychologistProfile> {
+  const data = await request<{ profile: PsychologistProfile }>(
+    "/api/master/complete",
+    { method: "POST", body: "{}" },
+  );
+  return data.profile;
+}
+
+export async function ensureMasterProfile(): Promise<{
+  profile: PsychologistProfile;
+  services: MasterServiceDto[];
+}> {
+  return request("/api/master/ensure", { method: "POST", body: "{}" });
+}
+
+export async function setMasterOnboardingStep(
+  step: number,
+): Promise<PsychologistProfile> {
+  const data = await request<{ profile: PsychologistProfile }>(
+    "/api/master/onboarding-step",
+    { method: "PUT", body: JSON.stringify({ step }) },
+  );
+  return data.profile;
+}
+
+export async function fetchPsychologist(
+  id: number | string,
+): Promise<PublicPsychologist> {
+  return request(`/api/psychologists/${encodeURIComponent(String(id))}`);
+}
+
+export async function fetchSlots(psychologistId: number | string): Promise<{
   psychologist: {
     id: number;
     name: string;
@@ -100,7 +170,9 @@ export async function fetchSlots(psychologistId: number): Promise<{
   };
   slots: TimeSlot[];
 }> {
-  return request(`/api/psychologists/${psychologistId}/slots?days=7`);
+  return request(
+    `/api/psychologists/${encodeURIComponent(String(psychologistId))}/slots?days=7`,
+  );
 }
 
 export async function fetchCabinetSessions(

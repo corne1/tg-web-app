@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { saveMasterProfile } from "../api";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
 import { useTelegram } from "../hooks/useTelegram";
@@ -10,6 +11,7 @@ import {
   SPECIALTIES,
   type MasterSpecialty,
 } from "../lib/masterDraft";
+import { cacheProfile } from "../lib/profileStorage";
 
 export function OnboardingScreen() {
   const navigate = useNavigate();
@@ -19,6 +21,8 @@ export function OnboardingScreen() {
   const [specialty, setSpecialty] = useState<MasterSpecialty | null>(
     initial.specialty,
   );
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const city = initial.city || "Москва";
 
   const draft = useMemo(
@@ -31,7 +35,7 @@ export function OnboardingScreen() {
   const previewTitle = meta?.title ?? "мастер маникюра";
   const previewChip = meta?.label ?? "Маникюр";
 
-  const persist = useCallback(() => {
+  const persistLocal = useCallback(() => {
     const prev = loadMasterDraft();
     saveMasterDraft({
       ...prev,
@@ -41,29 +45,58 @@ export function OnboardingScreen() {
     });
   }, [city, draft.name, draft.specialty]);
 
+  const persistServer = useCallback(async () => {
+    if (!draft.name || !draft.specialty) return null;
+    persistLocal();
+    const profile = await saveMasterProfile({
+      name: draft.name,
+      specialty: draft.specialty,
+      city,
+    });
+    cacheProfile(profile);
+    return profile;
+  }, [city, draft.name, draft.specialty, persistLocal]);
+
   const handleBack = useCallback(() => {
-    persist();
+    persistLocal();
     navigate("/");
-  }, [navigate, persist]);
+  }, [navigate, persistLocal]);
 
   const handleClose = useCallback(() => {
-    persist();
+    persistLocal();
     webApp?.close?.();
     navigate("/");
-  }, [navigate, persist, webApp]);
+  }, [navigate, persistLocal, webApp]);
 
-  const handleContinue = useCallback(() => {
-    if (!valid) return;
-    persist();
-    webApp?.HapticFeedback?.impactOccurred("light");
-    navigate("/onboarding/services");
-  }, [navigate, persist, valid, webApp]);
+  const handleContinue = useCallback(async () => {
+    if (!valid || saving) return;
+    setSaving(true);
+    setError(null);
+    try {
+      await persistServer();
+      webApp?.HapticFeedback?.impactOccurred("light");
+      navigate("/onboarding/services");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Не удалось сохранить");
+    } finally {
+      setSaving(false);
+    }
+  }, [navigate, persistServer, saving, valid, webApp]);
 
-  const handleSaveExit = useCallback(() => {
-    persist();
-    webApp?.HapticFeedback?.notificationOccurred("success");
-    navigate("/");
-  }, [navigate, persist, webApp]);
+  const handleSaveExit = useCallback(async () => {
+    if (!valid || saving) return;
+    setSaving(true);
+    setError(null);
+    try {
+      await persistServer();
+      webApp?.HapticFeedback?.notificationOccurred("success");
+      navigate("/");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Не удалось сохранить");
+    } finally {
+      setSaving(false);
+    }
+  }, [navigate, persistServer, saving, valid, webApp]);
 
   useBackButton(handleBack);
   useMainButton({ text: "", visible: false, onClick: () => undefined });
@@ -210,13 +243,14 @@ export function OnboardingScreen() {
 
       <footer className="ms-footer">
         <p className="ms-next-hint">Следующий шаг — Услуги и цены</p>
+        {error && <p className="error">{error}</p>}
         <button
           type="button"
           className="ms-btn-primary"
-          disabled={!valid}
-          onClick={handleContinue}
+          disabled={!valid || saving}
+          onClick={() => void handleContinue()}
         >
-          Продолжить
+          {saving ? "Сохранение…" : "Продолжить"}
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden>
             <path
               d="M6.5 3.5 12 9l-5.5 5.5"
@@ -227,7 +261,12 @@ export function OnboardingScreen() {
             />
           </svg>
         </button>
-        <button type="button" className="ms-btn-secondary" onClick={handleSaveExit}>
+        <button
+          type="button"
+          className="ms-btn-secondary"
+          disabled={saving}
+          onClick={() => void handleSaveExit()}
+        >
           Сохранить и выйти
         </button>
       </footer>

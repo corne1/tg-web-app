@@ -13,14 +13,40 @@ export type StoredUser = {
 
 export type ScheduleKind = "weekday" | "weekend" | "manual";
 
-export type PsychologistProfileRow = {
+/** draft = onboarding in progress; active = finished and usable for booking */
+export type MasterProfileStatus = "draft" | "active";
+
+export type MasterProfileRow = {
   user_id: number;
+  slug: string;
   name: string;
+  specialty: string | null;
+  city: string;
   duration: 50 | 60;
   price: number;
   schedule: ScheduleKind;
   timezone: string;
   cancel_hours: number;
+  status: MasterProfileStatus;
+  onboarding_step: number;
+  onboarding_completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+/** @deprecated alias while migrating call sites */
+export type PsychologistProfileRow = MasterProfileRow;
+
+export type MasterServiceRow = {
+  id: string;
+  master_id: number;
+  title: string;
+  duration_min: number;
+  price: number;
+  price_mode: "fixed" | "from";
+  break_after_min: number;
+  description: string;
+  sort_order: number;
   created_at: string;
   updated_at: string;
 };

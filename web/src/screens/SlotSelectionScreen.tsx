@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { fetchMe, fetchSlots, rescheduleBooking } from "../api";
+import { fetchSlots, rescheduleBooking } from "../api";
 import { ScreenShell } from "../components/calendar/ScreenShell";
 import { SlotGridSkeleton } from "../components/calendar/Skeleton";
 import { UiMainButton } from "../components/calendar/UiMainButton";
@@ -15,7 +15,7 @@ export function SlotSelectionScreen() {
   const [search] = useSearchParams();
   const { isTelegram } = useTelegram();
 
-  const psychologistId = Number(paramId || search.get("p") || "");
+  const masterKey = (paramId || search.get("p") || "").trim();
   const rescheduleId = search.get("reschedule");
 
   const [loading, setLoading] = useState(true);
@@ -34,26 +34,12 @@ export function SlotSelectionScreen() {
     let cancelled = false;
 
     async function load() {
-      if (!Number.isFinite(psychologistId) || psychologistId <= 0) {
-        // Fallback: if user is a psychologist, show own slots is wrong —
-        // client must open via deep link. Try self only for local testing.
-        try {
-          const me = await fetchMe();
-          if (cancelled) return;
-          if (me.profile && me.user.id) {
-            // No psychologist in URL — point to bookings / hub.
-            setError(null);
-            setLoading(false);
-            setMeta(null);
-            setSlots([]);
-            return;
-          }
-        } catch {
-          /* ignore */
-        }
+      if (!masterKey) {
         if (!cancelled) {
-          setError("Откройте ссылку психолога, чтобы выбрать слот.");
+          setError("Откройте ссылку мастера, чтобы выбрать слот.");
           setLoading(false);
+          setMeta(null);
+          setSlots([]);
         }
         return;
       }
@@ -61,7 +47,7 @@ export function SlotSelectionScreen() {
       setLoading(true);
       setError(null);
       try {
-        const data = await fetchSlots(psychologistId);
+        const data = await fetchSlots(masterKey);
         if (cancelled) return;
         setSlots(data.slots);
         setMeta(data.psychologist);
@@ -78,7 +64,7 @@ export function SlotSelectionScreen() {
     return () => {
       cancelled = true;
     };
-  }, [psychologistId]);
+  }, [masterKey]);
 
   const days = useMemo(() => {
     const map = new Map<string, TimeSlot[]>();
@@ -141,12 +127,12 @@ export function SlotSelectionScreen() {
     },
   });
 
-  if (!Number.isFinite(psychologistId) || psychologistId <= 0) {
+  if (!masterKey) {
     return (
-      <ScreenShell title="Запись" subtitle="Нужна ссылка психолога">
+      <ScreenShell title="Запись" subtitle="Нужна ссылка мастера">
         <div className="empty-inline">
           <p>
-            Психолог отправляет персональную ссылку. Откройте её в Telegram — здесь
+            Мастер отправляет персональную ссылку. Откройте её в Telegram — здесь
             появятся свободные слоты.
           </p>
           <Link to="/client/bookings" className="text-link">

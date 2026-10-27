@@ -13,13 +13,31 @@ export interface Session {
 }
 
 export interface PsychologistProfile {
+  userId?: number;
+  slug?: string;
   name: string;
   duration: 50 | 60;
   price: number;
   schedule: "weekday" | "weekend" | "manual";
   timezone?: string;
   cancelHours?: number;
+  specialty?: string | null;
+  city?: string;
+  status?: "draft" | "active";
+  onboardingStep?: number;
+  onboardingComplete?: boolean;
+  onboardingCompletedAt?: string | null;
   bookingLink?: string | null;
+}
+
+export interface MasterServiceDto {
+  id: string;
+  title: string;
+  durationMin: number;
+  price: number;
+  priceMode: "fixed" | "from";
+  breakAfterMin: number;
+  description: string;
 }
 
 export interface TimeSlot {

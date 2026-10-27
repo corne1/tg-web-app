@@ -52,3 +52,13 @@ export function psychologistDeepLink(psychologistId: number): string | null {
   if (!config.botUsername) return null;
   return `https://t.me/${config.botUsername}?startapp=p_${psychologistId}`;
 }
+
+export function bookingDeepLink(slug: string): string | null {
+  if (!config.botUsername || !slug) return null;
+  return `https://t.me/${config.botUsername}?startapp=book_${encodeURIComponent(slug)}`;
+}
+
+export function cabinetDeepLink(): string | null {
+  if (!config.botUsername) return null;
+  return `https://t.me/${config.botUsername}?startapp=cabinet`;
+}

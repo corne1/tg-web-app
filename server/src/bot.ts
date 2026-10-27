@@ -1,7 +1,13 @@
 import { Bot, InlineKeyboard, Keyboard } from "grammy";
-import { config } from "./config.js";
+import { bookingDeepLink, cabinetDeepLink, config } from "./config.js";
 
 let botSingleton: Bot | null | undefined;
+
+function appLinks() {
+  const cabinet =
+    cabinetDeepLink() ?? `${config.webAppUrl.replace(/\/$/, "")}/#cabinet`;
+  return { cabinet };
+}
 
 export function createBot(): Bot | null {
   if (botSingleton !== undefined) return botSingleton;
@@ -17,17 +23,27 @@ export function createBot(): Bot | null {
   const bot = new Bot(config.botToken);
 
   bot.command("start", async (ctx) => {
-    const keyboard = new InlineKeyboard().webApp("Открыть", config.webAppUrl);
+    const { cabinet } = appLinks();
+    const inline = new InlineKeyboard()
+      .url("Мой кабинет", cabinet)
+      .row()
+      .webApp("Открыть приложение", config.webAppUrl);
+
     const replyKeyboard = new Keyboard()
-      .webApp("Открыть календарь", config.webAppUrl)
+      .webApp("Мой кабинет", config.webAppUrl)
       .resized();
 
     await ctx.reply(
-      "Календарь записи к психологу.\nОткройте Mini App кнопкой ниже.",
-      { reply_markup: keyboard },
+      "Запись к мастеру.\n\n«Мой кабинет» — настройка и расписание.\nКлиенты записываются по вашей персональной ссылке.",
+      { reply_markup: inline },
     );
-    await ctx.reply("Или через клавиатуру:", {
-      reply_markup: replyKeyboard,
+    await ctx.reply("Быстрый доступ:", { reply_markup: replyKeyboard });
+  });
+
+  bot.command("cabinet", async (ctx) => {
+    const { cabinet } = appLinks();
+    await ctx.reply("Откройте кабинет мастера:", {
+      reply_markup: new InlineKeyboard().url("Мой кабинет", cabinet),
     });
   });
 
@@ -44,7 +60,7 @@ export async function configureMenuButton(bot: Bot): Promise<void> {
   await bot.api.setChatMenuButton({
     menu_button: {
       type: "web_app",
-      text: "Open",
+      text: "Кабинет",
       web_app: { url: config.webAppUrl },
     },
   });
@@ -63,3 +79,5 @@ export async function configureWebhook(bot: Bot): Promise<void> {
   });
   console.log(`[bot] Webhook set to ${url}`);
 }
+
+export { bookingDeepLink };

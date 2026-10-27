@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { saveMasterService } from "../api";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
 import { useTelegram } from "../hooks/useTelegram";
@@ -74,6 +75,8 @@ export function ServiceFormScreen({ mode }: { mode: Mode }) {
   const [errors, setErrors] = useState<Errors>({});
   const [sheet, setSheet] = useState<Sheet>(null);
   const [tried, setTried] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const headings = useMemo(() => {
     if (mode === "edit") {
@@ -115,7 +118,8 @@ export function ServiceFormScreen({ mode }: { mode: Mode }) {
     return next;
   }, [form]);
 
-  const submit = useCallback(() => {
+  const submit = useCallback(async () => {
+    if (saving) return;
     setTried(true);
     const next = validate();
     setErrors(next);
@@ -129,10 +133,7 @@ export function ServiceFormScreen({ mode }: { mode: Mode }) {
       : form.durationMin;
 
     const service: MasterService = {
-      id:
-        mode === "edit" && source
-          ? source.id
-          : crypto.randomUUID(),
+      id: mode === "edit" && source ? source.id : crypto.randomUUID(),
       title: form.title.trim(),
       durationMin: duration,
       price: Number(form.price),
@@ -141,12 +142,31 @@ export function ServiceFormScreen({ mode }: { mode: Mode }) {
       description: form.description.trim(),
     };
 
-    upsertService(service);
-    webApp?.HapticFeedback?.notificationOccurred("success");
-    navigate("/onboarding/services", {
-      state: { toast: mode === "edit" ? "saved" : "added" },
-    });
-  }, [form, mode, navigate, source, validate, webApp]);
+    setSaving(true);
+    setSubmitError(null);
+    try {
+      const saved = await saveMasterService(service);
+      upsertService({
+        ...service,
+        id: saved.id,
+        title: saved.title,
+        durationMin: saved.durationMin,
+        price: saved.price,
+        priceMode: saved.priceMode,
+        breakAfterMin: saved.breakAfterMin,
+        description: saved.description,
+      });
+      webApp?.HapticFeedback?.notificationOccurred("success");
+      navigate("/onboarding/services", {
+        state: { toast: mode === "edit" ? "saved" : "added" },
+      });
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "Не удалось сохранить");
+      webApp?.HapticFeedback?.notificationOccurred("error");
+    } finally {
+      setSaving(false);
+    }
+  }, [form, mode, navigate, saving, source, validate, webApp]);
 
   useBackButton(goBack);
   useMainButton({ text: "", visible: false, onClick: () => undefined });
@@ -301,10 +321,21 @@ export function ServiceFormScreen({ mode }: { mode: Mode }) {
       </div>
 
       <footer className="ms-footer">
-        <button type="button" className="ms-btn-primary" onClick={submit}>
-          {headings.cta}
+        {submitError && <p className="error">{submitError}</p>}
+        <button
+          type="button"
+          className="ms-btn-primary"
+          disabled={saving}
+          onClick={() => void submit()}
+        >
+          {saving ? "Сохранение…" : headings.cta}
         </button>
-        <button type="button" className="ms-btn-secondary" onClick={goBack}>
+        <button
+          type="button"
+          className="ms-btn-secondary"
+          disabled={saving}
+          onClick={goBack}
+        >
           Отмена
         </button>
       </footer>

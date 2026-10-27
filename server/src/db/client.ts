@@ -35,6 +35,14 @@ export function getDb(): Client {
   return client;
 }
 
+async function tryExec(db: Client, sql: string): Promise<void> {
+  try {
+    await db.execute(sql);
+  } catch {
+    // ignore (exists / already migrated)
+  }
+}
+
 export async function migrate(): Promise<void> {
   if (migrated) return;
   const db = getDb();
@@ -53,6 +61,7 @@ export async function migrate(): Promise<void> {
         updated_at TEXT NOT NULL,
         last_seen_at TEXT NOT NULL
       )`,
+      // Legacy table kept for one-time copy into master_profiles.
       `CREATE TABLE IF NOT EXISTS psychologist_profiles (
         user_id INTEGER PRIMARY KEY NOT NULL REFERENCES users(id),
         name TEXT NOT NULL,
@@ -61,6 +70,23 @@ export async function migrate(): Promise<void> {
         schedule TEXT NOT NULL,
         timezone TEXT NOT NULL DEFAULT 'Europe/Moscow',
         cancel_hours INTEGER NOT NULL DEFAULT 24,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      )`,
+      `CREATE TABLE IF NOT EXISTS master_profiles (
+        user_id INTEGER PRIMARY KEY NOT NULL REFERENCES users(id),
+        slug TEXT NOT NULL UNIQUE,
+        name TEXT NOT NULL DEFAULT '',
+        specialty TEXT,
+        city TEXT NOT NULL DEFAULT 'Москва',
+        duration INTEGER NOT NULL DEFAULT 60,
+        price INTEGER NOT NULL DEFAULT 0,
+        schedule TEXT NOT NULL DEFAULT 'weekday',
+        timezone TEXT NOT NULL DEFAULT 'Europe/Moscow',
+        cancel_hours INTEGER NOT NULL DEFAULT 24,
+        status TEXT NOT NULL DEFAULT 'draft',
+        onboarding_step INTEGER NOT NULL DEFAULT 1,
+        onboarding_completed_at TEXT,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
       )`,
@@ -86,9 +112,69 @@ export async function migrate(): Promise<void> {
       `CREATE UNIQUE INDEX IF NOT EXISTS idx_bookings_active_slot
         ON bookings(psychologist_id, starts_at)
         WHERE status != 'cancelled'`,
+      `CREATE TABLE IF NOT EXISTS master_services (
+        id TEXT PRIMARY KEY NOT NULL,
+        master_id INTEGER NOT NULL REFERENCES users(id),
+        title TEXT NOT NULL,
+        duration_min INTEGER NOT NULL,
+        price INTEGER NOT NULL,
+        price_mode TEXT NOT NULL DEFAULT 'fixed',
+        break_after_min INTEGER NOT NULL DEFAULT 0,
+        description TEXT NOT NULL DEFAULT '',
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      )`,
+      `CREATE INDEX IF NOT EXISTS idx_master_services_master
+        ON master_services(master_id, sort_order)`,
+      `CREATE UNIQUE INDEX IF NOT EXISTS idx_master_profiles_slug
+        ON master_profiles(slug)`,
     ],
     "write",
   );
+
+  for (const sql of [
+    `ALTER TABLE psychologist_profiles ADD COLUMN specialty TEXT`,
+    `ALTER TABLE psychologist_profiles ADD COLUMN city TEXT NOT NULL DEFAULT 'Москва'`,
+    `ALTER TABLE psychologist_profiles ADD COLUMN onboarding_complete INTEGER NOT NULL DEFAULT 0`,
+  ]) {
+    await tryExec(db, sql);
+  }
+
+  // One-time copy legacy psychologist_profiles → master_profiles.
+  try {
+    const legacy = await db.execute(`SELECT * FROM psychologist_profiles`);
+    for (const row of legacy.rows) {
+      const userId = Number(row.user_id);
+      const complete = Boolean(row.onboarding_complete);
+      await db.execute({
+        sql: `INSERT OR IGNORE INTO master_profiles (
+          user_id, slug, name, specialty, city, duration, price, schedule,
+          timezone, cancel_hours, status, onboarding_step, onboarding_completed_at,
+          created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        args: [
+          userId,
+          `m${userId}`,
+          String(row.name ?? ""),
+          row.specialty != null ? String(row.specialty) : null,
+          String(row.city ?? "Москва"),
+          Number(row.duration ?? 60),
+          Number(row.price ?? 0),
+          String(row.schedule ?? "weekday"),
+          String(row.timezone ?? "Europe/Moscow"),
+          Number(row.cancel_hours ?? 24),
+          complete ? "active" : "draft",
+          complete ? 4 : 1,
+          complete ? String(row.updated_at) : null,
+          String(row.created_at),
+          String(row.updated_at),
+        ],
+      });
+    }
+  } catch (err) {
+    console.warn("[migrate] legacy profile copy skipped", err);
+  }
 
   migrated = true;
 }

@@ -23,5 +23,18 @@ export function getCachedProfile(): PsychologistProfile | null {
 
 export function isOnboardingDone(profile?: PsychologistProfile | null): boolean {
   const p = profile ?? getCachedProfile();
-  return Boolean(p?.name && p.duration && p.price && p.schedule);
+  if (!p) return false;
+  if (p.onboardingComplete || p.status === "active") return true;
+  // Legacy profiles without the flag.
+  return Boolean(p.name && p.duration && p.price && p.schedule && p.price > 0);
+}
+
+/** Resume path for incomplete master onboarding. */
+export function masterResumePath(profile?: PsychologistProfile | null): string {
+  const p = profile ?? getCachedProfile();
+  const step = p?.onboardingStep ?? 1;
+  if (step <= 1) return "/onboarding";
+  if (step === 2) return "/onboarding/services";
+  if (step === 3) return "/onboarding/hours";
+  return "/cabinet";
 }

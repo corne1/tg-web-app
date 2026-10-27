@@ -1,8 +1,10 @@
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { setMasterOnboardingStep } from "../api";
 import { MasterSetupChrome } from "../components/master/MasterSetupChrome";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
+import { cacheProfile } from "../lib/profileStorage";
 
 /** Stub until step 3 designs are implemented. */
 export function HoursPlaceholderScreen() {
@@ -10,6 +12,12 @@ export function HoursPlaceholderScreen() {
   const goBack = useCallback(() => navigate("/onboarding/services"), [navigate]);
   useBackButton(goBack);
   useMainButton({ text: "", visible: false, onClick: () => undefined });
+
+  useEffect(() => {
+    void setMasterOnboardingStep(3)
+      .then((p) => cacheProfile(p))
+      .catch(() => undefined);
+  }, []);
 
   return (
     <MasterSetupChrome

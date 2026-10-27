@@ -3,15 +3,23 @@ import { BrowserRouter, Navigate, Route, Routes, useNavigate } from "react-route
 import {
   authenticate,
   clearStoredToken,
+  ensureMasterProfile,
   fetchMe,
   getStoredToken,
   type AppUser,
 } from "./api";
 import { useTelegram } from "./hooks/useTelegram";
-import { cacheProfile, isOnboardingDone } from "./lib/profileStorage";
-import { masterHomePath } from "./lib/masterDraft";
-import { parsePsychologistStartParam } from "./lib/startParam";
-import type { PsychologistProfile } from "./types";
+import {
+  cacheProfile,
+  isOnboardingDone,
+  masterResumePath,
+} from "./lib/profileStorage";
+import {
+  saveMasterDraft,
+  type MasterSpecialty,
+} from "./lib/masterDraft";
+import { parseEntryContext } from "./lib/startParam";
+import type { MasterServiceDto, PsychologistProfile } from "./types";
 import { BookingConfirmScreen } from "./screens/BookingConfirmScreen";
 import { EmptyStateScreen } from "./screens/EmptyStateScreen";
 import { MyBookingsScreen } from "./screens/MyBookingsScreen";
@@ -23,30 +31,89 @@ import { ServiceFormScreen } from "./screens/ServiceFormScreen";
 import { ServicesStepScreen } from "./screens/ServicesStepScreen";
 import { SlotSelectionScreen } from "./screens/SlotSelectionScreen";
 
+function syncDraftFromServer(
+  profile: PsychologistProfile | null,
+  services: MasterServiceDto[],
+) {
+  if (!profile) return;
+  saveMasterDraft({
+    name: profile.name,
+    specialty: (profile.specialty as MasterSpecialty | null) ?? null,
+    city: profile.city ?? "Москва",
+    services: services.map((s) => ({
+      id: s.id,
+      title: s.title,
+      durationMin: s.durationMin,
+      price: s.price,
+      priceMode: s.priceMode,
+      breakAfterMin: s.breakAfterMin,
+      description: s.description,
+    })),
+  });
+}
+
 function HomeRedirect({
-  deepPsychologistId,
-  hasServerProfile,
+  startParam,
+  profile,
 }: {
-  deepPsychologistId: number | null;
-  hasServerProfile: boolean;
+  startParam: string | undefined;
+  profile: PsychologistProfile | null;
 }) {
   const navigate = useNavigate();
+  const [bootError, setBootError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (deepPsychologistId) {
-      navigate(`/client/${deepPsychologistId}`, { replace: true });
-      return;
+    let cancelled = false;
+
+    async function route() {
+      const ctx = parseEntryContext(startParam);
+
+      if (ctx.mode === "client") {
+        if ("masterId" in ctx) {
+          navigate(`/client/${ctx.masterId}`, { replace: true });
+          return;
+        }
+        navigate(`/client/${encodeURIComponent(ctx.slug)}`, { replace: true });
+        return;
+      }
+
+      // Master context (explicit cabinet) or default open from menu.
+      try {
+        const ensured = await ensureMasterProfile();
+        if (cancelled) return;
+        cacheProfile(ensured.profile);
+        syncDraftFromServer(ensured.profile, ensured.services);
+
+        if (isOnboardingDone(ensured.profile)) {
+          navigate("/cabinet", { replace: true });
+          return;
+        }
+        navigate(masterResumePath(ensured.profile), { replace: true });
+      } catch (err) {
+        if (cancelled) return;
+        // Fallback without ensure (e.g. offline draft).
+        if (isOnboardingDone(profile)) {
+          navigate("/cabinet", { replace: true });
+          return;
+        }
+        if (profile?.name || profile?.specialty) {
+          navigate(masterResumePath(profile), { replace: true });
+          return;
+        }
+        setBootError(err instanceof Error ? err.message : "Не удалось открыть кабинет");
+        navigate("/onboarding", { replace: true });
+      }
     }
-    if (hasServerProfile) {
-      navigate("/cabinet", { replace: true });
-      return;
-    }
-    navigate(masterHomePath(), { replace: true });
-  }, [deepPsychologistId, hasServerProfile, navigate]);
+
+    void route();
+    return () => {
+      cancelled = true;
+    };
+  }, [navigate, profile, startParam]);
 
   return (
     <main className="screen">
-      <p className="screen-subtitle">Открываем…</p>
+      <p className="screen-subtitle">{bootError ?? "Открываем…"}</p>
     </main>
   );
 }
@@ -57,8 +124,6 @@ export function App() {
   const [profile, setProfile] = useState<PsychologistProfile | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-
-  const deepPsychologistId = parsePsychologistStartParam(startParam);
 
   useEffect(() => {
     let cancelled = false;
@@ -74,6 +139,7 @@ export function App() {
             setUser(me.user ?? authed);
             setProfile(me.profile);
             cacheProfile(me.profile);
+            syncDraftFromServer(me.profile, me.services);
           }
           return;
         }
@@ -84,6 +150,7 @@ export function App() {
             setUser(me.user);
             setProfile(me.profile);
             cacheProfile(me.profile);
+            syncDraftFromServer(me.profile, me.services);
           }
           return;
         }
@@ -146,12 +213,7 @@ export function App() {
         <Routes>
           <Route
             path="/"
-            element={
-              <HomeRedirect
-                deepPsychologistId={deepPsychologistId}
-                hasServerProfile={isOnboardingDone(profile)}
-              />
-            }
+            element={<HomeRedirect startParam={startParam} profile={profile} />}
           />
           <Route path="/onboarding" element={<OnboardingScreen />} />
           <Route path="/onboarding/services" element={<ServicesStepScreen />} />
