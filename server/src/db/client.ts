@@ -61,18 +61,6 @@ export async function migrate(): Promise<void> {
         updated_at TEXT NOT NULL,
         last_seen_at TEXT NOT NULL
       )`,
-      // Legacy table kept for one-time copy into master_profiles.
-      `CREATE TABLE IF NOT EXISTS psychologist_profiles (
-        user_id INTEGER PRIMARY KEY NOT NULL REFERENCES users(id),
-        name TEXT NOT NULL,
-        duration INTEGER NOT NULL,
-        price INTEGER NOT NULL,
-        schedule TEXT NOT NULL,
-        timezone TEXT NOT NULL DEFAULT 'Europe/Moscow',
-        cancel_hours INTEGER NOT NULL DEFAULT 24,
-        created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL
-      )`,
       `CREATE TABLE IF NOT EXISTS master_profiles (
         user_id INTEGER PRIMARY KEY NOT NULL REFERENCES users(id),
         slug TEXT NOT NULL UNIQUE,
@@ -133,15 +121,7 @@ export async function migrate(): Promise<void> {
     "write",
   );
 
-  for (const sql of [
-    `ALTER TABLE psychologist_profiles ADD COLUMN specialty TEXT`,
-    `ALTER TABLE psychologist_profiles ADD COLUMN city TEXT NOT NULL DEFAULT 'Москва'`,
-    `ALTER TABLE psychologist_profiles ADD COLUMN onboarding_complete INTEGER NOT NULL DEFAULT 0`,
-  ]) {
-    await tryExec(db, sql);
-  }
-
-  // One-time copy legacy psychologist_profiles → master_profiles.
+  // One-time: copy legacy psychologist_profiles → master_profiles, then drop.
   try {
     const legacy = await db.execute(`SELECT * FROM psychologist_profiles`);
     for (const row of legacy.rows) {
@@ -172,8 +152,9 @@ export async function migrate(): Promise<void> {
         ],
       });
     }
-  } catch (err) {
-    console.warn("[migrate] legacy profile copy skipped", err);
+    await tryExec(db, `DROP TABLE IF EXISTS psychologist_profiles`);
+  } catch {
+    // Table never existed — nothing to migrate.
   }
 
   migrated = true;

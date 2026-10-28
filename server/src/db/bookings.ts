@@ -309,7 +309,7 @@ export async function listDueReminders(
     const result = await db.execute({
       sql: `SELECT b.*, p.name AS psychologist_name, p.timezone AS psychologist_timezone
         FROM bookings b
-        JOIN psychologist_profiles p ON p.user_id = b.psychologist_id
+        JOIN master_profiles p ON p.user_id = b.psychologist_id
         WHERE b.status != 'cancelled'
           AND b.${flagCol} = 0
           AND b.starts_at >= ?
