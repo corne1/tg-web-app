@@ -396,7 +396,7 @@ apiRouter.get(
   "/psychologists/:id",
   requireSession,
   async (req: AuthedRequest, res) => {
-    const raw = String(req.params.id);
+    const raw = decodeURIComponent(String(req.params.id));
     let profile: MasterProfileRow | null = null;
 
     if (/^\d+$/.test(raw)) {
@@ -428,12 +428,7 @@ apiRouter.get(
   "/psychologists/:id/slots",
   requireSession,
   async (req: AuthedRequest, res) => {
-    const id = Number(req.params.id);
-    if (!Number.isFinite(id)) {
-      res.status(400).json({ error: "Invalid id" });
-      return;
-    }
-    const raw = String(req.params.id);
+    const raw = decodeURIComponent(String(req.params.id));
     const profile = /^\d+$/.test(raw)
       ? await getProfile(Number(raw))
       : await getProfileBySlug(raw);

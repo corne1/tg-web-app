@@ -171,9 +171,9 @@ export function SlotSelectionScreen() {
         <SlotGridSkeleton />
       ) : (
         <div className="slot-grid">
-          {days.length === 0 ? (
+          {!error && days.length === 0 ? (
             <p className="screen-subtitle">Нет свободных слотов на этой неделе</p>
-          ) : (
+          ) : error ? null : (
             days.map(([key, daySlots]) => {
               const [dayLabel, date] = key.split("|");
               return (
