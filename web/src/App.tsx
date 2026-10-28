@@ -15,6 +15,7 @@ import {
   masterResumePath,
 } from "./lib/profileStorage";
 import {
+  loadMasterDraft,
   saveMasterDraft,
   type MasterSpecialty,
 } from "./lib/masterDraft";
@@ -26,7 +27,7 @@ import { MyBookingsScreen } from "./screens/MyBookingsScreen";
 import { NotificationsScreen } from "./screens/NotificationsScreen";
 import { OnboardingScreen } from "./screens/OnboardingScreen";
 import { ScheduleScreen } from "./screens/ScheduleScreen";
-import { HoursPlaceholderScreen } from "./screens/HoursPlaceholderScreen";
+import { HoursStepScreen } from "./screens/HoursStepScreen";
 import { ServiceFormScreen } from "./screens/ServiceFormScreen";
 import { ServicesStepScreen } from "./screens/ServicesStepScreen";
 import { SlotSelectionScreen } from "./screens/SlotSelectionScreen";
@@ -36,7 +37,9 @@ function syncDraftFromServer(
   services: MasterServiceDto[],
 ) {
   if (!profile) return;
+  const prev = loadMasterDraft();
   saveMasterDraft({
+    ...prev,
     name: profile.name,
     specialty: (profile.specialty as MasterSpecialty | null) ?? null,
     city: profile.city ?? "Москва",
@@ -229,7 +232,7 @@ export function App() {
             path="/onboarding/services/:serviceId/duplicate"
             element={<ServiceFormScreen mode="duplicate" />}
           />
-          <Route path="/onboarding/hours" element={<HoursPlaceholderScreen />} />
+          <Route path="/onboarding/hours" element={<HoursStepScreen />} />
           <Route path="/cabinet" element={<ScheduleScreen />} />
           <Route path="/cabinet/empty" element={<EmptyStateScreen />} />
           <Route path="/client/confirm" element={<BookingConfirmScreen />} />
