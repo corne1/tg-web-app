@@ -460,9 +460,25 @@ apiRouter.get(
   requireSession,
   async (req: AuthedRequest, res) => {
     const tg = req.telegramUser!;
-    const profile = await getProfile(tg.id);
-    if (!profile) {
-      res.status(404).json({ error: "Complete onboarding first" });
+    await upsertUser(tg);
+    const profile = await ensureMasterProfile(
+      tg.id,
+      [tg.first_name, tg.last_name].filter(Boolean).join(" "),
+    );
+
+    const onboardingComplete =
+      profile.status === "active" && Boolean(profile.onboarding_completed_at);
+
+    // Draft masters should finish wizard — FE redirects on this flag.
+    if (!onboardingComplete) {
+      res.json({
+        sessions: [],
+        bookingLink:
+          bookingDeepLink(profile.slug) ?? psychologistDeepLink(tg.id),
+        onboardingComplete: false,
+        onboardingStep: profile.onboarding_step,
+        profile: serializeProfile(profile),
+      });
       return;
     }
 
@@ -495,7 +511,11 @@ apiRouter.get(
         status: b.status,
         paid: b.paid,
       })),
-      bookingLink: psychologistDeepLink(tg.id),
+      bookingLink:
+        bookingDeepLink(profile.slug) ?? psychologistDeepLink(tg.id),
+      onboardingComplete: true,
+      onboardingStep: profile.onboarding_step,
+      profile: serializeProfile(profile),
     });
   },
 );

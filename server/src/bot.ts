@@ -29,6 +29,8 @@ export function createBot(): Bot | null {
       .row()
       .webApp("Открыть приложение", config.webAppUrl);
 
+    // ReplyKeyboard web_app cannot pass startapp — use same Mini App URL;
+    // HomeRedirect treats default open as master cabinet flow.
     const replyKeyboard = new Keyboard()
       .webApp("Мой кабинет", config.webAppUrl)
       .resized();
@@ -37,7 +39,9 @@ export function createBot(): Bot | null {
       "Запись к мастеру.\n\n«Мой кабинет» — настройка и расписание.\nКлиенты записываются по вашей персональной ссылке.",
       { reply_markup: inline },
     );
-    await ctx.reply("Быстрый доступ:", { reply_markup: replyKeyboard });
+    await ctx.reply("Быстрый доступ с клавиатуры:", {
+      reply_markup: replyKeyboard,
+    });
   });
 
   bot.command("cabinet", async (ctx) => {

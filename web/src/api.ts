@@ -177,7 +177,13 @@ export async function fetchSlots(psychologistId: number | string): Promise<{
 
 export async function fetchCabinetSessions(
   period: SchedulePeriod,
-): Promise<{ sessions: Session[]; bookingLink: string | null }> {
+): Promise<{
+  sessions: Session[];
+  bookingLink: string | null;
+  onboardingComplete?: boolean;
+  onboardingStep?: number;
+  profile?: PsychologistProfile;
+}> {
   return request(`/api/cabinet/sessions?period=${period}`);
 }
 

@@ -5,6 +5,7 @@ import { ScreenShell } from "../components/calendar/ScreenShell";
 import { UiMainButton } from "../components/calendar/UiMainButton";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
+import { cacheProfile, masterResumePath } from "../lib/profileStorage";
 import type { SchedulePeriod, Session } from "../types";
 
 const PERIODS: { id: SchedulePeriod; label: string }[] = [
@@ -39,6 +40,11 @@ export function ScheduleScreen() {
     setError(null);
     try {
       const data = await fetchCabinetSessions(p);
+      if (data.profile) cacheProfile(data.profile);
+      if (data.onboardingComplete === false) {
+        navigate(masterResumePath(data.profile ?? null), { replace: true });
+        return;
+      }
       setSessions(data.sessions);
       setBookingLink(data.bookingLink);
     } catch (err) {
@@ -47,7 +53,7 @@ export function ScheduleScreen() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
     void load(period);
