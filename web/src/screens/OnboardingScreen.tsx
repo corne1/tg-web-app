@@ -215,17 +215,6 @@ export function OnboardingScreen() {
                 </p>
                 <div className="ms-preview-tags">
                   <span className="ms-tag">{previewChip}</span>
-                  <span className="ms-loc">
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden>
-                      <path
-                        d="M6 1.5c-1.9 0-3.4 1.5-3.4 3.3C2.6 6.8 6 10.5 6 10.5s3.4-3.7 3.4-5.7C9.4 3 7.9 1.5 6 1.5Z"
-                        stroke="currentColor"
-                        strokeWidth="1.2"
-                      />
-                      <circle cx="6" cy="4.8" r="1.1" fill="currentColor" />
-                    </svg>
-                    {city}
-                  </span>
                 </div>
               </div>
             </div>
