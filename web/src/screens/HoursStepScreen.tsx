@@ -31,20 +31,6 @@ type Sheet =
 
 const TIME_OPTS = timeOptions(30);
 
-function GearIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <path
-        d="M6.4 1.6h3.2l.35 1.4a4.8 4.8 0 0 1 1.15.66l1.4-.45 1.6 2.77-1.15 1.05c.05.28.08.56.08.85s-.03.57-.08.85l1.15 1.05-1.6 2.77-1.4-.45a4.8 4.8 0 0 1-1.15.66l-.35 1.4H6.4l-.35-1.4a4.8 4.8 0 0 1-1.15-.66l-1.4.45L2 10.58l1.15-1.05A4.9 4.9 0 0 1 3.07 8c0-.29.03-.57.08-.85L2 6.1 3.6 3.33l1.4.45c.34-.28.73-.5 1.15-.66L6.4 1.6Z"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        strokeLinejoin="round"
-      />
-      <circle cx="8" cy="8" r="1.8" stroke="currentColor" strokeWidth="1.2" />
-    </svg>
-  );
-}
-
 function CopyIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
@@ -133,7 +119,7 @@ export function HoursStepScreen() {
     if (!canContinue) return;
     persist();
     webApp?.HapticFeedback?.impactOccurred("light");
-    navigate("/");
+    navigate("/onboarding/place");
   }, [canContinue, navigate, persist, webApp]);
 
   const handleSaveExit = useCallback(() => {
@@ -149,11 +135,6 @@ export function HoursStepScreen() {
     persist(next, id);
     webApp?.HapticFeedback?.selectionChanged?.();
   }, [persist, webApp]);
-
-  const setManual = useCallback(() => {
-    setPreset("manual");
-    persist(hours, "manual");
-  }, [hours, persist]);
 
   const toggleDay = useCallback(
     (id: WeekdayId) => {
@@ -245,7 +226,7 @@ export function HoursStepScreen() {
       toastTone="success"
       footer={
         <>
-          <p className="ms-next-hint">Следующий шаг — Правила записи</p>
+          <p className="ms-next-hint">Следующий шаг — Место приёма</p>
           <button
             type="button"
             className="ms-btn-primary"
@@ -293,14 +274,6 @@ export function HoursStepScreen() {
               </span>
             </button>
           ))}
-          <button
-            type="button"
-            className={`ms-preset-manual ${preset === "manual" ? "is-active" : ""}`}
-            onClick={setManual}
-          >
-            <GearIcon />
-            Настроить вручную
-          </button>
         </div>
       </section>
 

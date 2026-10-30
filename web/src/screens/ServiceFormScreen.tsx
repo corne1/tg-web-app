@@ -9,6 +9,8 @@ import {
   DURATION_OPTIONS,
   formatDuration,
   getService,
+  MAX_BREAK_AFTER_MIN,
+  MAX_SERVICE_PRICE,
   type MasterService,
   type PriceMode,
   upsertService,
@@ -24,10 +26,41 @@ type FormState = {
   price: string;
   priceMode: PriceMode;
   breakAfterMin: number;
+  customBreak: string;
+  useCustomBreak: boolean;
   description: string;
 };
 
-type Errors = Partial<Record<"title" | "durationMin" | "price", string>>;
+type Errors = Partial<
+  Record<"title" | "durationMin" | "price" | "breakAfterMin", string>
+>;
+
+function priceError(raw: string): string | undefined {
+  const value = raw.trim();
+  if (!value) return "Укажите стоимость услуги";
+  if (/[^\d\s.,]/.test(value) || /[a-zA-Zа-яА-ЯёЁ]/.test(value)) {
+    return "Введите стоимость числом";
+  }
+  const normalized = value.replace(/\s/g, "").replace(",", ".");
+  const price = Number(normalized);
+  if (!Number.isFinite(price)) return "Введите стоимость числом";
+  if (price < 0) return "Введите корректную стоимость";
+  if (price === 0) return "Стоимость должна быть больше 0 ₽";
+  if (price > MAX_SERVICE_PRICE) return "Проверьте указанную стоимость";
+  return undefined;
+}
+
+function breakError(useCustom: boolean, custom: string): string | undefined {
+  if (!useCustom) return undefined;
+  const mins = Number(custom);
+  if (!Number.isFinite(mins) || mins <= 0) {
+    return "Перерыв должен быть больше 0 минут";
+  }
+  if (mins > MAX_BREAK_AFTER_MIN) {
+    return `Укажите перерыв не более ${MAX_BREAK_AFTER_MIN} минут`;
+  }
+  return undefined;
+}
 
 type Sheet = "duration" | "break" | null;
 
@@ -40,6 +73,8 @@ function emptyForm(): FormState {
     price: "",
     priceMode: "fixed",
     breakAfterMin: 0,
+    customBreak: "",
+    useCustomBreak: false,
     description: "",
   };
 }
@@ -48,6 +83,9 @@ function fromService(s: MasterService, asCopy = false): FormState {
   const preset = DURATION_OPTIONS.some(
     (o) => o.value === s.durationMin && o.value !== -1,
   );
+  const breakPreset = BREAK_OPTIONS.some(
+    (o) => o.value === s.breakAfterMin && o.value !== -1,
+  );
   return {
     title: asCopy ? `${s.title} (копия)` : s.title,
     durationMin: s.durationMin,
@@ -55,7 +93,9 @@ function fromService(s: MasterService, asCopy = false): FormState {
     useCustomDuration: !preset,
     price: s.price ? String(s.price) : "",
     priceMode: s.priceMode,
-    breakAfterMin: s.breakAfterMin,
+    breakAfterMin: breakPreset ? s.breakAfterMin : 0,
+    customBreak: breakPreset ? "" : String(s.breakAfterMin),
+    useCustomBreak: !breakPreset,
     description: s.description,
   };
 }
@@ -94,8 +134,12 @@ export function ServiceFormScreen({ mode }: { mode: Mode }) {
       : "Своя длительность"
     : formatDuration(form.durationMin);
 
-  const breakLabel =
-    BREAK_OPTIONS.find((o) => o.value === form.breakAfterMin)?.label ?? "Без перерыва";
+  const breakLabel = form.useCustomBreak
+    ? form.customBreak
+      ? formatDuration(Number(form.customBreak) || 0)
+      : "Другое время"
+    : (BREAK_OPTIONS.find((o) => o.value === form.breakAfterMin)?.label ??
+      "Без перерыва");
 
   const goBack = useCallback(
     () => navigate("/onboarding/services"),
@@ -111,10 +155,10 @@ export function ServiceFormScreen({ mode }: { mode: Mode }) {
     if (!Number.isFinite(duration) || duration <= 0) {
       next.durationMin = "Длительность должна быть больше 0 мин";
     }
-    const price = Number(form.price);
-    if (!Number.isFinite(price) || price <= 0) {
-      next.price = "Укажите стоимость";
-    }
+    const priceMsg = priceError(form.price);
+    if (priceMsg) next.price = priceMsg;
+    const breakMsg = breakError(form.useCustomBreak, form.customBreak);
+    if (breakMsg) next.breakAfterMin = breakMsg;
     return next;
   }, [form]);
 
@@ -131,14 +175,18 @@ export function ServiceFormScreen({ mode }: { mode: Mode }) {
     const duration = form.useCustomDuration
       ? Number(form.customDuration)
       : form.durationMin;
+    const breakAfterMin = form.useCustomBreak
+      ? Number(form.customBreak)
+      : form.breakAfterMin;
+    const price = Number(form.price.trim().replace(/\s/g, "").replace(",", "."));
 
     const service: MasterService = {
       id: mode === "edit" && source ? source.id : crypto.randomUUID(),
       title: form.title.trim(),
       durationMin: duration,
-      price: Number(form.price),
+      price,
       priceMode: form.priceMode,
-      breakAfterMin: form.breakAfterMin,
+      breakAfterMin,
       description: form.description.trim(),
     };
 
@@ -281,8 +329,8 @@ export function ServiceFormScreen({ mode }: { mode: Mode }) {
           <div className="ms-input-affix">
             <input
               className={`ms-input ${showErr("price") ? "is-invalid" : ""}`}
-              type="number"
-              min={0}
+              type="text"
+              inputMode="decimal"
               placeholder="2500"
               value={form.price}
               onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
@@ -296,12 +344,28 @@ export function ServiceFormScreen({ mode }: { mode: Mode }) {
           <span className="ms-label">Перерыв после услуги</span>
           <button
             type="button"
-            className="ms-select"
+            className={`ms-select ${showErr("breakAfterMin") ? "is-invalid" : ""}`}
             onClick={() => setSheet("break")}
           >
             <span>{breakLabel}</span>
             <Chevron />
           </button>
+          {showErr("breakAfterMin") && (
+            <span className="ms-field-error">{errors.breakAfterMin}</span>
+          )}
+          {form.useCustomBreak && (
+            <input
+              className={`ms-input mt-2 ${showErr("breakAfterMin") ? "is-invalid" : ""}`}
+              type="number"
+              min={1}
+              max={MAX_BREAK_AFTER_MIN}
+              placeholder="Минуты"
+              value={form.customBreak}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, customBreak: e.target.value }))
+              }
+            />
+          )}
         </div>
 
         <label className="ms-field">
@@ -388,20 +452,38 @@ export function ServiceFormScreen({ mode }: { mode: Mode }) {
                   );
                 })}
               {sheet === "break" &&
-                BREAK_OPTIONS.map((opt) => (
-                  <li key={opt.value}>
-                    <button
-                      type="button"
-                      className={`ms-sheet-item ${form.breakAfterMin === opt.value ? "is-active" : ""}`}
-                      onClick={() => {
-                        setForm((f) => ({ ...f, breakAfterMin: opt.value }));
-                        setSheet(null);
-                      }}
-                    >
-                      {opt.label}
-                    </button>
-                  </li>
-                ))}
+                BREAK_OPTIONS.map((opt) => {
+                  const active =
+                    opt.value === -1
+                      ? form.useCustomBreak
+                      : !form.useCustomBreak && form.breakAfterMin === opt.value;
+                  return (
+                    <li key={opt.value}>
+                      <button
+                        type="button"
+                        className={`ms-sheet-item ${active ? "is-active" : ""}`}
+                        onClick={() => {
+                          if (opt.value === -1) {
+                            setForm((f) => ({
+                              ...f,
+                              useCustomBreak: true,
+                              customBreak: f.customBreak || "20",
+                            }));
+                          } else {
+                            setForm((f) => ({
+                              ...f,
+                              useCustomBreak: false,
+                              breakAfterMin: opt.value,
+                            }));
+                          }
+                          setSheet(null);
+                        }}
+                      >
+                        {opt.label}
+                      </button>
+                    </li>
+                  );
+                })}
             </ul>
           </div>
         </div>

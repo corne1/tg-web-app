@@ -12,3 +12,6 @@ coverage/
 .vercel/
 .vercel
 .env*
+
+docs/
+scripts/

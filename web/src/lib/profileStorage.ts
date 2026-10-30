@@ -35,6 +35,7 @@ export function masterResumePath(profile?: PsychologistProfile | null): string {
   const step = p?.onboardingStep ?? 1;
   if (step <= 1) return "/onboarding";
   if (step === 2) return "/onboarding/services";
-  if (step >= 3) return "/onboarding/hours";
+  if (step === 3) return "/onboarding/hours";
+  if (step >= 4) return "/onboarding/place";
   return "/onboarding";
 }

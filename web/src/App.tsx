@@ -28,6 +28,7 @@ import { NotificationsScreen } from "./screens/NotificationsScreen";
 import { OnboardingScreen } from "./screens/OnboardingScreen";
 import { ScheduleScreen } from "./screens/ScheduleScreen";
 import { HoursStepScreen } from "./screens/HoursStepScreen";
+import { PlaceStepScreen } from "./screens/PlaceStepScreen";
 import { ServiceFormScreen } from "./screens/ServiceFormScreen";
 import { ServicesStepScreen } from "./screens/ServicesStepScreen";
 import { SlotSelectionScreen } from "./screens/SlotSelectionScreen";
@@ -233,6 +234,7 @@ export function App() {
             element={<ServiceFormScreen mode="duplicate" />}
           />
           <Route path="/onboarding/hours" element={<HoursStepScreen />} />
+          <Route path="/onboarding/place" element={<PlaceStepScreen />} />
           <Route path="/cabinet" element={<ScheduleScreen />} />
           <Route path="/cabinet/empty" element={<EmptyStateScreen />} />
           <Route path="/client/confirm" element={<BookingConfirmScreen />} />

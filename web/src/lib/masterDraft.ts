@@ -36,6 +36,14 @@ export type WorkingHours = Record<WeekdayId, DayHours>;
 
 export type HoursPresetId = "mon-fri" | "mon-sat" | "everyday" | "manual";
 
+export type PlaceMode = "studio" | "visit" | "both";
+
+export type PlaceDetails = {
+  city: string;
+  address: string;
+  comment: string;
+};
+
 export type MasterDraft = {
   name: string;
   specialty: MasterSpecialty | null;
@@ -44,6 +52,9 @@ export type MasterDraft = {
   hours: WorkingHours;
   hoursPreset: HoursPresetId | null;
   dayBreakMin: number | null;
+  placeMode: PlaceMode | null;
+  studioPlace: PlaceDetails;
+  visitPlace: PlaceDetails;
 };
 
 const KEY = "masterSetupDraft";
@@ -77,7 +88,12 @@ export const BREAK_OPTIONS = [
   { value: 30, label: "30 мин" },
   { value: 45, label: "45 мин" },
   { value: 60, label: "1 ч" },
+  /** Sentinel: custom minutes via «Другое время» input (Blur #3). */
+  { value: -1, label: "Другое время" },
 ] as const;
+
+export const MAX_BREAK_AFTER_MIN = 240;
+export const MAX_SERVICE_PRICE = 10_000_000;
 
 export const WEEKDAYS: { id: WeekdayId; label: string; short: string }[] = [
   { id: "mon", label: "Понедельник", short: "Пн" },
@@ -238,6 +254,73 @@ function normalizeService(raw: Partial<MasterService> & { id?: string }): Master
   };
 }
 
+export const PLACE_OPTIONS: {
+  id: PlaceMode;
+  title: string;
+  subtitle: string;
+}[] = [
+  {
+    id: "studio",
+    title: "В кабинете или студии",
+    subtitle: "Клиенты приходят ко мне",
+  },
+  {
+    id: "visit",
+    title: "С выездом к клиенту",
+    subtitle: "Я приезжаю к клиентам",
+  },
+  {
+    id: "both",
+    title: "Оба варианта",
+    subtitle: "Принимаю у себя и выезжаю",
+  },
+];
+
+/** Cities for step-4 search (local list; server geo later). */
+export const CITY_SUGGESTIONS = [
+  "Москва",
+  "Санкт-Петербург",
+  "Казань",
+  "Новосибирск",
+  "Екатеринбург",
+  "Нижний Новгород",
+  "Самара",
+  "Ростов-на-Дону",
+  "Краснодар",
+  "Уфа",
+  "Воронеж",
+  "Пермь",
+  "Волгоград",
+  "Красноярск",
+  "Саратов",
+  "Тюмень",
+  "Тольятти",
+  "Ижевск",
+  "Барнаул",
+  "Иркутск",
+  "Хабаровск",
+  "Ярославль",
+  "Владивосток",
+  "Махачкала",
+  "Томск",
+  "Оренбург",
+  "Кемерово",
+  "Новокузнецк",
+  "Рязань",
+  "Астрахань",
+  "Пенза",
+  "Липецк",
+  "Киров",
+  "Челябинск",
+  "Сочи",
+];
+
+const emptyPlace = (): PlaceDetails => ({
+  city: "",
+  address: "",
+  comment: "",
+});
+
 const emptyDraft = (): MasterDraft => ({
   name: "",
   specialty: null,
@@ -246,7 +329,18 @@ const emptyDraft = (): MasterDraft => ({
   hours: applyHoursPreset("mon-fri"),
   hoursPreset: "mon-fri",
   dayBreakMin: null,
+  placeMode: null,
+  studioPlace: emptyPlace(),
+  visitPlace: emptyPlace(),
 });
+
+function normalizePlace(raw: Partial<PlaceDetails> | undefined): PlaceDetails {
+  return {
+    city: String(raw?.city ?? ""),
+    address: String(raw?.address ?? ""),
+    comment: String(raw?.comment ?? ""),
+  };
+}
 
 export function loadMasterDraft(): MasterDraft {
   try {
@@ -260,6 +354,12 @@ export function loadMasterDraft(): MasterDraft {
       parsed.hoursPreset === "manual"
         ? parsed.hoursPreset
         : "mon-fri";
+    const placeMode =
+      parsed.placeMode === "studio" ||
+      parsed.placeMode === "visit" ||
+      parsed.placeMode === "both"
+        ? parsed.placeMode
+        : null;
     return {
       ...emptyDraft(),
       ...parsed,
@@ -270,6 +370,9 @@ export function loadMasterDraft(): MasterDraft {
       hoursPreset,
       dayBreakMin:
         typeof parsed.dayBreakMin === "number" ? parsed.dayBreakMin : null,
+      placeMode,
+      studioPlace: normalizePlace(parsed.studioPlace),
+      visitPlace: normalizePlace(parsed.visitPlace),
     };
   } catch {
     return emptyDraft();
@@ -289,16 +392,67 @@ export function isMasterStep1Done(draft = loadMasterDraft()): boolean {
   return Boolean(draft.name.trim() && draft.specialty);
 }
 
-/** Ready for cabinet: identity + at least one service (hours step optional for now). */
+export function needsStudioPlace(mode: PlaceMode | null): boolean {
+  return mode === "studio" || mode === "both";
+}
+
+export function needsVisitPlace(mode: PlaceMode | null): boolean {
+  return mode === "visit" || mode === "both";
+}
+
+export function isPlaceDetailsValid(
+  place: PlaceDetails,
+  requireAddress: boolean,
+): boolean {
+  if (!place.city.trim()) return false;
+  if (requireAddress && !place.address.trim()) return false;
+  return true;
+}
+
+export function isMasterPlaceDone(draft = loadMasterDraft()): boolean {
+  if (!draft.placeMode) return false;
+  if (
+    needsStudioPlace(draft.placeMode) &&
+    !isPlaceDetailsValid(draft.studioPlace, true)
+  ) {
+    return false;
+  }
+  if (
+    needsVisitPlace(draft.placeMode) &&
+    !isPlaceDetailsValid(draft.visitPlace, false)
+  ) {
+    return false;
+  }
+  return true;
+}
+
+/** Ready for cabinet: identity + services + hours day + place. */
 export function isMasterReady(draft = loadMasterDraft()): boolean {
-  return isMasterStep1Done(draft) && draft.services.length > 0;
+  return (
+    isMasterStep1Done(draft) &&
+    draft.services.length > 0 &&
+    hasEnabledWorkingDay(draft.hours) &&
+    isMasterPlaceDone(draft)
+  );
 }
 
 /** Resume path inside master setup. */
 export function masterHomePath(draft = loadMasterDraft()): string {
   if (isMasterReady(draft)) return "/cabinet";
-  if (isMasterStep1Done(draft)) return "/onboarding/services";
-  return "/onboarding";
+  if (!isMasterStep1Done(draft)) return "/onboarding";
+  if (draft.services.length === 0) return "/onboarding/services";
+  if (!hasEnabledWorkingDay(draft.hours)) return "/onboarding/hours";
+  if (!isMasterPlaceDone(draft)) return "/onboarding/place";
+  return "/cabinet";
+}
+
+export function filterCities(query: string, limit = 8): string[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return CITY_SUGGESTIONS.slice(0, limit);
+  return CITY_SUGGESTIONS.filter((c) => c.toLowerCase().includes(q)).slice(
+    0,
+    limit,
+  );
 }
 
 export function upsertService(service: MasterService): MasterDraft {

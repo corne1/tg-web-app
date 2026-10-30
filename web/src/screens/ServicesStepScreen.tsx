@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { completeMasterOnboarding, deleteMasterService } from "../api";
+import { deleteMasterService, setMasterOnboardingStep } from "../api";
 import { MasterSetupChrome } from "../components/master/MasterSetupChrome";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
@@ -14,8 +14,6 @@ import {
   serviceInitials,
   type MasterService,
 } from "../lib/masterDraft";
-import { cacheProfile } from "../lib/profileStorage";
-
 function EmptyIllustration() {
   return (
     <svg
@@ -59,6 +57,7 @@ export function ServicesStepScreen() {
   const [menuId, setMenuId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [toastTone, setToastTone] = useState<"success" | "danger">("success");
 
   const refresh = useCallback(() => {
     setServices(loadMasterDraft().services);
@@ -76,6 +75,7 @@ export function ServicesStepScreen() {
       deleted: "Услуга удалена",
       saved: "Изменения сохранены",
     } as const;
+    setToastTone("success");
     setToast(map[state.toast]);
     navigate(location.pathname, { replace: true, state: null });
     const t = setTimeout(() => setToast(null), 2500);
@@ -88,34 +88,27 @@ export function ServicesStepScreen() {
     navigate("/");
   }, [navigate, webApp]);
 
-  const handleSaveExit = useCallback(async () => {
+  const handleSaveExit = useCallback(() => {
     const draft = loadMasterDraft();
     saveMasterDraft({ ...draft, services });
-    try {
-      if (services.length > 0) {
-        const profile = await completeMasterOnboarding();
-        cacheProfile(profile);
-      }
-      webApp?.HapticFeedback?.notificationOccurred("success");
-      navigate("/");
-    } catch (err) {
-      setToast(err instanceof Error ? err.message : "Не удалось сохранить");
-      setTimeout(() => setToast(null), 2500);
-    }
+    webApp?.HapticFeedback?.notificationOccurred("success");
+    navigate("/");
   }, [navigate, services, webApp]);
 
   const handleContinue = useCallback(async () => {
     if (services.length === 0) return;
+    const draft = loadMasterDraft();
+    saveMasterDraft({ ...draft, services });
     try {
-      const profile = await completeMasterOnboarding();
-      cacheProfile(profile);
+      await setMasterOnboardingStep(2);
       webApp?.HapticFeedback?.impactOccurred("light");
       navigate("/onboarding/hours");
     } catch (err) {
+      setToastTone("danger");
       setToast(err instanceof Error ? err.message : "Не удалось продолжить");
       setTimeout(() => setToast(null), 2500);
     }
-  }, [navigate, services.length, webApp]);
+  }, [navigate, services, webApp]);
 
   const openForm = useCallback(
     (mode: "new" | "edit" | "duplicate", id?: string) => {
@@ -137,10 +130,12 @@ export function ServicesStepScreen() {
       setDeleteId(null);
       setMenuId(null);
       refresh();
+      setToastTone("success");
       setToast("Услуга удалена");
       webApp?.HapticFeedback?.notificationOccurred("success");
       setTimeout(() => setToast(null), 2500);
     } catch (err) {
+      setToastTone("danger");
       setToast(err instanceof Error ? err.message : "Не удалось удалить");
       setTimeout(() => setToast(null), 2500);
     }
@@ -158,7 +153,7 @@ export function ServicesStepScreen() {
       onBack={goBack}
       onClose={handleClose}
       toast={toast}
-      toastTone="success"
+      toastTone={toastTone}
       footer={
         <>
           <p className="ms-next-hint">Следующий шаг — Рабочее время</p>

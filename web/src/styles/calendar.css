@@ -771,6 +771,10 @@ input {
   --ms-soft: #f2f2f7;
   --ms-info: #007aff;
   --ms-tag: #3a3a3c;
+  /* Figma Radian radii from Project!! Base Input / Text Area */
+  --ms-radius-input: 9999px; /* Base Input → rounded-lg (resolved 9999) */
+  --ms-radius-textarea: 16px; /* Text Area → Input Form */
+  --ms-radius-input-search: 24px; /* city search Base Input → rounded-3xl */
 
   width: min(440px, 100%);
   min-height: calc(100vh - 2.5rem);
@@ -899,13 +903,17 @@ input {
 .ms-input {
   width: 100%;
   padding: 0.95rem 1rem;
-  border-radius: 14px;
+  border-radius: var(--ms-radius-input);
   border: 1.5px solid var(--ms-line);
   background: #fff;
   color: var(--ms-ink);
   outline: none;
   font-size: 1rem;
   transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.ms-input.ms-input-search {
+  border-radius: var(--ms-radius-input-search);
 }
 
 .ms-input::placeholder {
@@ -1457,7 +1465,7 @@ input {
   justify-content: space-between;
   gap: 0.5rem;
   padding: 0.95rem 1rem;
-  border-radius: 14px;
+  border-radius: var(--ms-radius-input);
   border: 1.5px solid var(--ms-line);
   background: #fff;
   color: var(--ms-ink);
@@ -1494,7 +1502,7 @@ input {
 .ms-textarea {
   width: 100%;
   padding: 0.95rem 1rem;
-  border-radius: 14px;
+  border-radius: var(--ms-radius-textarea);
   border: 1.5px solid var(--ms-line);
   background: #fff;
   color: var(--ms-ink);
@@ -1908,4 +1916,146 @@ input {
 
 .ms-sheet-hours .ms-btn-primary {
   margin-top: 0.35rem;
+}
+
+/* Step 4: place of reception */
+.ms-stage-label {
+  margin: 0 0 0.85rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--ms-ink);
+}
+
+.ms-stage-label span {
+  color: #9196a1;
+}
+
+.ms-place-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.ms-place-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  padding: 1rem;
+  border: 1px solid var(--ms-line);
+  border-radius: 20px;
+  background: #eeeff1;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+
+.ms-place-card.is-active {
+  border-color: var(--ms-purple);
+  background: var(--ms-purple-soft);
+}
+
+.ms-place-card.is-static {
+  cursor: default;
+}
+
+.ms-place-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.ms-place-title {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--ms-ink);
+}
+
+.ms-place-sub {
+  font-size: 0.8125rem;
+  color: #5e636e;
+}
+
+.ms-place-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-bottom: 1.5rem;
+}
+
+.ms-select.is-placeholder span {
+  color: var(--ms-muted);
+}
+
+.ms-city-list {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  border: 1px solid var(--ms-line);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.ms-city-item {
+  display: block;
+  width: 100%;
+  padding: 0.9rem 1rem;
+  border: 0;
+  border-bottom: 1px solid var(--ms-line);
+  background: #fff;
+  text-align: left;
+  font: inherit;
+  color: var(--ms-ink);
+  cursor: pointer;
+}
+
+.ms-city-item:last-child {
+  border-bottom: 0;
+}
+
+.ms-city-empty {
+  margin-top: 1.5rem;
+  padding: 1.25rem 1rem;
+  border-radius: 16px;
+  background: var(--ms-soft);
+  text-align: center;
+}
+
+.ms-city-empty-title {
+  margin: 0 0 0.35rem;
+  font-weight: 600;
+  color: var(--ms-ink);
+}
+
+.ms-city-empty-text {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--ms-muted);
+}
+
+.ms-place-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.ms-place-summary-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.ms-place-summary-line {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--ms-ink);
+}
+
+.ms-place-summary-muted {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--ms-muted);
 }
