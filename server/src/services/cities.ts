@@ -12,30 +12,47 @@ type HhArea = {
   areas?: HhArea[];
 };
 
+export type CityHit = {
+  name: string;
+  /** Parent region name when known (null for federal cities like Москва). */
+  region: string | null;
+};
+
 const HH_RUSSIA_URL = "https://api.hh.ru/areas/113";
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
-let cache: { names: string[]; loadedAt: number } | null = null;
-let inflight: Promise<string[]> | null = null;
+let cache: { cities: CityHit[]; loadedAt: number } | null = null;
+let inflight: Promise<CityHit[]> | null = null;
 
-function collectCities(russiaAreas: HhArea[]): string[] {
-  const set = new Set<string>();
+function collectCities(russiaAreas: HhArea[]): CityHit[] {
+  const byName = new Map<string, CityHit>();
   for (const regionOrCity of russiaAreas) {
     const children = regionOrCity.areas ?? [];
     if (children.length === 0) {
       const name = regionOrCity.name?.trim();
-      if (name) set.add(name);
+      if (name && !byName.has(name)) {
+        byName.set(name, { name, region: null });
+      }
       continue;
     }
+    const regionName = regionOrCity.name?.trim() || null;
     for (const city of children) {
       const name = city.name?.trim();
-      if (name) set.add(name);
+      if (!name) continue;
+      const existing = byName.get(name);
+      if (!existing) {
+        byName.set(name, { name, region: regionName });
+      } else if (!existing.region && regionName) {
+        byName.set(name, { name, region: regionName });
+      }
     }
   }
-  return [...set].sort((a, b) => a.localeCompare(b, "ru"));
+  return [...byName.values()].sort((a, b) =>
+    a.name.localeCompare(b.name, "ru"),
+  );
 }
 
-async function fetchRussiaCities(): Promise<string[]> {
+async function fetchRussiaCities(): Promise<CityHit[]> {
   const res = await fetch(HH_RUSSIA_URL, {
     headers: {
       "User-Agent": "PomniMiniApp/1.0 (cities)",
@@ -49,16 +66,16 @@ async function fetchRussiaCities(): Promise<string[]> {
   return collectCities(root.areas ?? []);
 }
 
-export async function getRussiaCityNames(): Promise<string[]> {
+export async function getRussiaCities(): Promise<CityHit[]> {
   const now = Date.now();
   if (cache && now - cache.loadedAt < CACHE_TTL_MS) {
-    return cache.names;
+    return cache.cities;
   }
   if (!inflight) {
     inflight = fetchRussiaCities()
-      .then((names) => {
-        cache = { names, loadedAt: Date.now() };
-        return names;
+      .then((cities) => {
+        cache = { cities, loadedAt: Date.now() };
+        return cities;
       })
       .finally(() => {
         inflight = null;
@@ -67,9 +84,15 @@ export async function getRussiaCityNames(): Promise<string[]> {
   try {
     return await inflight;
   } catch (err) {
-    if (cache?.names.length) return cache.names;
+    if (cache?.cities.length) return cache.cities;
     throw err;
   }
+}
+
+/** @deprecated Prefer getRussiaCities — kept for callers that only need names. */
+export async function getRussiaCityNames(): Promise<string[]> {
+  const cities = await getRussiaCities();
+  return cities.map((c) => c.name);
 }
 
 function rankCity(name: string, q: string): number {
@@ -79,9 +102,7 @@ function rankCity(name: string, q: string): number {
   if (lower.startsWith(q)) score += 1_000;
   else if (lower.includes(q)) score += 100;
   else return -1;
-  // Prefer plain city names over "Name (Region…)" disambiguations.
   if (!name.includes("(")) score += 200;
-  // Shorter names tend to be actual cities (Москва before Москаленки).
   score += Math.max(0, 80 - name.length);
   return score;
 }
@@ -89,8 +110,8 @@ function rankCity(name: string, q: string): number {
 export async function searchRussiaCities(
   query: string,
   limit = 8,
-): Promise<string[]> {
-  const names = await getRussiaCityNames();
+): Promise<CityHit[]> {
+  const cities = await getRussiaCities();
   const q = query.trim().toLowerCase();
   const capped = Math.min(Math.max(limit, 1), 50);
 
@@ -98,15 +119,15 @@ export async function searchRussiaCities(
     return [];
   }
 
-  return names
-    .map((name) => ({ name, score: rankCity(name, q) }))
+  return cities
+    .map((city) => ({ city, score: rankCity(city.name, q) }))
     .filter((x) => x.score >= 0)
     .sort(
       (a, b) =>
-        b.score - a.score || a.name.localeCompare(b.name, "ru"),
+        b.score - a.score || a.city.name.localeCompare(b.city.name, "ru"),
     )
     .slice(0, capped)
-    .map((x) => x.name);
+    .map((x) => x.city);
 }
 
 export async function resolveRussiaCity(
@@ -114,6 +135,6 @@ export async function resolveRussiaCity(
 ): Promise<string | null> {
   const q = query.trim().toLowerCase();
   if (!q) return null;
-  const names = await getRussiaCityNames();
-  return names.find((n) => n.toLowerCase() === q) ?? null;
+  const cities = await getRussiaCities();
+  return cities.find((c) => c.name.toLowerCase() === q)?.name ?? null;
 }

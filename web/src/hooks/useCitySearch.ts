@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
-import { resolveCity, searchCities } from "../api";
+import { resolveCity, searchCities, type CityHit } from "../api";
 
 export function useCitySearch(active: boolean, query: string, limit = 12) {
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [suggestions, setSuggestions] = useState<CityHit[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,7 +42,7 @@ export function useCitySearch(active: boolean, query: string, limit = 12) {
     setError(null);
     try {
       const resolved = await resolveCity(q);
-      return resolved ?? q;
+      return resolved;
     } catch {
       setError("Не удалось проверить город");
       return null;

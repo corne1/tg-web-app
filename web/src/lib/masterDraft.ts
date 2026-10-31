@@ -40,10 +40,15 @@ export type HoursPresetId = "mon-fri" | "mon-sat" | "everyday" | "manual";
 
 export type PlaceMode = "studio" | "visit" | "both";
 
+/** When to show studio street address to clients (Figma step 4). */
+export type AddressVisibility = "public" | "after_booking";
+
 export type PlaceDetails = {
   city: string;
   address: string;
+  /** Studio: how to find entrance. Visit: travel districts. */
   comment: string;
+  addressVisibility: AddressVisibility;
 };
 
 export type MasterDraft = {
@@ -295,6 +300,7 @@ const emptyPlace = (): PlaceDetails => ({
   city: "",
   address: "",
   comment: "",
+  addressVisibility: "public",
 });
 
 const emptyDraft = (): MasterDraft => ({
@@ -315,6 +321,8 @@ function normalizePlace(raw: Partial<PlaceDetails> | undefined): PlaceDetails {
     city: String(raw?.city ?? ""),
     address: String(raw?.address ?? ""),
     comment: String(raw?.comment ?? ""),
+    addressVisibility:
+      raw?.addressVisibility === "after_booking" ? "after_booking" : "public",
   };
 }
 

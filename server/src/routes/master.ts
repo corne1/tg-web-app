@@ -13,6 +13,11 @@ import {
 } from "../db/services.js";
 import { upsertUser } from "../db/users.js";
 import {
+  isMasterPlaceValid,
+  normalizeMasterPlace,
+  primaryCityFromPlace,
+} from "../lib/place.js";
+import {
   hasEnabledWorkingDay,
   normalizeWorkingHours,
 } from "../lib/workingHours.js";
@@ -94,6 +99,41 @@ masterRouter.put("/profile", requireSession, async (req: AuthedRequest, res) => 
   } catch (err) {
     console.error("[master.profile]", err);
     res.status(500).json({ error: "Failed to save master profile" });
+  }
+});
+
+/** Persist onboarding reception place (step 4). */
+masterRouter.put("/place", requireSession, async (req: AuthedRequest, res) => {
+  const tg = req.telegramUser!;
+  const body = req.body ?? {};
+  const place = normalizeMasterPlace(body.place ?? body);
+
+  if (!place || !isMasterPlaceValid(place)) {
+    res.status(400).json({ error: "Invalid place" });
+    return;
+  }
+
+  try {
+    await upsertUser(tg);
+    let profile = await getProfile(tg.id);
+    if (!profile) {
+      profile = await ensureMasterProfile(
+        tg.id,
+        [tg.first_name, tg.last_name].filter(Boolean).join(" "),
+      );
+    }
+    const city = primaryCityFromPlace(place) ?? profile.city;
+    const next = await upsertProfile({
+      userId: tg.id,
+      name: profile.name,
+      place,
+      city,
+      onboardingStep: Math.max(profile.onboarding_step, 4),
+    });
+    res.json({ profile: serializeProfile(next) });
+  } catch (err) {
+    console.error("[master.place]", err);
+    res.status(500).json({ error: "Failed to save place" });
   }
 });
 
@@ -241,6 +281,7 @@ masterRouter.post(
       dayBreakRaw === null || dayBreakRaw === undefined || dayBreakRaw === ""
         ? undefined
         : Number(dayBreakRaw);
+    const place = normalizeMasterPlace(body.place);
 
     if (hours) {
       if (!hasEnabledWorkingDay(hours)) {
@@ -254,6 +295,19 @@ masterRouter.post(
           dayBreakMin !== undefined && Number.isFinite(dayBreakMin)
             ? dayBreakMin
             : null,
+      });
+    }
+
+    if (place) {
+      if (!isMasterPlaceValid(place)) {
+        res.status(400).json({ error: "Invalid place" });
+        return;
+      }
+      const existing = await getProfile(tg.id);
+      await upsertProfile({
+        userId: tg.id,
+        place,
+        city: primaryCityFromPlace(place) ?? existing?.city,
       });
     }
 

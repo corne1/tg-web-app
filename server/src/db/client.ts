@@ -130,6 +130,10 @@ export async function migrate(): Promise<void> {
     db,
     `ALTER TABLE master_profiles ADD COLUMN day_break_min INTEGER`,
   );
+  await tryExec(
+    db,
+    `ALTER TABLE master_profiles ADD COLUMN place_json TEXT`,
+  );
 
   // One-time: copy legacy psychologist_profiles → master_profiles, then drop.
   try {

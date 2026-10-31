@@ -1,4 +1,8 @@
 import {
+  parsePlaceJson,
+  type MasterPlace,
+} from "../lib/place.js";
+import {
   normalizeWorkingHours,
   parseWorkingHoursJson,
   scheduleKindFromHours,
@@ -18,6 +22,9 @@ function mapProfile(row: Record<string, unknown>): MasterProfileRow {
   const workingHours = parseWorkingHoursJson(
     row.working_hours_json != null ? String(row.working_hours_json) : null,
   );
+  const place = parsePlaceJson(
+    row.place_json != null ? String(row.place_json) : null,
+  );
   const dayBreakRaw = row.day_break_min;
   const dayBreakMin =
     dayBreakRaw == null || dayBreakRaw === ""
@@ -35,6 +42,7 @@ function mapProfile(row: Record<string, unknown>): MasterProfileRow {
     working_hours: workingHours,
     day_break_min:
       dayBreakMin != null && Number.isFinite(dayBreakMin) ? dayBreakMin : null,
+    place,
     timezone: String(row.timezone),
     cancel_hours: Number(row.cancel_hours),
     status,
@@ -60,6 +68,7 @@ export type UpsertProfileInput = {
   schedule?: ScheduleKind;
   workingHours?: WorkingHours | null;
   dayBreakMin?: number | null;
+  place?: MasterPlace | null;
   timezone?: string;
   cancelHours?: number;
   specialty?: string | null;
@@ -123,6 +132,9 @@ export async function upsertProfile(
       dayBreakMin = null;
     }
 
+    const place =
+      input.place !== undefined ? input.place : (prev?.place ?? null);
+
     let schedule = input.schedule ?? prev?.schedule ?? "weekday";
     if (input.workingHours !== undefined && workingHours) {
       schedule = scheduleKindFromHours(workingHours);
@@ -153,14 +165,15 @@ export async function upsertProfile(
     const workingHoursJson = workingHours
       ? JSON.stringify(workingHours)
       : null;
+    const placeJson = place ? JSON.stringify(place) : null;
 
     await db.execute({
       sql: `INSERT INTO master_profiles (
         user_id, slug, name, specialty, city, duration, price, schedule,
-        working_hours_json, day_break_min,
+        working_hours_json, day_break_min, place_json,
         timezone, cancel_hours, status, onboarding_step, onboarding_completed_at,
         created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(user_id) DO UPDATE SET
         name = excluded.name,
         specialty = excluded.specialty,
@@ -170,6 +183,7 @@ export async function upsertProfile(
         schedule = excluded.schedule,
         working_hours_json = excluded.working_hours_json,
         day_break_min = excluded.day_break_min,
+        place_json = excluded.place_json,
         timezone = excluded.timezone,
         cancel_hours = excluded.cancel_hours,
         status = excluded.status,
@@ -187,6 +201,7 @@ export async function upsertProfile(
         schedule,
         workingHoursJson,
         dayBreakMin,
+        placeJson,
         timezone,
         cancelHours,
         status,
@@ -208,6 +223,7 @@ export async function upsertProfile(
       schedule,
       working_hours: workingHours,
       day_break_min: dayBreakMin,
+      place,
       timezone,
       cancel_hours: cancelHours,
       status,

@@ -2,11 +2,38 @@ import {
   isPlaceDetailsValid,
   needsStudioPlace,
   needsVisitPlace,
+  type AddressVisibility,
+  type MasterDraft,
   type PlaceDetails,
   type PlaceMode,
 } from "./masterDraft";
+import type { MasterPlaceDto } from "../types";
 
 export type PlaceStage = 1 | 2 | 3;
+
+export type PlaceStage2Copy = {
+  title: string;
+  lead: string;
+};
+
+export function placeStage2Copy(mode: PlaceMode): PlaceStage2Copy {
+  if (mode === "visit") {
+    return {
+      title: "В каких районах вы выезжаете?",
+      lead: "Укажите город и районы, в которых вы готовы принимать записи с выездом",
+    };
+  }
+  if (mode === "both") {
+    return {
+      title: "Где вы принимаете и куда выезжаете?",
+      lead: "Укажите адрес, по которому клиенты смогут прийти на услугу",
+    };
+  }
+  return {
+    title: "Где вы принимаете клиентов?",
+    lead: "Укажите адрес, по которому принимаете клиентов, и районы, в которые готовы выезжать",
+  };
+}
 
 export function canContinuePlaceStage1(placeMode: PlaceMode | null): boolean {
   return Boolean(placeMode);
@@ -51,3 +78,37 @@ export function deriveDraftCity(
     "Москва"
   );
 }
+
+export function draftToPlaceDto(draft: MasterDraft): MasterPlaceDto | null {
+  if (!draft.placeMode) return null;
+  return {
+    mode: draft.placeMode,
+    studio: {
+      city: draft.studioPlace.city.trim(),
+      address: draft.studioPlace.address.trim(),
+      comment: draft.studioPlace.comment.trim(),
+      addressVisibility: draft.studioPlace.addressVisibility,
+    },
+    visit: {
+      city: draft.visitPlace.city.trim(),
+      areas: draft.visitPlace.comment.trim(),
+    },
+  };
+}
+
+export const ADDRESS_VISIBILITY_OPTIONS: {
+  id: AddressVisibility;
+  title: string;
+  subtitle: string;
+}[] = [
+  {
+    id: "public",
+    title: "В публичном профиле",
+    subtitle: "Клиенты видят адрес до записи",
+  },
+  {
+    id: "after_booking",
+    title: "После подтверждения записи",
+    subtitle: "До записи виден только город",
+  },
+];

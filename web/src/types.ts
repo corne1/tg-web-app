@@ -37,7 +37,24 @@ export interface MasterProfile {
   bookingLink?: string | null;
   workingHours?: WorkingHoursDto | null;
   dayBreakMin?: number | null;
+  place?: MasterPlaceDto | null;
 }
+
+export type AddressVisibilityDto = "public" | "after_booking";
+
+export type MasterPlaceDto = {
+  mode: "studio" | "visit" | "both";
+  studio: {
+    city: string;
+    address: string;
+    comment: string;
+    addressVisibility: AddressVisibilityDto;
+  };
+  visit: {
+    city: string;
+    areas: string;
+  };
+};
 
 /** @deprecated Use MasterProfile */
 export type PsychologistProfile = MasterProfile;

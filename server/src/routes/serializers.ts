@@ -23,6 +23,7 @@ export function serializeProfile(profile: MasterProfileRow) {
     onboardingCompletedAt: profile.onboarding_completed_at,
     workingHours: profile.working_hours,
     dayBreakMin: profile.day_break_min,
+    place: profile.place,
     bookingLink:
       bookingDeepLink(profile.slug) ?? psychologistDeepLink(profile.user_id),
   };

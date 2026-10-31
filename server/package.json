@@ -8,7 +8,7 @@
     "start": "node dist/index.js",
     "bot:menu": "tsx src/setMenu.ts",
     "test:auth": "tsx src/telegramAuth.test.ts",
-    "test": "tsx src/telegramAuth.test.ts && tsx src/lib/workingHours.test.ts && tsx src/lib/bookingRules.test.ts && tsx src/services/slots.test.ts"
+    "test": "tsx src/telegramAuth.test.ts && tsx src/lib/workingHours.test.ts && tsx src/lib/bookingRules.test.ts && tsx src/lib/place.test.ts && tsx src/services/slots.test.ts"
   },
   "dependencies": {
     "@libsql/client": "^0.18.0",

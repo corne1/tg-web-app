@@ -1,5 +1,6 @@
 import type {
   ClientBooking,
+  MasterPlaceDto,
   MasterProfile,
   MasterServiceDto,
   PublicMaster,
@@ -8,6 +9,11 @@ import type {
   TimeSlot,
   WorkingHoursDto,
 } from "./types";
+
+export type CityHit = {
+  name: string;
+  region: string | null;
+};
 
 /** @deprecated Prefer MasterProfile */
 export type { MasterProfile as PsychologistProfile } from "./types";
@@ -148,9 +154,20 @@ export async function deleteMasterService(id: string): Promise<void> {
   });
 }
 
+export async function saveMasterPlace(
+  place: MasterPlaceDto,
+): Promise<MasterProfile> {
+  const data = await request<{ profile: MasterProfile }>("/api/master/place", {
+    method: "PUT",
+    body: JSON.stringify({ place }),
+  });
+  return data.profile;
+}
+
 export async function completeMasterOnboarding(input?: {
   hours?: WorkingHoursDto;
   dayBreakMin?: number | null;
+  place?: MasterPlaceDto | null;
 }): Promise<MasterProfile> {
   const data = await request<{ profile: MasterProfile }>(
     "/api/master/complete",
@@ -159,6 +176,7 @@ export async function completeMasterOnboarding(input?: {
       body: JSON.stringify({
         hours: input?.hours,
         dayBreakMin: input?.dayBreakMin ?? null,
+        place: input?.place ?? undefined,
       }),
     },
   );
@@ -185,13 +203,17 @@ export async function setMasterOnboardingStep(
 export async function searchCities(
   query: string,
   limit = 8,
-): Promise<string[]> {
+): Promise<CityHit[]> {
   const params = new URLSearchParams({
     q: query,
     limit: String(limit),
   });
-  const data = await request<{ cities: string[] }>(`/api/cities?${params}`);
-  return data.cities;
+  const data = await request<{ cities: Array<string | CityHit> }>(
+    `/api/cities?${params}`,
+  );
+  return data.cities.map((c) =>
+    typeof c === "string" ? { name: c, region: null } : c,
+  );
 }
 
 export async function resolveCity(query: string): Promise<string | null> {

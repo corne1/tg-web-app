@@ -1,3 +1,4 @@
+import type { MasterPlace } from "../lib/place.js";
 import type { WorkingHours } from "../lib/workingHours.js";
 
 export type StoredUser = {
@@ -30,6 +31,8 @@ export type MasterProfileRow = {
   /** Custom weekly hours from onboarding; null → use schedule presets in slots. */
   working_hours: WorkingHours | null;
   day_break_min: number | null;
+  /** Reception place from onboarding step 4; null if not set. */
+  place: MasterPlace | null;
   timezone: string;
   cancel_hours: number;
   status: MasterProfileStatus;
