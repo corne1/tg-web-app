@@ -11,7 +11,10 @@ import {
   SPECIALTIES,
   type MasterSpecialty,
 } from "../lib/masterDraft";
+import { MsArrowRight } from "../components/master/MsArrowRight";
 import { cacheProfile } from "../lib/profileStorage";
+import avatarPlaceholder from "../assets/onboarding/avatar-placeholder.svg";
+import infoIcon from "../assets/onboarding/info.svg";
 
 export function OnboardingScreen() {
   const navigate = useNavigate();
@@ -103,129 +106,141 @@ export function OnboardingScreen() {
 
   return (
     <div className="master-setup">
-      <header className="ms-top">
-        <button
-          type="button"
-          className="ms-icon-btn"
-          aria-label="Назад"
-          onClick={handleBack}
-        >
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden>
-            <path
-              d="M12.5 4.5 7 10l5.5 5.5"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
-        <div className="ms-top-titles">
-          <h1 className="ms-top-title">Настройки записи</h1>
-          <p className="ms-top-sub">Шаг 1 из 4</p>
+      <div className="ms-toolbar">
+        <div className="ms-toolbar-nav">
+          <header className="ms-top">
+            <button
+              type="button"
+              className="ms-icon-btn"
+              aria-label="Назад"
+              onClick={handleBack}
+            >
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden>
+                <path
+                  d="M12.5 4.5 7 10l5.5 5.5"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+            <div className="ms-top-titles">
+              <h1 className="ms-top-title">Настройки записи</h1>
+              <p className="ms-top-sub">Шаг 1 из 4</p>
+            </div>
+            <button
+              type="button"
+              className="ms-icon-btn"
+              aria-label="Закрыть"
+              onClick={handleClose}
+            >
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden>
+                <path
+                  d="M4.5 4.5l9 9M13.5 4.5l-9 9"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </button>
+          </header>
+
+          <div className="ms-progress" aria-hidden>
+            <span className="ms-progress-seg is-on" />
+            <span className="ms-progress-seg" />
+            <span className="ms-progress-seg" />
+            <span className="ms-progress-seg" />
+          </div>
         </div>
-        <button
-          type="button"
-          className="ms-icon-btn"
-          aria-label="Закрыть"
-          onClick={handleClose}
-        >
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden>
-            <path
-              d="M4.5 4.5l9 9M13.5 4.5l-9 9"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-            />
-          </svg>
-        </button>
-      </header>
 
-      <div className="ms-progress" aria-hidden>
-        <span className="ms-progress-seg is-on" />
-        <span className="ms-progress-seg" />
-        <span className="ms-progress-seg" />
-        <span className="ms-progress-seg" />
-      </div>
-
-      <div className="ms-body">
-        <section className="ms-hero">
-          <h2 className="ms-question">Как клиенты будут вас находить?</h2>
+        <section className="ms-hero ms-hero-toolbar">
+          <h2 className="ms-question">
+            Как клиенты будут
+            <br />
+            вас находить?
+          </h2>
           <p className="ms-lead">
-            Эту информацию увидят на странице записи. Можно изменить в любой момент.
+            Эту информацию увидят на странице записи. Можно изменить в любой момент
           </p>
         </section>
+      </div>
 
-        <label className="ms-field">
-          <span className="ms-label">Имя</span>
-          <input
-            className="ms-input"
-            type="text"
-            placeholder="Анна"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            autoComplete="given-name"
-            autoFocus
-          />
-        </label>
+      <div className="ms-body ms-body-step1">
+        <div className="ms-form-stack">
+          <label className="ms-field">
+            <span className="ms-label">Имя</span>
+            <input
+              className="ms-input"
+              type="text"
+              placeholder="Анна"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              autoComplete="given-name"
+              autoFocus
+            />
+          </label>
 
-        <fieldset className="ms-field">
-          <legend className="ms-label">Основное направление</legend>
-          <div className="ms-chips" role="radiogroup" aria-label="Основное направление">
-            {SPECIALTIES.map((s) => (
-              <button
-                key={s.id}
-                type="button"
-                role="radio"
-                aria-checked={specialty === s.id}
-                className={`ms-chip ${specialty === s.id ? "is-active" : ""}`}
-                onClick={() => setSpecialty(s.id)}
-              >
-                {s.label}
-              </button>
-            ))}
+          <div className="ms-specialty-stack">
+            <fieldset className="ms-field ms-field-chips">
+              <legend className="ms-label">Основное направление</legend>
+              <div className="ms-chips" role="radiogroup" aria-label="Основное направление">
+                {SPECIALTIES.map((s) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={specialty === s.id}
+                    className={`ms-chip ${specialty === s.id ? "is-active" : ""}`}
+                    onClick={() => setSpecialty(s.id)}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+
+            <div className="ms-info" role="note">
+              <img
+                className="ms-info-icon"
+                src={infoIcon}
+                width={20}
+                height={20}
+                alt=""
+                aria-hidden
+              />
+              <p>Остальные услуги можно добавить позже</p>
+            </div>
           </div>
-        </fieldset>
-
-        <div className="ms-info" role="note">
-          <span className="ms-info-icon" aria-hidden>
-            i
-          </span>
-          <p>Остальные услуги можно добавить позже</p>
         </div>
 
         <section className="ms-preview" aria-label="Превью страницы записи">
           <p className="ms-preview-eyebrow">Так увидят клиенты</p>
-          <div className="ms-preview-card">
-            <div className="ms-preview-head">
-              <div className="ms-avatar" aria-hidden>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-                  <circle cx="12" cy="8" r="3.5" stroke="currentColor" strokeWidth="1.6" />
-                  <path
-                    d="M5 19c1.2-3.2 3.4-4.8 7-4.8s5.8 1.6 7 4.8"
-                    stroke="currentColor"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </div>
-              <div className="ms-preview-meta">
-                <p className="ms-preview-name">
-                  {previewName} — {previewTitle}
-                </p>
-                <div className="ms-preview-tags">
-                  <span className="ms-tag">{previewChip}</span>
-                </div>
+          <div className="ms-preview-head">
+            <img
+              className="ms-avatar"
+              src={avatarPlaceholder}
+              width={48}
+              height={48}
+              alt=""
+              aria-hidden
+            />
+            <div className="ms-preview-meta">
+              <p className="ms-preview-name">
+                {previewName} — {previewTitle}
+              </p>
+              <div className="ms-preview-tags">
+                <span className="ms-tag">{previewChip}</span>
               </div>
             </div>
-            <div className="ms-preview-actions">
-              <button type="button" className="ms-preview-btn" tabIndex={-1}>
-                Выбрать время
-              </button>
-              <button type="button" className="ms-preview-btn is-accent" tabIndex={-1}>
-                Записаться
-              </button>
-            </div>
+          </div>
+          <div className="ms-preview-actions">
+            <button type="button" className="ms-preview-btn" tabIndex={-1}>
+              Выбрать время
+            </button>
+            <button type="button" className="ms-preview-btn is-accent" tabIndex={-1}>
+              Записаться
+            </button>
           </div>
         </section>
       </div>
@@ -233,31 +248,25 @@ export function OnboardingScreen() {
       <footer className="ms-footer">
         <p className="ms-next-hint">Следующий шаг — Услуги и цены</p>
         {error && <p className="error">{error}</p>}
-        <button
-          type="button"
-          className="ms-btn-primary"
-          disabled={!valid || saving}
-          onClick={() => void handleContinue()}
-        >
-          {saving ? "Сохранение…" : "Продолжить"}
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden>
-            <path
-              d="M6.5 3.5 12 9l-5.5 5.5"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
-        <button
-          type="button"
-          className="ms-btn-secondary"
-          disabled={saving}
-          onClick={() => void handleSaveExit()}
-        >
-          Сохранить и выйти
-        </button>
+        <div className="ms-footer-actions">
+          <button
+            type="button"
+            className="ms-btn-primary"
+            disabled={!valid || saving}
+            onClick={() => void handleContinue()}
+          >
+            {saving ? "Сохранение…" : "Продолжить"}
+            <MsArrowRight />
+          </button>
+          <button
+            type="button"
+            className="ms-btn-secondary"
+            disabled={saving}
+            onClick={() => void handleSaveExit()}
+          >
+            Сохранить и выйти
+          </button>
+        </div>
       </footer>
     </div>
   );

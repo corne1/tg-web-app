@@ -7,6 +7,7 @@ import {
   setMasterOnboardingStep,
 } from "../api";
 import { MasterSetupChrome } from "../components/master/MasterSetupChrome";
+import { MsArrowRight } from "../components/master/MsArrowRight";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
 import { useTelegram } from "../hooks/useTelegram";
@@ -425,17 +426,7 @@ export function PlaceStepScreen() {
             onClick={() => void handleContinue()}
           >
             {primaryLabel}
-            {stage < 3 && (
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden>
-                <path
-                  d="M6.5 3.5 12 9l-5.5 5.5"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            )}
+            {stage < 3 && <MsArrowRight />}
           </button>
           <button type="button" className="ms-btn-secondary" onClick={handleSaveExit}>
             Сохранить и выйти

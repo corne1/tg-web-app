@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { setMasterOnboardingStep } from "../api";
 import { MasterSetupChrome } from "../components/master/MasterSetupChrome";
+import { MsArrowRight } from "../components/master/MsArrowRight";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
 import { useTelegram } from "../hooks/useTelegram";
@@ -234,15 +235,7 @@ export function HoursStepScreen() {
             onClick={handleContinue}
           >
             Продолжить
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden>
-              <path
-                d="M6.5 3.5 12 9l-5.5 5.5"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            <MsArrowRight />
           </button>
           <button type="button" className="ms-btn-secondary" onClick={handleSaveExit}>
             Сохранить и выйти

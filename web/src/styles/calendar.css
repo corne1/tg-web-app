@@ -798,13 +798,29 @@ input {
   animation: rise 0.35s ease-out;
 }
 
+/* Figma Toolbar: nav (controls+stepper gap 16) → hero gap 24 */
+.ms-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.ms-toolbar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
 .ms-top {
   display: grid;
   grid-template-columns: 44px 1fr 44px;
   align-items: center;
   gap: 8px;
   padding: 0 16px;
-  margin-top: 8px;
+  margin-top: 0;
 }
 
 .ms-icon-btn {
@@ -854,7 +870,7 @@ input {
 .ms-progress {
   display: flex;
   gap: 8px;
-  padding: 16px 16px 0;
+  padding: 0 16px;
 }
 
 .ms-progress-seg {
@@ -877,10 +893,35 @@ input {
   overflow-y: auto;
 }
 
+/* Step 1 content frame: forms stack + preview, gap 24 (Figma 21016:102474) */
+.ms-body-step1 {
+  gap: 24px;
+}
+
+.ms-form-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.ms-specialty-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
 .ms-hero {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.ms-hero-toolbar {
+  padding: 0 16px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .ms-question {
@@ -909,6 +950,21 @@ input {
   padding: 0;
   border: none;
   min-width: 0;
+}
+
+.ms-field-chips {
+  gap: 12px;
+}
+
+.ms-field > legend.ms-label {
+  float: left;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.ms-field > legend.ms-label + * {
+  clear: both;
 }
 
 .ms-label {
@@ -1004,23 +1060,22 @@ input {
   flex: 0 0 auto;
   width: 20px;
   height: 20px;
-  border-radius: var(--ms-radius-full);
-  background: var(--ms-info);
-  color: #fff;
-  font-size: 0.75rem;
-  font-weight: 700;
-  font-style: italic;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
+  display: block;
 }
 
-.ms-preview {
+/* Figma: eyebrow lives inside the fill2 card (not above it) */
+.ms-preview,
+.ms-preview-card {
+  background: var(--ms-fill2);
+  border: 1px solid var(--ms-line-soft);
+  border-radius: var(--ms-radius-card);
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-top: 0;
+  gap: 16px;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
 }
 
 .ms-preview-eyebrow {
@@ -1033,16 +1088,6 @@ input {
   color: var(--ms-tertiary);
 }
 
-.ms-preview-card {
-  background: var(--ms-fill2);
-  border: 1px solid var(--ms-line-soft);
-  border-radius: var(--ms-radius-card);
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
 .ms-preview-head {
   display: flex;
   gap: 12px;
@@ -1053,12 +1098,9 @@ input {
   width: 48px;
   height: 48px;
   border-radius: var(--ms-radius-full);
-  background: #dfe0e5;
-  color: var(--ms-tertiary);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   flex: 0 0 auto;
+  display: block;
+  object-fit: cover;
 }
 
 .ms-preview-meta {
@@ -1137,10 +1179,17 @@ input {
 .ms-footer {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
   padding: 20px 16px calc(16px + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid var(--ms-line-soft);
   background: #fff;
+}
+
+.ms-footer-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
 }
 
 .ms-next-hint {
