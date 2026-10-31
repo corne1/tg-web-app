@@ -9,6 +9,7 @@ import {
 import infoIcon from "../assets/onboarding/info.svg";
 import { MasterSetupChrome } from "../components/master/MasterSetupChrome";
 import { MsArrowRight } from "../components/master/MsArrowRight";
+import { PlacePublishReview } from "../components/master/PlacePublishReview";
 import { useBackButton } from "../hooks/useBackButton";
 import { useCitySearch } from "../hooks/useCitySearch";
 import { useMainButton } from "../hooks/useMainButton";
@@ -20,6 +21,7 @@ import {
   PLACE_OPTIONS,
   saveMasterDraft,
   type AddressVisibility,
+  type MasterDraft,
   type PlaceDetails,
   type PlaceMode,
 } from "../lib/masterDraft";
@@ -194,6 +196,7 @@ export function PlaceStepScreen() {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [toastTone, setToastTone] = useState<"success" | "danger">("success");
+  const [reviewDraft, setReviewDraft] = useState<MasterDraft>(initial);
 
   const cityQuery =
     activeCityField === "visit" ? visitCityQuery : studioCityQuery;
@@ -403,11 +406,41 @@ export function PlaceStepScreen() {
     navigate("/");
   }, [navigate, persist, syncPlaceToServer, webApp]);
 
+  useEffect(() => {
+    if (stage !== 3) return;
+    persist();
+    setReviewDraft(loadMasterDraft());
+  }, [persist, stage]);
+
+  const editProfile = useCallback(() => {
+    persist();
+    navigate("/onboarding");
+  }, [navigate, persist]);
+
+  const editServices = useCallback(() => {
+    persist();
+    navigate("/onboarding/services");
+  }, [navigate, persist]);
+
+  const editHours = useCallback(() => {
+    persist();
+    navigate("/onboarding/hours");
+  }, [navigate, persist]);
+
+  const editPlace = useCallback(() => {
+    persist();
+    setStage(1);
+  }, [persist]);
+
   useBackButton(goBack);
   useMainButton({ text: "", visible: false, onClick: () => undefined });
 
   const primaryLabel =
-    stage === 3 ? (saving ? "Публикация…" : "Опубликовать") : "Продолжить";
+    stage === 3
+      ? saving
+        ? "Публикация…"
+        : "Опубликовать профиль"
+      : "Продолжить";
   const primaryDisabled =
     stage === 1
       ? !canContinueStage1
@@ -775,58 +808,28 @@ export function PlaceStepScreen() {
       {stage === 3 && placeMode && (
         <>
           <section className="ms-hero">
-            <h2 className="ms-question">Готово к публикации</h2>
+            <h2 className="ms-question">Проверьте профиль</h2>
             <p className="ms-lead">
-              Проверьте формат приёма. После публикации клиенты смогут
-              записаться по вашей ссылке.
+              Всё готово! Проверьте информацию перед публикацией. При
+              необходимости вы сможете внести изменения.
             </p>
           </section>
           <p className="ms-stage-label">
             Этап 3 <span>/ 3</span>
           </p>
-          <div className="ms-place-summary">
-            <div className="ms-place-card is-active is-static">
-              <PlaceIcon mode={placeMode} />
-              <span className="ms-place-text">
-                <span className="ms-place-title">
-                  {PLACE_OPTIONS.find((o) => o.id === placeMode)?.title}
-                </span>
-                <span className="ms-place-sub">
-                  {PLACE_OPTIONS.find((o) => o.id === placeMode)?.subtitle}
-                </span>
-              </span>
-            </div>
-            {needsStudioPlace(placeMode) && (
-              <div className="ms-place-summary-block">
-                <h3 className="ms-hours-section-title">Кабинет или студия</h3>
-                <p className="ms-place-summary-line">{studioPlace.city}</p>
-                <p className="ms-place-summary-line">{studioPlace.address}</p>
-                {studioPlace.comment.trim() && (
-                  <p className="ms-place-summary-muted">
-                    {studioPlace.comment}
-                  </p>
-                )}
-                <p className="ms-place-summary-muted">
-                  {
-                    ADDRESS_VISIBILITY_OPTIONS.find(
-                      (o) => o.id === studioPlace.addressVisibility,
-                    )?.title
-                  }
-                </p>
-              </div>
-            )}
-            {needsVisitPlace(placeMode) && (
-              <div className="ms-place-summary-block">
-                <h3 className="ms-hours-section-title">Выезд к клиенту</h3>
-                <p className="ms-place-summary-line">{visitPlace.city}</p>
-                {visitPlace.comment.trim() && (
-                  <p className="ms-place-summary-muted">
-                    {visitPlace.comment}
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
+          <PlacePublishReview
+            draft={{
+              ...reviewDraft,
+              placeMode,
+              studioPlace,
+              visitPlace,
+            }}
+            placeMode={placeMode}
+            onEditProfile={editProfile}
+            onEditServices={editServices}
+            onEditHours={editHours}
+            onEditPlace={editPlace}
+          />
         </>
       )}
     </MasterSetupChrome>

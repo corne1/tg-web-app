@@ -2,12 +2,17 @@ import {
   isPlaceDetailsValid,
   needsStudioPlace,
   needsVisitPlace,
+  WEEKDAYS,
   type AddressVisibility,
   type MasterDraft,
   type PlaceDetails,
   type PlaceMode,
+  type WorkingHours,
 } from "./masterDraft";
 import type { MasterPlaceDto } from "../types";
+
+/** Collapsed service list length on publish review (Этап 3). */
+export const REVIEW_SERVICES_PREVIEW = 3;
 
 export type PlaceStage = 1 | 2 | 3;
 
@@ -112,3 +117,45 @@ export const ADDRESS_VISIBILITY_OPTIONS: {
     subtitle: "До записи виден только город",
   },
 ];
+
+export type ReviewHourRow = {
+  dayId: string;
+  label: string;
+  range: string;
+};
+
+/** Enabled weekdays with `HH:MM–HH:MM` for the publish review checklist. */
+export function reviewWorkingDayRows(hours: WorkingHours): ReviewHourRow[] {
+  return WEEKDAYS.filter((d) => hours[d.id]?.enabled).map((d) => {
+    const row = hours[d.id];
+    return {
+      dayId: d.id,
+      label: d.label,
+      range: `${row.start}–${row.end}`,
+    };
+  });
+}
+
+/** Short labels of days off, e.g. `Вт, Пт, Вс`. */
+export function reviewDaysOffShort(hours: WorkingHours): string {
+  return WEEKDAYS.filter((d) => !hours[d.id]?.enabled)
+    .map((d) => d.short)
+    .join(", ");
+}
+
+/** Client-facing note under place details on the review screen. */
+export function reviewAddressVisibilityNote(
+  visibility: AddressVisibility,
+): string {
+  if (visibility === "after_booking") {
+    return "Точный адрес виден после подтверждения записи";
+  }
+  return "Точный адрес виден в публичном профиле";
+}
+
+export function formatStudioAddressLine(place: PlaceDetails): string {
+  const city = place.city.trim();
+  const address = place.address.trim();
+  if (city && address) return `${city}, ${address}`;
+  return city || address;
+}

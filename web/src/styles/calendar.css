@@ -2884,3 +2884,205 @@ label.ms-sheet-item {
   font-size: 14px;
   color: var(--ms-muted);
 }
+
+/* Step 4 / Этап 3 — publish checklist «Проверьте профиль»
+   Figma: Project!! / 21131:46821 «Шаг 4. Место приёма и публикация. Начало» */
+.ms-review {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.ms-review-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  background: #fff;
+  border: 1px solid var(--ms-line-soft);
+  border-radius: var(--ms-radius-card);
+  box-sizing: border-box;
+  box-shadow: var(--ms-shadow-e1);
+}
+
+.ms-review-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ms-review-card-title {
+  margin: 0;
+  min-width: 0;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.16px;
+  line-height: 24px;
+  color: var(--ms-ink);
+}
+
+.ms-review-status {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px 4px 6px;
+  border-radius: var(--ms-radius-full);
+  background: #e8f8ef;
+  color: #12b76a;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: -0.12px;
+  line-height: 16px;
+}
+
+.ms-review-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ms-review-count {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  color: var(--ms-muted);
+}
+
+.ms-review-service-list {
+  gap: 8px;
+}
+
+.ms-review-service-card {
+  padding: 12px;
+  box-shadow: none;
+}
+
+.ms-review-show-all {
+  align-self: flex-start;
+}
+
+.ms-review-edit {
+  appearance: none;
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 12px;
+  border-radius: var(--ms-radius-full);
+  border: 1px solid var(--ms-line);
+  background: #fff;
+  color: var(--ms-ink);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  box-shadow: var(--ms-shadow-e1);
+  cursor: pointer;
+}
+
+.ms-review-edit:active {
+  background: var(--ms-soft);
+}
+
+.ms-review-hours {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ms-review-hours-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  color: var(--ms-ink);
+}
+
+.ms-review-hours-day {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.ms-review-hours-range {
+  color: var(--ms-muted);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.ms-review-days-off-label {
+  color: var(--ms-muted);
+}
+
+.ms-review-place-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  background: var(--ms-soft);
+  border: 1px solid var(--ms-line-soft);
+  border-radius: 16px;
+  box-sizing: border-box;
+}
+
+.ms-review-place-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.ms-review-place-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ms-review-place-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  color: var(--ms-ink);
+}
+
+.ms-review-place-sub {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  color: var(--ms-muted);
+}
+
+.ms-review-visibility {
+  margin: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--ms-fill2);
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: -0.13px;
+  line-height: 18px;
+  color: var(--ms-tertiary);
+}
+
+.ms-review-visibility svg {
+  flex: 0 0 auto;
+  margin-top: 0;
+}
