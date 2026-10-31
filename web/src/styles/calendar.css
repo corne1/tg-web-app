@@ -833,6 +833,7 @@ input {
   flex-shrink: 0;
   /* Internal inset only — keeps .master-setup flush to viewport edge */
   padding-top: calc(20px + env(safe-area-inset-top, 0px));
+  padding-bottom: 20px;
   background: #fff;
   z-index: 3;
 }
