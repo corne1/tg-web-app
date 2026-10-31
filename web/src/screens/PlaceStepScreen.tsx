@@ -37,6 +37,14 @@ import {
   type PlaceStage,
 } from "../lib/placeStepFlow";
 import { cacheProfile } from "../lib/profileStorage";
+import {
+  Button,
+  Field,
+  Input,
+  RadioMark,
+  Textarea,
+  cx,
+} from "../ui";
 
 type CityField = "studio" | "visit";
 
@@ -461,18 +469,22 @@ export function PlaceStepScreen() {
     const showEmptyError = hasError && query.trim().length > 0;
 
     return (
-      <div className="ms-field ms-city-field">
-        <span className="ms-label">Город</span>
+      <Field label="Город" className="ms-city-field">
         <div
-          className={`ms-input-affix ms-input-affix-prefix ms-city-input-wrap ${
-            hasError ? "is-invalid" : ""
-          } ${open ? "is-open" : ""}`}
+          className={cx(
+            "ms-input-affix",
+            "ms-input-affix-prefix",
+            "ms-city-input-wrap",
+            hasError && "is-invalid",
+            open && "is-open",
+          )}
         >
           <span className="ms-affix ms-affix-icon" aria-hidden>
             <IconSearch />
           </span>
-          <input
-            className={`ms-input ms-input-search ${hasError ? "is-invalid" : ""}`}
+          <Input
+            className="ms-input-search"
+            invalid={hasError}
             value={query}
             onChange={(e) => onCityQueryChange(field, e.target.value)}
             onFocus={() => setActiveCityField(field)}
@@ -535,7 +547,7 @@ export function PlaceStepScreen() {
         {committedCity && !open && !hasError && (
           <span className="ms-sr-only">Выбран город {committedCity}</span>
         )}
-      </div>
+      </Field>
     );
   };
 
@@ -551,18 +563,19 @@ export function PlaceStepScreen() {
             studioCityError,
           )}
 
-          <label className="ms-field">
-            <span className="ms-label">Адрес кабинета или студии</span>
+          <Field label="Адрес кабинета или студии" as="label">
             <div
-              className={`ms-input-affix ms-input-affix-prefix ms-input-affix-both ${
-                cityLocked ? "is-disabled" : ""
-              }`}
+              className={cx(
+                "ms-input-affix",
+                "ms-input-affix-prefix",
+                "ms-input-affix-both",
+                cityLocked && "is-disabled",
+              )}
             >
               <span className="ms-affix ms-affix-icon" aria-hidden>
                 <IconSearch />
               </span>
-              <input
-                className="ms-input"
+              <Input
                 placeholder={
                   cityLocked ? "Сначала выберите город" : "Улица, дом, офис"
                 }
@@ -580,12 +593,10 @@ export function PlaceStepScreen() {
                 </span>
               )}
             </div>
-          </label>
+          </Field>
 
-          <label className="ms-field">
-            <span className="ms-label">Как найти вход?</span>
-            <textarea
-              className="ms-textarea"
+          <Field label="Как найти вход?" as="label">
+            <Textarea
               rows={3}
               placeholder="Этаж, номер кабинета, ориентир"
               value={studioPlace.comment}
@@ -599,10 +610,9 @@ export function PlaceStepScreen() {
               <img src={infoIcon} alt="" className="ms-field-hint-icon" />
               Необязательно
             </span>
-          </label>
+          </Field>
 
-          <div className="ms-field">
-            <span className="ms-label">Когда показывать точный адрес?</span>
+          <Field label="Когда показывать точный адрес?">
             <div
               className="ms-place-visibility"
               role="radiogroup"
@@ -617,9 +627,10 @@ export function PlaceStepScreen() {
                     type="button"
                     role="radio"
                     aria-checked={active}
-                    className={`ms-place-visibility-card ${
-                      active ? "is-active" : ""
-                    }`}
+                    className={cx(
+                      "ms-place-visibility-card",
+                      active && "is-active",
+                    )}
                     onClick={() => {
                       const next: PlaceDetails = {
                         ...studioPlace,
@@ -634,15 +645,12 @@ export function PlaceStepScreen() {
                       <span className="ms-place-title">{opt.title}</span>
                       <span className="ms-place-sub">{opt.subtitle}</span>
                     </span>
-                    <span
-                      className={`ms-radio ${active ? "is-on" : ""}`}
-                      aria-hidden
-                    />
+                    <RadioMark checked={active} />
                   </button>
                 );
               })}
             </div>
-          </div>
+          </Field>
       </>
     );
     return (
@@ -672,10 +680,8 @@ export function PlaceStepScreen() {
           visitPlace.city,
           visitCityError,
         )}
-        <label className="ms-field">
-          <span className="ms-label">Районы выезда</span>
-          <textarea
-            className="ms-textarea"
+        <Field label="Районы выезда" as="label">
+          <Textarea
             rows={3}
             placeholder="Например, Хамовники, Арбат, Пресня"
             value={visitPlace.comment}
@@ -685,7 +691,7 @@ export function PlaceStepScreen() {
               persist(placeMode, studioPlace, next);
             }}
           />
-        </label>
+        </Field>
         {placeMode === "visit" && (
           <div className="ms-info ms-place-client-info" role="note">
             <img src={infoIcon} alt="" className="ms-info-icon" />
@@ -725,22 +731,16 @@ export function PlaceStepScreen() {
       onToastDismiss={() => setToast(null)}
       footer={
         <>
-          <button
-            type="button"
-            className="ms-btn-primary"
+          <Button
             disabled={primaryDisabled}
             onClick={() => void handleContinue()}
           >
             {primaryLabel}
             {stage < 3 && <MsArrowRight />}
-          </button>
-          <button
-            type="button"
-            className="ms-btn-secondary"
-            onClick={handleSaveExit}
-          >
+          </Button>
+          <Button variant="secondary" onClick={handleSaveExit}>
             Сохранить и выйти
-          </button>
+          </Button>
         </>
       }
     >
@@ -780,10 +780,7 @@ export function PlaceStepScreen() {
                     <span className="ms-place-title">{opt.title}</span>
                     <span className="ms-place-sub">{opt.subtitle}</span>
                   </span>
-                  <span
-                    className={`ms-radio ${active ? "is-on" : ""}`}
-                    aria-hidden
-                  />
+                  <RadioMark checked={active} />
                 </button>
               );
             })}

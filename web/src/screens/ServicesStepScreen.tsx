@@ -22,6 +22,7 @@ import modalTrashIcon from "../assets/onboarding/modal-trash.svg";
 import plusCircleIcon from "../assets/onboarding/plus-circle.svg";
 import servicesEmptyIllu from "../assets/onboarding/services-empty.svg";
 import timerIcon from "../assets/onboarding/timer.svg";
+import { Button, Modal } from "../ui";
 
 function EmptyIllustration() {
   return (
@@ -154,22 +155,16 @@ export function ServicesStepScreen() {
       footer={
         <>
           <p className="ms-next-hint">Следующий шаг — Рабочее время</p>
-          <button
-            type="button"
-            className="ms-btn-primary"
+          <Button
             disabled={!hasServices}
             onClick={() => void handleContinue()}
           >
             Продолжить
             <MsArrowRight />
-          </button>
-          <button
-            type="button"
-            className="ms-btn-secondary"
-            onClick={() => void handleSaveExit()}
-          >
+          </Button>
+          <Button variant="secondary" onClick={() => void handleSaveExit()}>
             Сохранить и выйти
-          </button>
+          </Button>
         </>
       }
     >
@@ -187,11 +182,7 @@ export function ServicesStepScreen() {
           <p className="ms-empty-text">
             Начните с одной основной услуги. Остальные можно добавить позже.
           </p>
-          <button
-            type="button"
-            className="ms-btn-outline"
-            onClick={() => openForm("new")}
-          >
+          <Button variant="outline" onClick={() => openForm("new")}>
             <img
               className="ms-btn-plus-icon"
               src={plusCircleIcon}
@@ -201,7 +192,7 @@ export function ServicesStepScreen() {
               aria-hidden
             />
             Добавить первую услугу
-          </button>
+          </Button>
         </div>
       ) : (
         <div className="ms-services">
@@ -303,11 +294,7 @@ export function ServicesStepScreen() {
               </li>
             ))}
           </ul>
-          <button
-            type="button"
-            className="ms-btn-outline"
-            onClick={() => openForm("new")}
-          >
+          <Button variant="outline" onClick={() => openForm("new")}>
             <img
               className="ms-btn-plus-icon"
               src={plusCircleIcon}
@@ -317,7 +304,7 @@ export function ServicesStepScreen() {
               aria-hidden
             />
             Добавить услугу
-          </button>
+          </Button>
         </div>
       )}
 
@@ -330,47 +317,34 @@ export function ServicesStepScreen() {
         />
       )}
 
-      {deleteId && (
-        <div className="ms-modal-root" role="presentation">
-          <button
-            type="button"
-            className="ms-modal-backdrop"
-            aria-label="Закрыть"
-            onClick={() => setDeleteId(null)}
+      <Modal
+        open={Boolean(deleteId)}
+        onClose={() => setDeleteId(null)}
+        labelledBy="del-title"
+      >
+        <div className="ms-modal-warn" aria-hidden>
+          <img
+            className="ms-modal-warn-icon"
+            src={modalTrashIcon}
+            width={20}
+            height={20}
+            alt=""
           />
-          <div className="ms-modal" role="dialog" aria-modal="true" aria-labelledby="del-title">
-            <div className="ms-modal-warn" aria-hidden>
-              <img
-                className="ms-modal-warn-icon"
-                src={modalTrashIcon}
-                width={20}
-                height={20}
-                alt=""
-              />
-            </div>
-            <h3 id="del-title">Удалить услугу?</h3>
-            <p>
-              «{deleteService?.title ?? "Услуга"}» перестанет быть доступна для новых записей.
-            </p>
-            <div className="ms-modal-actions">
-              <button
-                type="button"
-                className="ms-btn-danger"
-                onClick={() => void confirmDelete()}
-              >
-                Удалить
-              </button>
-              <button
-                type="button"
-                className="ms-btn-ghost-text"
-                onClick={() => setDeleteId(null)}
-              >
-                Отмена
-              </button>
-            </div>
-          </div>
         </div>
-      )}
+        <h3 id="del-title">Удалить услугу?</h3>
+        <p>
+          «{deleteService?.title ?? "Услуга"}» перестанет быть доступна для новых
+          записей.
+        </p>
+        <div className="ms-modal-actions">
+          <Button variant="danger" onClick={() => void confirmDelete()}>
+            Удалить
+          </Button>
+          <Button variant="ghost" onClick={() => setDeleteId(null)}>
+            Отмена
+          </Button>
+        </div>
+      </Modal>
     </MasterSetupChrome>
   );
 }

@@ -15,6 +15,16 @@ import { MsArrowRight } from "../components/master/MsArrowRight";
 import { cacheProfile } from "../lib/profileStorage";
 import avatarPlaceholder from "../assets/onboarding/avatar-placeholder.svg";
 import infoIcon from "../assets/onboarding/info.svg";
+import {
+  BackIcon,
+  Button,
+  Chip,
+  ChipGroup,
+  CloseIcon,
+  Field,
+  IconButton,
+  Input,
+} from "../ui";
 
 export function OnboardingScreen() {
   const navigate = useNavigate();
@@ -109,41 +119,16 @@ export function OnboardingScreen() {
       <div className="ms-toolbar">
         <div className="ms-toolbar-nav">
           <header className="ms-top">
-            <button
-              type="button"
-              className="ms-icon-btn"
-              aria-label="Назад"
-              onClick={handleBack}
-            >
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden>
-                <path
-                  d="M12.5 4.5 7 10l5.5 5.5"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
+            <IconButton label="Назад" onClick={handleBack}>
+              <BackIcon />
+            </IconButton>
             <div className="ms-top-titles">
               <h1 className="ms-top-title">Настройки записи</h1>
               <p className="ms-top-sub">Шаг 1 из 4</p>
             </div>
-            <button
-              type="button"
-              className="ms-icon-btn"
-              aria-label="Закрыть"
-              onClick={handleClose}
-            >
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden>
-                <path
-                  d="M4.5 4.5l9 9M13.5 4.5l-9 9"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </button>
+            <IconButton label="Закрыть" onClick={handleClose}>
+              <CloseIcon />
+            </IconButton>
           </header>
 
           <div className="ms-progress" aria-hidden>
@@ -168,10 +153,8 @@ export function OnboardingScreen() {
         </section>
 
         <div className="ms-form-stack">
-          <label className="ms-field">
-            <span className="ms-label">Имя</span>
-            <input
-              className="ms-input"
+          <Field label="Имя" as="label">
+            <Input
               type="text"
               placeholder="Анна"
               value={name}
@@ -179,26 +162,26 @@ export function OnboardingScreen() {
               autoComplete="given-name"
               autoFocus
             />
-          </label>
+          </Field>
 
           <div className="ms-specialty-stack">
-            <fieldset className="ms-field ms-field-chips">
-              <legend className="ms-label">Основное направление</legend>
-              <div className="ms-chips" role="radiogroup" aria-label="Основное направление">
+            <Field
+              label="Основное направление"
+              as="fieldset"
+              className="ms-field-chips"
+            >
+              <ChipGroup label="Основное направление">
                 {SPECIALTIES.map((s) => (
-                  <button
+                  <Chip
                     key={s.id}
-                    type="button"
-                    role="radio"
-                    aria-checked={specialty === s.id}
-                    className={`ms-chip ${specialty === s.id ? "is-active" : ""}`}
+                    active={specialty === s.id}
                     onClick={() => setSpecialty(s.id)}
                   >
                     {s.label}
-                  </button>
+                  </Chip>
                 ))}
-              </div>
-            </fieldset>
+              </ChipGroup>
+            </Field>
 
             <div className="ms-info" role="note">
               <img
@@ -249,23 +232,20 @@ export function OnboardingScreen() {
         <p className="ms-next-hint">Следующий шаг — Услуги и цены</p>
         {error && <p className="error">{error}</p>}
         <div className="ms-footer-actions">
-          <button
-            type="button"
-            className="ms-btn-primary"
+          <Button
             disabled={!valid || saving}
             onClick={() => void handleContinue()}
           >
             {saving ? "Сохранение…" : "Продолжить"}
             <MsArrowRight />
-          </button>
-          <button
-            type="button"
-            className="ms-btn-secondary"
+          </Button>
+          <Button
+            variant="secondary"
             disabled={saving}
             onClick={() => void handleSaveExit()}
           >
             Сохранить и выйти
-          </button>
+          </Button>
         </div>
       </footer>
     </div>

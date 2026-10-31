@@ -27,6 +27,16 @@ import {
   toggleWorkingDay,
   updateWorkingDayTime,
 } from "../lib/workingHoursMutations";
+import {
+  BottomSheet,
+  Button,
+  RadioMark,
+  SelectTrigger,
+  SheetItem,
+  SheetList,
+  SheetSimpleHeader,
+  cx,
+} from "../ui";
 
 type Sheet =
   | { kind: "time"; day: WeekdayId; field: "start" | "end" }
@@ -54,20 +64,6 @@ function CopyIcon() {
         stroke="currentColor"
         strokeWidth="1.4"
         strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function Chevron() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <path
-        d="M4 6l4 4 4-4"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
       />
     </svg>
   );
@@ -239,18 +235,13 @@ export function HoursStepScreen() {
       footer={
         <>
           <p className="ms-next-hint">Следующий шаг — Место приёма</p>
-          <button
-            type="button"
-            className="ms-btn-primary"
-            disabled={!canContinue}
-            onClick={handleContinue}
-          >
+          <Button disabled={!canContinue} onClick={handleContinue}>
             Продолжить
             <MsArrowRight />
-          </button>
-          <button type="button" className="ms-btn-secondary" onClick={handleSaveExit}>
+          </Button>
+          <Button variant="secondary" onClick={handleSaveExit}>
             Сохранить и выйти
-          </button>
+          </Button>
         </>
       }
     >
@@ -352,18 +343,17 @@ export function HoursStepScreen() {
 
       <section className="ms-hours-section">
         <h3 className="ms-hours-section-title">Перерывы в течение дня</h3>
-        <button
-          type="button"
-          className="ms-select ms-break-select"
+        <SelectTrigger
+          className="ms-break-select"
+          value={
+            <>
+              <span className="ms-break-optional">Необязательно</span>
+              {" · "}
+              {breakLabel}
+            </>
+          }
           onClick={() => setSheet({ kind: "break" })}
-        >
-          <span>
-            <span className="ms-break-optional">Необязательно</span>
-            {" · "}
-            {breakLabel}
-          </span>
-          <Chevron />
-        </button>
+        />
       </section>
 
       {sheet?.kind === "time" && (
@@ -388,90 +378,75 @@ export function HoursStepScreen() {
         />
       )}
 
-      {sheet?.kind === "copy-source" && (
-        <div className="ms-sheet-root" role="presentation">
-          <button
-            type="button"
-            className="ms-modal-backdrop"
-            aria-label="Закрыть"
-            onClick={() => setSheet(null)}
-          />
-          <div className="ms-sheet ms-sheet-hours" role="dialog" aria-modal="true">
-            <div className="ms-sheet-handle" aria-hidden />
-            <h3 className="ms-sheet-title">Копировать часы</h3>
-            <p className="ms-sheet-lead">Из какого дня скопировать время?</p>
-            <ul className="ms-sheet-list">
-              {enabledDays.map((day) => {
-                const row = hours[day.id];
-                const active = copySource === day.id;
-                return (
-                  <li key={day.id}>
-                    <button
-                      type="button"
-                      className={`ms-sheet-item ms-sheet-item-row ${active ? "is-active" : ""}`}
-                      onClick={() => setCopySource(day.id)}
-                    >
-                      <span>
-                        {day.label}{" "}
-                        <span className="ms-muted">
-                          ({row.start}–{row.end})
-                        </span>
-                      </span>
-                      <span className={`ms-radio ${active ? "is-on" : ""}`} aria-hidden />
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-            <button
-              type="button"
-              className="ms-btn-primary"
-              disabled={!copySource}
-              onClick={() => {
-                if (!copySource) return;
-                setCopyTargets([]);
-                setSheet({ kind: "copy-targets", source: copySource });
-              }}
-            >
-              Выбрать дни
-            </button>
-            <button
-              type="button"
-              className="ms-btn-ghost-text"
-              onClick={() => setSheet(null)}
-            >
-              Отмена
-            </button>
-          </div>
-        </div>
-      )}
+      <BottomSheet
+        open={sheet?.kind === "copy-source"}
+        sheetClassName="ms-sheet-hours"
+        onClose={() => setSheet(null)}
+      >
+        <SheetSimpleHeader
+          title="Копировать часы"
+          lead="Из какого дня скопировать время?"
+        />
+        <SheetList>
+          {enabledDays.map((day) => {
+            const row = hours[day.id];
+            const active = copySource === day.id;
+            return (
+              <li key={day.id}>
+                <SheetItem
+                  active={active}
+                  className="ms-sheet-item-row"
+                  onClick={() => setCopySource(day.id)}
+                >
+                  <span>
+                    {day.label}{" "}
+                    <span className="ms-muted">
+                      ({row.start}–{row.end})
+                    </span>
+                  </span>
+                  <RadioMark checked={active} />
+                </SheetItem>
+              </li>
+            );
+          })}
+        </SheetList>
+        <Button
+          disabled={!copySource}
+          onClick={() => {
+            if (!copySource) return;
+            setCopyTargets([]);
+            setSheet({ kind: "copy-targets", source: copySource });
+          }}
+        >
+          Выбрать дни
+        </Button>
+        <Button variant="ghost" onClick={() => setSheet(null)}>
+          Отмена
+        </Button>
+      </BottomSheet>
 
-      {sheet?.kind === "copy-targets" && (
-        <div className="ms-sheet-root" role="presentation">
-          <button
-            type="button"
-            className="ms-modal-backdrop"
-            aria-label="Закрыть"
-            onClick={() => {
-              setSheet(null);
-              setCopyTargets([]);
-            }}
-          />
-          <div className="ms-sheet ms-sheet-hours" role="dialog" aria-modal="true">
-            <div className="ms-sheet-handle" aria-hidden />
-            <h3 className="ms-sheet-title">Копировать часы</h3>
-            <p className="ms-sheet-lead">
-              Куда скопировать время {hours[sheet.source].start}–
-              {hours[sheet.source].end}?
-            </p>
-            <ul className="ms-sheet-list">
+      <BottomSheet
+        open={sheet?.kind === "copy-targets"}
+        sheetClassName="ms-sheet-hours"
+        onClose={() => {
+          setSheet(null);
+          setCopyTargets([]);
+        }}
+      >
+        {sheet?.kind === "copy-targets" ? (
+          <>
+            <SheetSimpleHeader
+              title="Копировать часы"
+              lead={`Куда скопировать время ${hours[sheet.source].start}–${hours[sheet.source].end}?`}
+            />
+            <SheetList>
               {WEEKDAYS.filter((d) => d.id !== sheet.source).map((day) => {
                 const checked = copyTargets.includes(day.id);
                 return (
                   <li key={day.id}>
-                    <button
-                      type="button"
-                      className={`ms-sheet-item ms-sheet-item-row ${checked ? "is-active" : ""}`}
+                    <SheetItem
+                      active={checked}
+                      className="ms-sheet-item-row"
                       onClick={() =>
                         setCopyTargets((prev) =>
                           checked
@@ -482,71 +457,56 @@ export function HoursStepScreen() {
                     >
                       <span>{day.label}</span>
                       <span
-                        className={`ms-check ${checked ? "is-on" : ""}`}
+                        className={cx("ms-check", checked && "is-on")}
                         aria-hidden
                       />
-                    </button>
+                    </SheetItem>
                   </li>
                 );
               })}
-            </ul>
-            <button
-              type="button"
-              className="ms-btn-primary"
-              disabled={copyTargets.length === 0}
-              onClick={applyCopy}
-            >
+            </SheetList>
+            <Button disabled={copyTargets.length === 0} onClick={applyCopy}>
               {copyTargets.length === 0
                 ? "Выберите дни"
                 : copyTargets.length === 1
                   ? "Применить к 1 дню"
                   : `Применить к ${copyTargets.length} дням`}
-            </button>
-            <button
-              type="button"
-              className="ms-btn-ghost-text"
+            </Button>
+            <Button
+              variant="ghost"
               onClick={() => {
                 setSheet(null);
                 setCopyTargets([]);
               }}
             >
               Отмена
-            </button>
-          </div>
-        </div>
-      )}
+            </Button>
+          </>
+        ) : null}
+      </BottomSheet>
 
-      {sheet?.kind === "break" && (
-        <div className="ms-sheet-root" role="presentation">
-          <button
-            type="button"
-            className="ms-modal-backdrop"
-            aria-label="Закрыть"
-            onClick={() => setSheet(null)}
-          />
-          <div className="ms-sheet" role="dialog" aria-modal="true">
-            <div className="ms-sheet-handle" aria-hidden />
-            <h3 className="ms-sheet-title">Перерыв в течение дня</h3>
-            <ul className="ms-sheet-list">
-              {DAY_BREAK_OPTIONS.map((opt) => (
-                <li key={String(opt.value)}>
-                  <button
-                    type="button"
-                    className={`ms-sheet-item ${dayBreakMin === opt.value ? "is-active" : ""}`}
-                    onClick={() => {
-                      setDayBreakMin(opt.value);
-                      persist(hours, preset, opt.value);
-                      setSheet(null);
-                    }}
-                  >
-                    {opt.label}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      )}
+      <BottomSheet
+        open={sheet?.kind === "break"}
+        onClose={() => setSheet(null)}
+      >
+        <SheetSimpleHeader title="Перерыв в течение дня" />
+        <SheetList>
+          {DAY_BREAK_OPTIONS.map((opt) => (
+            <li key={String(opt.value)}>
+              <SheetItem
+                active={dayBreakMin === opt.value}
+                onClick={() => {
+                  setDayBreakMin(opt.value);
+                  persist(hours, preset, opt.value);
+                  setSheet(null);
+                }}
+              >
+                {opt.label}
+              </SheetItem>
+            </li>
+          ))}
+        </SheetList>
+      </BottomSheet>
     </MasterSetupChrome>
   );
 }
@@ -573,30 +533,17 @@ function TimeSheet({
   });
 
   return (
-    <div className="ms-sheet-root" role="presentation">
-      <button
-        type="button"
-        className="ms-modal-backdrop"
-        aria-label="Закрыть"
-        onClick={onClose}
-      />
-      <div className="ms-sheet ms-sheet-hours" role="dialog" aria-modal="true">
-        <div className="ms-sheet-handle" aria-hidden />
-        <h3 className="ms-sheet-title">{title}</h3>
-        <ul className="ms-sheet-list ms-time-list">
-          {filtered.map((t) => (
-            <li key={t}>
-              <button
-                type="button"
-                className={`ms-sheet-item ${t === value ? "is-active" : ""}`}
-                onClick={() => onPick(t)}
-              >
-                {t}
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
+    <BottomSheet open sheetClassName="ms-sheet-hours" onClose={onClose}>
+      <SheetSimpleHeader title={title} />
+      <SheetList className="ms-time-list">
+        {filtered.map((t) => (
+          <li key={t}>
+            <SheetItem active={t === value} onClick={() => onPick(t)}>
+              {t}
+            </SheetItem>
+          </li>
+        ))}
+      </SheetList>
+    </BottomSheet>
   );
 }
