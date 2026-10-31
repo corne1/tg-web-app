@@ -1812,6 +1812,58 @@ input {
   animation: rise 0.22s ease-out;
 }
 
+.ms-sheet-picker {
+  max-height: none;
+  padding: 0 0 calc(env(safe-area-inset-bottom, 0px));
+  gap: 0;
+}
+
+.ms-sheet-picker.is-compact {
+  max-height: min(70vh, 320px);
+}
+
+.ms-sheet-toolbar {
+  flex: 0 0 auto;
+  padding-bottom: 0;
+}
+
+.ms-sheet-grabber {
+  width: 36px;
+  height: 5px;
+  border-radius: var(--ms-radius-full);
+  background: var(--ms-fill2);
+  margin: 5px auto 0;
+}
+
+.ms-sheet-toolbar-row {
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 16px;
+  margin-top: 11px;
+}
+
+.ms-sheet-toolbar-side {
+  width: 44px;
+  height: 44px;
+}
+
+.ms-sheet-toolbar-title {
+  margin: 0;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.16px;
+  line-height: 24px;
+  color: var(--ms-ink-strong);
+}
+
+.ms-sheet-icon-btn {
+  flex-shrink: 0;
+}
+
 .ms-sheet-handle {
   width: 36px;
   height: 4px;
@@ -1856,6 +1908,115 @@ input {
 .ms-sheet-item.is-active {
   color: var(--ms-purple);
   font-weight: 500;
+}
+
+.ms-sheet-picker-list {
+  padding: 6px 16px 0;
+}
+
+.ms-sheet-picker-list .ms-sheet-item {
+  min-height: 48px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--ms-line-soft);
+}
+
+.ms-sheet-picker .ms-sheet-item.is-active {
+  color: var(--ms-ink);
+  font-weight: 500;
+}
+
+.ms-sheet-picker-list li:last-child .ms-sheet-item {
+  border-bottom: 1px solid var(--ms-line-soft);
+}
+
+.ms-sheet-alt-action {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: calc(100% - 32px);
+  min-height: 44px;
+  margin: 8px 16px 0;
+  padding: 10px 12px;
+  border-radius: var(--ms-radius-full);
+  border: 1px solid var(--ms-line);
+  background: #fff;
+  color: var(--ms-ink);
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.16px;
+  line-height: 24px;
+  box-shadow: var(--ms-shadow-e1);
+  cursor: pointer;
+}
+
+.ms-sheet-alt-action:active {
+  background: var(--ms-soft);
+}
+
+.ms-sheet-chevron-right {
+  flex-shrink: 0;
+  color: var(--ms-tertiary);
+}
+
+.ms-sheet-footer {
+  flex: 0 0 auto;
+  padding: 16px 16px 16px;
+  margin-top: auto;
+}
+
+.ms-sheet-custom-body {
+  padding: 16px 16px 0;
+}
+
+.ms-sheet-custom-field {
+  margin: 0;
+}
+
+.ms-sheet-dual {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.ms-sheet-segment {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+}
+
+.ms-sheet-segment-label {
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  color: var(--ms-muted);
+}
+
+.ms-sheet-segment-control {
+  appearance: none;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: var(--ms-radius-input);
+  border: 1px solid var(--ms-line);
+  background: #fff;
+  color: var(--ms-ink);
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.16px;
+  line-height: 24px;
+  box-shadow: var(--ms-shadow-e1);
+  text-align: center;
+  cursor: pointer;
+}
+
+.ms-sheet-segment-control:focus {
+  border-color: var(--ms-purple);
+  box-shadow: var(--ms-shadow-e1), 0 0 0 3px rgba(98, 61, 245, 0.16);
+  outline: none;
 }
 
 .ms-sheet-custom {

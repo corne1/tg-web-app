@@ -117,6 +117,10 @@ export function ServiceFormScreen({ mode }: { mode: Mode }) {
   const [errors, setErrors] = useState<Errors>({});
   const [sheet, setSheet] = useState<Sheet>(null);
   const [sheetPanel, setSheetPanel] = useState<SheetPanel>("list");
+  const [sheetDraftDuration, setSheetDraftDuration] = useState(60);
+  const [sheetDraftBreak, setSheetDraftBreak] = useState(0);
+  const [customHours, setCustomHours] = useState(0);
+  const [customMinutes, setCustomMinutes] = useState(40);
   const [tried, setTried] = useState(false);
   const [saving, setSaving] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -156,16 +160,24 @@ export function ServiceFormScreen({ mode }: { mode: Mode }) {
 
   const openSheet = useCallback(
     (next: Sheet) => {
-      if (next === "duration" && form.useCustomDuration) {
-        setSheetPanel("custom");
-      } else if (next === "break" && form.useCustomBreak) {
-        setSheetPanel("custom");
-      } else {
-        setSheetPanel("list");
+      if (next === "duration") {
+        const mins = form.useCustomDuration
+          ? Number(form.customDuration) || 40
+          : form.durationMin;
+        const parts = splitDurationMinutes(mins);
+        setCustomHours(parts.hours);
+        setCustomMinutes(parts.minutes);
+        setSheetDraftDuration(form.durationMin);
+        setSheetPanel(form.useCustomDuration ? "custom" : "list");
+      } else if (next === "break") {
+        setSheetDraftBreak(
+          form.useCustomBreak ? 0 : form.breakAfterMin,
+        );
+        setSheetPanel(form.useCustomBreak ? "custom" : "list");
       }
       setSheet(next);
     },
-    [form.useCustomBreak, form.useCustomDuration],
+    [form],
   );
 
   const closeSheet = useCallback(() => {
@@ -401,158 +413,323 @@ export function ServiceFormScreen({ mode }: { mode: Mode }) {
             aria-label="Закрыть"
             onClick={closeSheet}
           />
-          <div className="ms-sheet" role="dialog" aria-modal="true">
-            <div className="ms-sheet-handle" aria-hidden />
+          <div
+            className={`ms-sheet ms-sheet-picker ${sheetPanel === "custom" ? "is-compact" : ""}`}
+            role="dialog"
+            aria-modal="true"
+          >
+            <ServiceSheetHeader
+              title={
+                sheetPanel === "custom"
+                  ? sheet === "duration"
+                    ? "Своя длительность"
+                    : "Другое время"
+                  : sheet === "duration"
+                    ? "Длительность"
+                    : "Перерыв после услуги"
+              }
+              onClose={closeSheet}
+              onBack={
+                sheetPanel === "custom"
+                  ? () => setSheetPanel("list")
+                  : undefined
+              }
+            />
             {sheetPanel === "list" ? (
               <>
-                <h3 className="ms-sheet-title">
-                  {sheet === "duration" ? "Длительность" : "Перерыв после услуги"}
-                </h3>
-                <ul className="ms-sheet-list">
+                <ul className="ms-sheet-list ms-sheet-picker-list">
                   {sheet === "duration" &&
-                    DURATION_OPTIONS.map((opt) => {
-                      const active =
-                        opt.value === -1
-                          ? form.useCustomDuration
-                          : !form.useCustomDuration &&
-                            form.durationMin === opt.value;
+                    DURATION_OPTIONS.filter((o) => o.value !== -1).map((opt) => {
+                      const active = sheetDraftDuration === opt.value;
                       return (
                         <li key={opt.value}>
                           <button
                             type="button"
-                            className={`ms-sheet-item ${active ? "is-active" : ""}`}
-                            onClick={() => {
-                              if (opt.value === -1) {
-                                setForm((f) => ({
-                                  ...f,
-                                  useCustomDuration: true,
-                                  customDuration: f.customDuration || "40",
-                                }));
-                                setSheetPanel("custom");
-                              } else {
-                                setForm((f) => ({
-                                  ...f,
-                                  useCustomDuration: false,
-                                  durationMin: opt.value,
-                                }));
-                                closeSheet();
-                              }
-                            }}
+                            className={`ms-sheet-item ms-sheet-item-row ${active ? "is-active" : ""}`}
+                            onClick={() => setSheetDraftDuration(opt.value)}
                           >
-                            {opt.label}
+                            <span>{opt.label}</span>
+                            <span
+                              className={`ms-radio ${active ? "is-on" : ""}`}
+                              aria-hidden
+                            />
                           </button>
                         </li>
                       );
                     })}
                   {sheet === "break" &&
-                    BREAK_OPTIONS.map((opt) => {
-                      const active =
-                        opt.value === -1
-                          ? form.useCustomBreak
-                          : !form.useCustomBreak &&
-                            form.breakAfterMin === opt.value;
+                    BREAK_OPTIONS.filter((o) => o.value !== -1).map((opt) => {
+                      const active = sheetDraftBreak === opt.value;
                       return (
                         <li key={opt.value}>
                           <button
                             type="button"
-                            className={`ms-sheet-item ${active ? "is-active" : ""}`}
-                            onClick={() => {
-                              if (opt.value === -1) {
-                                setForm((f) => ({
-                                  ...f,
-                                  useCustomBreak: true,
-                                  customBreak: f.customBreak || "20",
-                                }));
-                                setSheetPanel("custom");
-                              } else {
-                                setForm((f) => ({
-                                  ...f,
-                                  useCustomBreak: false,
-                                  breakAfterMin: opt.value,
-                                }));
-                                closeSheet();
-                              }
-                            }}
+                            className={`ms-sheet-item ms-sheet-item-row ${active ? "is-active" : ""}`}
+                            onClick={() => setSheetDraftBreak(opt.value)}
                           >
-                            {opt.label}
+                            <span>{opt.label}</span>
+                            <span
+                              className={`ms-radio ${active ? "is-on" : ""}`}
+                              aria-hidden
+                            />
                           </button>
                         </li>
                       );
                     })}
                 </ul>
-              </>
-            ) : (
-              <div className="ms-sheet-custom">
-                <h3 className="ms-sheet-title">
-                  {sheet === "duration" ? "Своя длительность" : "Другое время"}
-                </h3>
-                <label className="ms-field">
-                  <span className="ms-label">Минуты</span>
-                  <input
-                    className={`ms-input ${
-                      sheet === "duration" && showErr("durationMin")
-                        ? "is-invalid"
-                        : sheet === "break" && showErr("breakAfterMin")
-                          ? "is-invalid"
-                          : ""
-                    }`}
-                    type="number"
-                    min={1}
-                    max={sheet === "break" ? MAX_BREAK_AFTER_MIN : undefined}
-                    inputMode="numeric"
-                    placeholder={sheet === "duration" ? "40" : "20"}
-                    value={
-                      sheet === "duration" ? form.customDuration : form.customBreak
-                    }
-                    onChange={(e) =>
-                      setForm((f) =>
-                        sheet === "duration"
-                          ? { ...f, customDuration: e.target.value }
-                          : { ...f, customBreak: e.target.value },
-                      )
-                    }
-                    autoFocus
-                  />
-                  {sheet === "duration" && showErr("durationMin") && (
-                    <span className="ms-field-error">{errors.durationMin}</span>
-                  )}
-                  {sheet === "break" && showErr("breakAfterMin") && (
-                    <span className="ms-field-error">{errors.breakAfterMin}</span>
-                  )}
-                </label>
                 <button
                   type="button"
-                  className="ms-btn-primary"
+                  className="ms-sheet-alt-action"
                   onClick={() => {
                     if (sheet === "duration") {
-                      const mins = Number(form.customDuration);
-                      if (!Number.isFinite(mins) || mins <= 0) {
-                        setTried(true);
-                        setErrors((e) => ({
-                          ...e,
-                          durationMin: "Длительность должна быть больше 0 мин",
-                        }));
-                        return;
-                      }
+                      const mins = form.useCustomDuration
+                        ? Number(form.customDuration) || 40
+                        : 40;
+                      const parts = splitDurationMinutes(mins);
+                      setCustomHours(parts.hours);
+                      setCustomMinutes(parts.minutes);
                     } else {
-                      const msg = breakError(form.useCustomBreak, form.customBreak);
-                      if (msg) {
-                        setTried(true);
-                        setErrors((e) => ({ ...e, breakAfterMin: msg }));
-                        return;
-                      }
+                      setForm((f) => ({
+                        ...f,
+                        customBreak: f.customBreak || "20",
+                      }));
                     }
-                    closeSheet();
+                    setSheetPanel("custom");
                   }}
                 >
-                  Готово
+                  <span>
+                    {sheet === "duration"
+                      ? "Своя длительность"
+                      : "Другое время"}
+                  </span>
+                  <SheetChevronRight />
                 </button>
-              </div>
+                <div className="ms-sheet-footer">
+                  <button
+                    type="button"
+                    className="ms-btn-primary"
+                    onClick={() => {
+                      if (sheet === "duration") {
+                        setForm((f) => ({
+                          ...f,
+                          useCustomDuration: false,
+                          durationMin: sheetDraftDuration,
+                        }));
+                      } else {
+                        setForm((f) => ({
+                          ...f,
+                          useCustomBreak: false,
+                          breakAfterMin: sheetDraftBreak,
+                        }));
+                      }
+                      closeSheet();
+                    }}
+                  >
+                    Готово
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="ms-sheet-custom-body">
+                  {sheet === "duration" ? (
+                    <div className="ms-sheet-dual">
+                      <label className="ms-sheet-segment">
+                        <span className="ms-sheet-segment-label">Часы</span>
+                        <select
+                          className="ms-sheet-segment-control"
+                          value={customHours}
+                          onChange={(e) =>
+                            setCustomHours(Number(e.target.value))
+                          }
+                        >
+                          {DURATION_HOUR_OPTIONS.map((h) => (
+                            <option key={h} value={h}>
+                              {h}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="ms-sheet-segment">
+                        <span className="ms-sheet-segment-label">Минуты</span>
+                        <select
+                          className="ms-sheet-segment-control"
+                          value={customMinutes}
+                          onChange={(e) =>
+                            setCustomMinutes(Number(e.target.value))
+                          }
+                        >
+                          {DURATION_MINUTE_OPTIONS.map((m) => (
+                            <option key={m} value={m}>
+                              {m}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+                  ) : (
+                    <label className="ms-field ms-sheet-custom-field">
+                      <span className="ms-label">Минуты</span>
+                      <input
+                        className={`ms-input ${
+                          showErr("breakAfterMin") ? "is-invalid" : ""
+                        }`}
+                        type="number"
+                        min={1}
+                        max={MAX_BREAK_AFTER_MIN}
+                        inputMode="numeric"
+                        placeholder="20"
+                        value={form.customBreak}
+                        onChange={(e) =>
+                          setForm((f) => ({
+                            ...f,
+                            customBreak: e.target.value,
+                          }))
+                        }
+                        autoFocus
+                      />
+                      {showErr("breakAfterMin") && (
+                        <span className="ms-field-error">
+                          {errors.breakAfterMin}
+                        </span>
+                      )}
+                    </label>
+                  )}
+                </div>
+                <div className="ms-sheet-footer">
+                  <button
+                    type="button"
+                    className="ms-btn-primary"
+                    onClick={() => {
+                      if (sheet === "duration") {
+                        const mins = customHours * 60 + customMinutes;
+                        if (mins <= 0) {
+                          setTried(true);
+                          setErrors((e) => ({
+                            ...e,
+                            durationMin:
+                              "Длительность должна быть больше 0 мин",
+                          }));
+                          return;
+                        }
+                        setForm((f) => ({
+                          ...f,
+                          useCustomDuration: true,
+                          customDuration: String(mins),
+                          durationMin: mins,
+                        }));
+                      } else {
+                        const msg = breakError(
+                          true,
+                          form.customBreak || "20",
+                        );
+                        if (msg) {
+                          setTried(true);
+                          setErrors((e) => ({ ...e, breakAfterMin: msg }));
+                          return;
+                        }
+                        const mins = Number(form.customBreak);
+                        setForm((f) => ({
+                          ...f,
+                          useCustomBreak: true,
+                          breakAfterMin: mins,
+                        }));
+                      }
+                      closeSheet();
+                    }}
+                  >
+                    Готово
+                  </button>
+                </div>
+              </>
             )}
           </div>
         </div>
       )}
     </>
+  );
+}
+
+const DURATION_HOUR_OPTIONS = Array.from({ length: 13 }, (_, i) => i);
+const DURATION_MINUTE_OPTIONS = Array.from({ length: 60 }, (_, i) => i);
+
+function splitDurationMinutes(mins: number) {
+  const safe = Number.isFinite(mins) && mins > 0 ? Math.round(mins) : 40;
+  return { hours: Math.floor(safe / 60), minutes: safe % 60 };
+}
+
+function ServiceSheetHeader({
+  title,
+  onClose,
+  onBack,
+}: {
+  title: string;
+  onClose: () => void;
+  onBack?: () => void;
+}) {
+  return (
+    <div className="ms-sheet-toolbar">
+      <div className="ms-sheet-grabber" aria-hidden />
+      <div className="ms-sheet-toolbar-row">
+        {onBack ? (
+          <button
+            type="button"
+            className="ms-icon-btn ms-sheet-icon-btn"
+            aria-label="Назад"
+            onClick={onBack}
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden>
+              <path
+                d="M12.5 4.5 7 10l5.5 5.5"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+        ) : (
+          <span className="ms-sheet-toolbar-side" aria-hidden />
+        )}
+        <h3 className="ms-sheet-toolbar-title">{title}</h3>
+        <button
+          type="button"
+          className="ms-icon-btn ms-sheet-icon-btn"
+          aria-label="Закрыть"
+          onClick={onClose}
+        >
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden>
+            <path
+              d="M4.5 4.5l9 9M13.5 4.5l-9 9"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function SheetChevronRight() {
+  return (
+    <svg
+      className="ms-sheet-chevron-right"
+      width="20"
+      height="20"
+      viewBox="0 0 20 20"
+      fill="none"
+      aria-hidden
+    >
+      <path
+        d="M7.5 4.167 13.333 10 7.5 15.833"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }
 
