@@ -12,6 +12,8 @@ export type MasterService = {
   title: string;
   durationMin: number;
   price: number;
+  /** Upper bound for `priceMode: "from"` (Figma «до»). Optional until API supports it. */
+  priceTo?: number | null;
   priceMode: PriceMode;
   breakAfterMin: number;
   description: string;
@@ -230,9 +232,16 @@ export function formatDuration(mins: number): string {
   return `${h} ч ${m} мин`;
 }
 
-export function formatPrice(service: Pick<MasterService, "price" | "priceMode">): string {
+export function formatPrice(
+  service: Pick<MasterService, "price" | "priceMode" | "priceTo">,
+): string {
   const n = service.price.toLocaleString("ru-RU");
-  return service.priceMode === "from" ? `от ${n} ₽` : `${n} ₽`;
+  if (service.priceMode !== "from") return `${n} ₽`;
+  const to = service.priceTo;
+  if (to != null && Number.isFinite(to) && to > 0) {
+    return `от ${n} до ${to.toLocaleString("ru-RU")} ₽`;
+  }
+  return `от ${n} ₽`;
 }
 
 export function serviceInitials(title: string): string {
@@ -243,11 +252,17 @@ export function serviceInitials(title: string): string {
 }
 
 function normalizeService(raw: Partial<MasterService> & { id?: string }): MasterService {
+  const priceToRaw = raw.priceTo;
+  const priceToNum = priceToRaw == null ? null : Number(priceToRaw);
   return {
     id: raw.id ?? crypto.randomUUID(),
     title: String(raw.title ?? ""),
     durationMin: Number(raw.durationMin) || 60,
     price: Number(raw.price) || 0,
+    priceTo:
+      priceToNum != null && Number.isFinite(priceToNum) && priceToNum > 0
+        ? priceToNum
+        : null,
     priceMode: raw.priceMode === "from" ? "from" : "fixed",
     breakAfterMin: Number(raw.breakAfterMin) || 0,
     description: String(raw.description ?? ""),

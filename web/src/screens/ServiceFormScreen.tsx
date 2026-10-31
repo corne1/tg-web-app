@@ -25,6 +25,7 @@ type FormState = {
   customDuration: string;
   useCustomDuration: boolean;
   price: string;
+  priceTo: string;
   priceMode: PriceMode;
   breakAfterMin: number;
   customBreak: string;
@@ -36,18 +37,56 @@ type Errors = Partial<
   Record<"title" | "durationMin" | "price" | "breakAfterMin", string>
 >;
 
-function priceError(raw: string): string | undefined {
+function parsePriceInput(raw: string): number | null {
   const value = raw.trim();
-  if (!value) return "Укажите стоимость услуги";
+  if (!value) return null;
   if (/[^\d\s.,]/.test(value) || /[a-zA-Zа-яА-ЯёЁ]/.test(value)) {
-    return "Введите стоимость числом";
+    return NaN;
   }
   const normalized = value.replace(/\s/g, "").replace(",", ".");
-  const price = Number(normalized);
-  if (!Number.isFinite(price)) return "Введите стоимость числом";
+  return Number(normalized);
+}
+
+function priceError(
+  raw: string,
+  opts?: { required?: boolean; emptyMessage?: string },
+): string | undefined {
+  const required = opts?.required !== false;
+  const value = raw.trim();
+  if (!value) {
+    return required
+      ? (opts?.emptyMessage ?? "Укажите стоимость услуги")
+      : undefined;
+  }
+  const price = parsePriceInput(raw);
+  if (price == null || !Number.isFinite(price)) return "Введите стоимость числом";
   if (price < 0) return "Введите корректную стоимость";
   if (price === 0) return "Стоимость должна быть больше 0 ₽";
   if (price > MAX_SERVICE_PRICE) return "Проверьте указанную стоимость";
+  return undefined;
+}
+
+function priceBlockError(form: FormState): string | undefined {
+  if (form.priceMode === "fixed") {
+    return priceError(form.price);
+  }
+  const fromMsg = priceError(form.price, {
+    emptyMessage: "Укажите стоимость услуги",
+  });
+  if (fromMsg) return fromMsg;
+  const toMsg = priceError(form.priceTo, { required: false });
+  if (toMsg) return toMsg;
+  const from = parsePriceInput(form.price);
+  const to = form.priceTo.trim() ? parsePriceInput(form.priceTo) : null;
+  if (
+    from != null &&
+    Number.isFinite(from) &&
+    to != null &&
+    Number.isFinite(to) &&
+    to < from
+  ) {
+    return "Введите корректную стоимость";
+  }
   return undefined;
 }
 
@@ -73,6 +112,7 @@ function emptyForm(): FormState {
     customDuration: "",
     useCustomDuration: false,
     price: "",
+    priceTo: "",
     priceMode: "fixed",
     breakAfterMin: 0,
     customBreak: "",
@@ -94,6 +134,7 @@ function fromService(s: MasterService, asCopy = false): FormState {
     customDuration: preset ? "" : String(s.durationMin),
     useCustomDuration: !preset,
     price: s.price ? String(s.price) : "",
+    priceTo: s.priceTo ? String(s.priceTo) : "",
     priceMode: s.priceMode,
     breakAfterMin: breakPreset ? s.breakAfterMin : 0,
     customBreak: breakPreset ? "" : String(s.breakAfterMin),
@@ -194,7 +235,7 @@ export function ServiceFormScreen({ mode }: { mode: Mode }) {
     if (!Number.isFinite(duration) || duration <= 0) {
       next.durationMin = "Длительность должна быть больше 0 мин";
     }
-    const priceMsg = priceError(form.price);
+    const priceMsg = priceBlockError(form);
     if (priceMsg) next.price = priceMsg;
     const breakMsg = breakError(form.useCustomBreak, form.customBreak);
     if (breakMsg) next.breakAfterMin = breakMsg;
@@ -217,13 +258,24 @@ export function ServiceFormScreen({ mode }: { mode: Mode }) {
     const breakAfterMin = form.useCustomBreak
       ? Number(form.customBreak)
       : form.breakAfterMin;
-    const price = Number(form.price.trim().replace(/\s/g, "").replace(",", "."));
+    const price = parsePriceInput(form.price) ?? 0;
+    const priceToRaw = form.priceTo.trim()
+      ? parsePriceInput(form.priceTo)
+      : null;
+    const priceTo =
+      form.priceMode === "from" &&
+      priceToRaw != null &&
+      Number.isFinite(priceToRaw) &&
+      priceToRaw > 0
+        ? priceToRaw
+        : null;
 
     const service: MasterService = {
       id: mode === "edit" && source ? source.id : crypto.randomUUID(),
       title: form.title.trim(),
       durationMin: duration,
       price,
+      priceTo,
       priceMode: form.priceMode,
       breakAfterMin,
       description: form.description.trim(),
@@ -239,6 +291,7 @@ export function ServiceFormScreen({ mode }: { mode: Mode }) {
         title: saved.title,
         durationMin: saved.durationMin,
         price: saved.price,
+        priceTo: service.priceTo ?? null,
         priceMode: saved.priceMode,
         breakAfterMin: saved.breakAfterMin,
         description: saved.description,
@@ -333,38 +386,122 @@ export function ServiceFormScreen({ mode }: { mode: Mode }) {
             )}
           </div>
 
-          <fieldset className="ms-field ms-field-chips">
+          <fieldset className="ms-field ms-price-block">
             <legend className="ms-label">Цена</legend>
-            <div className="ms-chips" role="radiogroup" aria-label="Тип цены">
-              <button
-                type="button"
-                role="radio"
-                aria-checked={form.priceMode === "fixed"}
-                className={`ms-chip ${form.priceMode === "fixed" ? "is-active" : ""}`}
-                onClick={() => setForm((f) => ({ ...f, priceMode: "fixed" }))}
-              >
-                Фиксированная
-              </button>
-              <button
-                type="button"
-                role="radio"
-                aria-checked={form.priceMode === "from"}
-                className={`ms-chip ${form.priceMode === "from" ? "is-active" : ""}`}
-                onClick={() => setForm((f) => ({ ...f, priceMode: "from" }))}
-              >
-                От суммы
-              </button>
-            </div>
-            <div className="ms-input-affix">
-              <input
-                className={`ms-input ${showErr("price") ? "is-invalid" : ""}`}
-                type="text"
-                inputMode="decimal"
-                placeholder="2500"
-                value={form.price}
-                onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
-              />
-              <span className="ms-affix">₽</span>
+            <div className="ms-price-options" role="radiogroup" aria-label="Тип цены">
+              <div className="ms-price-option">
+                <label
+                  className="ms-price-option-row"
+                  htmlFor="price-mode-fixed"
+                >
+                  <input
+                    id="price-mode-fixed"
+                    type="radio"
+                    name="price-mode"
+                    className="ms-sheet-radio-input"
+                    checked={form.priceMode === "fixed"}
+                    onChange={() =>
+                      setForm((f) => ({ ...f, priceMode: "fixed" }))
+                    }
+                  />
+                  <span
+                    className={`ms-radio ${form.priceMode === "fixed" ? "is-on" : ""}`}
+                    aria-hidden
+                  />
+                  <span className="ms-price-option-label">Фиксированная цена</span>
+                </label>
+                <div
+                  className={`ms-input-affix ${
+                    form.priceMode !== "fixed" ? "is-disabled" : ""
+                  }`}
+                >
+                  <input
+                    className={`ms-input ${
+                      showErr("price") && form.priceMode === "fixed"
+                        ? "is-invalid"
+                        : ""
+                    }`}
+                    type="text"
+                    inputMode="decimal"
+                    placeholder="2500"
+                    value={form.priceMode === "fixed" ? form.price : ""}
+                    disabled={form.priceMode !== "fixed"}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, price: e.target.value }))
+                    }
+                  />
+                  <span className="ms-affix">₽</span>
+                </div>
+              </div>
+
+              <div className="ms-price-option">
+                <label
+                  className="ms-price-option-row"
+                  htmlFor="price-mode-from"
+                >
+                  <input
+                    id="price-mode-from"
+                    type="radio"
+                    name="price-mode"
+                    className="ms-sheet-radio-input"
+                    checked={form.priceMode === "from"}
+                    onChange={() =>
+                      setForm((f) => ({ ...f, priceMode: "from" }))
+                    }
+                  />
+                  <span
+                    className={`ms-radio ${form.priceMode === "from" ? "is-on" : ""}`}
+                    aria-hidden
+                  />
+                  <span className="ms-price-option-label">
+                    Цена от указанной суммы
+                  </span>
+                </label>
+                <div
+                  className={`ms-price-range ${
+                    form.priceMode !== "from" ? "is-disabled" : ""
+                  }`}
+                >
+                  <div className="ms-input-affix ms-input-affix-prefix">
+                    <span className="ms-prefix">от</span>
+                    <input
+                      className={`ms-input ${
+                        showErr("price") && form.priceMode === "from"
+                          ? "is-invalid"
+                          : ""
+                      }`}
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="2500"
+                      value={form.priceMode === "from" ? form.price : ""}
+                      disabled={form.priceMode !== "from"}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, price: e.target.value }))
+                      }
+                    />
+                    <span className="ms-affix">₽</span>
+                  </div>
+                  <div className="ms-input-affix ms-input-affix-prefix">
+                    <span className="ms-prefix">до</span>
+                    <input
+                      className={`ms-input ${
+                        showErr("price") && form.priceMode === "from"
+                          ? "is-invalid"
+                          : ""
+                      }`}
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="3500"
+                      value={form.priceMode === "from" ? form.priceTo : ""}
+                      disabled={form.priceMode !== "from"}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, priceTo: e.target.value }))
+                      }
+                    />
+                    <span className="ms-affix">₽</span>
+                  </div>
+                </div>
+              </div>
             </div>
             {showErr("price") && (
               <span className="ms-field-error">{errors.price}</span>
@@ -417,6 +554,7 @@ export function ServiceFormScreen({ mode }: { mode: Mode }) {
             className={`ms-sheet ms-sheet-picker ${sheetPanel === "custom" ? "is-compact" : ""}`}
             role="dialog"
             aria-modal="true"
+            onClick={(e) => e.stopPropagation()}
           >
             <ServiceSheetHeader
               title={
@@ -437,73 +575,105 @@ export function ServiceFormScreen({ mode }: { mode: Mode }) {
             />
             {sheetPanel === "list" ? (
               <>
-                <ul className="ms-sheet-list ms-sheet-picker-list">
-                  {sheet === "duration" &&
-                    DURATION_OPTIONS.filter((o) => o.value !== -1).map((opt) => {
-                      const active = sheetDraftDuration === opt.value;
-                      return (
-                        <li key={opt.value}>
-                          <button
-                            type="button"
-                            className={`ms-sheet-item ms-sheet-item-row ${active ? "is-active" : ""}`}
-                            onClick={() => setSheetDraftDuration(opt.value)}
-                          >
-                            <span>{opt.label}</span>
-                            <span
-                              className={`ms-radio ${active ? "is-on" : ""}`}
-                              aria-hidden
-                            />
-                          </button>
-                        </li>
-                      );
-                    })}
-                  {sheet === "break" &&
-                    BREAK_OPTIONS.filter((o) => o.value !== -1).map((opt) => {
-                      const active = sheetDraftBreak === opt.value;
-                      return (
-                        <li key={opt.value}>
-                          <button
-                            type="button"
-                            className={`ms-sheet-item ms-sheet-item-row ${active ? "is-active" : ""}`}
-                            onClick={() => setSheetDraftBreak(opt.value)}
-                          >
-                            <span>{opt.label}</span>
-                            <span
-                              className={`ms-radio ${active ? "is-on" : ""}`}
-                              aria-hidden
-                            />
-                          </button>
-                        </li>
-                      );
-                    })}
-                </ul>
-                <button
-                  type="button"
-                  className="ms-sheet-alt-action"
-                  onClick={() => {
-                    if (sheet === "duration") {
-                      const mins = form.useCustomDuration
-                        ? Number(form.customDuration) || 40
-                        : 40;
-                      const parts = splitDurationMinutes(mins);
-                      setCustomHours(parts.hours);
-                      setCustomMinutes(parts.minutes);
-                    } else {
-                      setForm((f) => ({
-                        ...f,
-                        customBreak: f.customBreak || "20",
-                      }));
+                <div className="ms-sheet-picker-group">
+                  <ul
+                    className="ms-sheet-list ms-sheet-picker-list"
+                    role="radiogroup"
+                    aria-label={
+                      sheet === "duration" ? "Длительность" : "Перерыв после услуги"
                     }
-                    setSheetPanel("custom");
-                  }}
-                >
-                  <span>
-                    {sheet === "duration"
-                      ? "Своя длительность"
-                      : "Другое время"}
-                  </span>
-                  <SheetChevronRight />
-                </button>
+                  >
+                    {sheet === "duration" &&
+                      DURATION_OPTIONS.filter((o) => o.value !== -1).map(
+                        (opt) => {
+                          const active = sheetDraftDuration === opt.value;
+                          const id = `sheet-duration-${opt.value}`;
+                          return (
+                            <li key={opt.value}>
+                              <label
+                                htmlFor={id}
+                                className={`ms-sheet-item ms-sheet-item-row ${active ? "is-active" : ""}`}
+                              >
+                                <input
+                                  id={id}
+                                  type="radio"
+                                  name="sheet-duration"
+                                  className="ms-sheet-radio-input"
+                                  checked={active}
+                                  onChange={() =>
+                                    setSheetDraftDuration(opt.value)
+                                  }
+                                />
+                                <span className="ms-sheet-item-label">
+                                  {opt.label}
+                                </span>
+                                <span
+                                  className={`ms-radio ${active ? "is-on" : ""}`}
+                                  aria-hidden
+                                />
+                              </label>
+                            </li>
+                          );
+                        },
+                      )}
+                    {sheet === "break" &&
+                      BREAK_OPTIONS.filter((o) => o.value !== -1).map((opt) => {
+                        const active = sheetDraftBreak === opt.value;
+                        const id = `sheet-break-${opt.value}`;
+                        return (
+                          <li key={opt.value}>
+                            <label
+                              htmlFor={id}
+                              className={`ms-sheet-item ms-sheet-item-row ${active ? "is-active" : ""}`}
+                            >
+                              <input
+                                id={id}
+                                type="radio"
+                                name="sheet-break"
+                                className="ms-sheet-radio-input"
+                                checked={active}
+                                onChange={() => setSheetDraftBreak(opt.value)}
+                              />
+                              <span className="ms-sheet-item-label">
+                                {opt.label}
+                              </span>
+                              <span
+                                className={`ms-radio ${active ? "is-on" : ""}`}
+                                aria-hidden
+                              />
+                            </label>
+                          </li>
+                        );
+                      })}
+                  </ul>
+                  <button
+                    type="button"
+                    className="ms-sheet-alt-action"
+                    onClick={() => {
+                      if (sheet === "duration") {
+                        const mins = form.useCustomDuration
+                          ? Number(form.customDuration) || 40
+                          : 40;
+                        const parts = splitDurationMinutes(mins);
+                        setCustomHours(parts.hours);
+                        setCustomMinutes(parts.minutes);
+                      } else {
+                        setForm((f) => ({
+                          ...f,
+                          customBreak: f.customBreak || "20",
+                        }));
+                      }
+                      setSheetPanel("custom");
+                    }}
+                  >
+                    <span className="ms-sheet-alt-action-label">
+                      {sheet === "duration"
+                        ? "Своя длительность"
+                        : "Другое время"}
+                    </span>
+                    <SheetChevronRight />
+                  </button>
+                </div>
                 <div className="ms-sheet-footer">
                   <button
                     type="button"

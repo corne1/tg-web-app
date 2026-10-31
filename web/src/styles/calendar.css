@@ -1579,9 +1579,14 @@ input {
 .ms-modal-backdrop {
   position: absolute;
   inset: 0;
+  z-index: 0;
   border: none;
   background: rgba(17, 17, 17, 0.45);
   cursor: pointer;
+}
+
+.ms-sheet-root .ms-sheet {
+  z-index: 1;
 }
 
 .ms-modal {
@@ -1681,6 +1686,84 @@ input {
   width: 100%;
 }
 
+/* Price block: label + 2 radio options (Dropdown-Item + Input), gap 6 / 12 / 4 */
+.ms-price-block {
+  gap: 6px;
+}
+
+.ms-price-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  clear: both;
+}
+
+.ms-price-option {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  min-width: 0;
+}
+
+.ms-price-option-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 32px;
+  margin: 0;
+  cursor: pointer;
+  color: var(--ms-ink);
+}
+
+.ms-price-option-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+}
+
+.ms-price-range {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+.ms-price-range > .ms-input-affix {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.ms-input-affix-prefix .ms-input {
+  padding-left: 36px;
+}
+
+.ms-prefix {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ms-tertiary);
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.ms-input-affix.is-disabled,
+.ms-price-range.is-disabled {
+  opacity: 0.48;
+  pointer-events: none;
+}
+
 .ms-service-form .ms-input-affix {
   margin-top: 0;
 }
@@ -1747,10 +1830,17 @@ input {
 
 .ms-input-affix {
   position: relative;
+  width: 100%;
 }
 
 .ms-input-affix .ms-input {
   padding-right: 2.5rem;
+}
+
+.ms-input-affix .ms-input:disabled {
+  color: var(--ms-tertiary);
+  background: var(--ms-soft);
+  cursor: default;
 }
 
 .ms-affix {
@@ -1758,9 +1848,12 @@ input {
   right: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--ms-muted);
-  font-weight: 500;
+  color: var(--ms-tertiary);
+  font-weight: 400;
   font-size: 14px;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  pointer-events: none;
 }
 
 .ms-textarea {
@@ -1905,19 +1998,55 @@ input {
   cursor: pointer;
 }
 
+label.ms-sheet-item {
+  margin: 0;
+  font-family: inherit;
+}
+
 .ms-sheet-item.is-active {
   color: var(--ms-purple);
   font-weight: 500;
 }
 
-.ms-sheet-picker-list {
+/* Figma Dropdown Group: 16px inset, 6px top, 48px rows, 44px alt row */
+.ms-sheet-picker-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   padding: 6px 16px 0;
+}
+
+.ms-sheet-picker-list {
+  padding: 0;
 }
 
 .ms-sheet-picker-list .ms-sheet-item {
   min-height: 48px;
   padding: 12px 0;
   border-bottom: 1px solid var(--ms-line-soft);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ms-sheet-picker-list label.ms-sheet-item {
+  cursor: pointer;
+}
+
+.ms-sheet-radio-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.ms-sheet-item-label {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .ms-sheet-picker .ms-sheet-item.is-active {
@@ -1935,9 +2064,9 @@ input {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  width: calc(100% - 32px);
+  width: 100%;
   min-height: 44px;
-  margin: 8px 16px 0;
+  margin: 0;
   padding: 10px 12px;
   border-radius: var(--ms-radius-full);
   border: 1px solid var(--ms-line);
@@ -1949,6 +2078,13 @@ input {
   line-height: 24px;
   box-shadow: var(--ms-shadow-e1);
   cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ms-sheet-alt-action-label {
+  flex: 1 1 auto;
+  text-align: left;
 }
 
 .ms-sheet-alt-action:active {
@@ -2331,7 +2467,10 @@ input {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: 12px;
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .ms-muted {
