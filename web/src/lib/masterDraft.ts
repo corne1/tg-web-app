@@ -74,12 +74,13 @@ export const SPECIALTIES: {
 ];
 
 export const DURATION_OPTIONS = [
-  { value: 30, label: "30 мин" },
-  { value: 45, label: "45 мин" },
-  { value: 60, label: "1 ч" },
+  { value: 30, label: "30 минут" },
+  { value: 45, label: "45 минут" },
+  { value: 60, label: "1 час" },
   { value: 90, label: "1 ч 30 мин" },
-  { value: 120, label: "2 ч" },
-  { value: -1, label: "Своя длительность" },
+  { value: 120, label: "2 часа" },
+  /** Sentinel: opens custom duration sheet («Выбрать другое время»). */
+  { value: -1, label: "Выбрать другое время" },
 ] as const;
 
 export const BREAK_OPTIONS = [
@@ -87,11 +88,10 @@ export const BREAK_OPTIONS = [
   { value: 5, label: "5 мин" },
   { value: 10, label: "10 мин" },
   { value: 15, label: "15 мин" },
+  { value: 20, label: "20 мин" },
   { value: 30, label: "30 мин" },
-  { value: 45, label: "45 мин" },
-  { value: 60, label: "1 ч" },
-  /** Sentinel: custom minutes via «Другое время» input (Blur #3). */
-  { value: -1, label: "Другое время" },
+  /** Sentinel: custom minutes via «Выбрать другое время» (Blur #3). */
+  { value: -1, label: "Выбрать другое время" },
 ] as const;
 
 export const MAX_BREAK_AFTER_MIN = 240;

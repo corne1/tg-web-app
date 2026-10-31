@@ -179,13 +179,14 @@ export function ServiceFormScreen({ mode }: { mode: Mode }) {
   const durationLabel = form.useCustomDuration
     ? form.customDuration
       ? formatDuration(Number(form.customDuration) || 0)
-      : "Своя длительность"
-    : formatDuration(form.durationMin);
+      : "Выбрать другое время"
+    : (DURATION_OPTIONS.find((o) => o.value === form.durationMin)?.label ??
+      formatDuration(form.durationMin));
 
   const breakLabel = form.useCustomBreak
     ? form.customBreak
       ? formatDuration(Number(form.customBreak) || 0)
-      : "Другое время"
+      : "Выбрать другое время"
     : (BREAK_OPTIONS.find((o) => o.value === form.breakAfterMin)?.label ??
       "Без перерыва");
 
@@ -561,10 +562,10 @@ export function ServiceFormScreen({ mode }: { mode: Mode }) {
                 sheetPanel === "custom"
                   ? sheet === "duration"
                     ? "Своя длительность"
-                    : "Другое время"
+                    : "Выбрать другое время"
                   : sheet === "duration"
-                    ? "Длительность"
-                    : "Перерыв после услуги"
+                    ? "Длительность услуги"
+                    : "Длительность перерыва"
               }
               onClose={closeSheet}
               onBack={
@@ -580,30 +581,26 @@ export function ServiceFormScreen({ mode }: { mode: Mode }) {
                     className="ms-sheet-list ms-sheet-picker-list"
                     role="radiogroup"
                     aria-label={
-                      sheet === "duration" ? "Длительность" : "Перерыв после услуги"
+                      sheet === "duration"
+                        ? "Длительность услуги"
+                        : "Длительность перерыва"
                     }
                   >
                     {sheet === "duration" &&
                       DURATION_OPTIONS.filter((o) => o.value !== -1).map(
                         (opt) => {
                           const active = sheetDraftDuration === opt.value;
-                          const id = `sheet-duration-${opt.value}`;
                           return (
                             <li key={opt.value}>
-                              <label
-                                htmlFor={id}
+                              <button
+                                type="button"
+                                role="radio"
+                                aria-checked={active}
                                 className={`ms-sheet-item ms-sheet-item-row ${active ? "is-active" : ""}`}
+                                onClick={() =>
+                                  setSheetDraftDuration(opt.value)
+                                }
                               >
-                                <input
-                                  id={id}
-                                  type="radio"
-                                  name="sheet-duration"
-                                  className="ms-sheet-radio-input"
-                                  checked={active}
-                                  onChange={() =>
-                                    setSheetDraftDuration(opt.value)
-                                  }
-                                />
                                 <span className="ms-sheet-item-label">
                                   {opt.label}
                                 </span>
@@ -611,7 +608,7 @@ export function ServiceFormScreen({ mode }: { mode: Mode }) {
                                   className={`ms-radio ${active ? "is-on" : ""}`}
                                   aria-hidden
                                 />
-                              </label>
+                              </button>
                             </li>
                           );
                         },
@@ -619,21 +616,15 @@ export function ServiceFormScreen({ mode }: { mode: Mode }) {
                     {sheet === "break" &&
                       BREAK_OPTIONS.filter((o) => o.value !== -1).map((opt) => {
                         const active = sheetDraftBreak === opt.value;
-                        const id = `sheet-break-${opt.value}`;
                         return (
                           <li key={opt.value}>
-                            <label
-                              htmlFor={id}
+                            <button
+                              type="button"
+                              role="radio"
+                              aria-checked={active}
                               className={`ms-sheet-item ms-sheet-item-row ${active ? "is-active" : ""}`}
+                              onClick={() => setSheetDraftBreak(opt.value)}
                             >
-                              <input
-                                id={id}
-                                type="radio"
-                                name="sheet-break"
-                                className="ms-sheet-radio-input"
-                                checked={active}
-                                onChange={() => setSheetDraftBreak(opt.value)}
-                              />
                               <span className="ms-sheet-item-label">
                                 {opt.label}
                               </span>
@@ -641,7 +632,7 @@ export function ServiceFormScreen({ mode }: { mode: Mode }) {
                                 className={`ms-radio ${active ? "is-on" : ""}`}
                                 aria-hidden
                               />
-                            </label>
+                            </button>
                           </li>
                         );
                       })}
@@ -667,9 +658,7 @@ export function ServiceFormScreen({ mode }: { mode: Mode }) {
                     }}
                   >
                     <span className="ms-sheet-alt-action-label">
-                      {sheet === "duration"
-                        ? "Своя длительность"
-                        : "Другое время"}
+                      Выбрать другое время
                     </span>
                     <SheetChevronRight />
                   </button>
@@ -808,7 +797,7 @@ export function ServiceFormScreen({ mode }: { mode: Mode }) {
                       closeSheet();
                     }}
                   >
-                    Готово
+                    Применить
                   </button>
                 </div>
               </>
