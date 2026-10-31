@@ -420,16 +420,6 @@ export function isMasterReady(draft = loadMasterDraft()): boolean {
   );
 }
 
-/** Resume path inside master setup. */
-export function masterHomePath(draft = loadMasterDraft()): string {
-  if (isMasterReady(draft)) return "/cabinet";
-  if (!isMasterStep1Done(draft)) return "/onboarding";
-  if (draft.services.length === 0) return "/onboarding/services";
-  if (!hasEnabledWorkingDay(draft.hours)) return "/onboarding/hours";
-  if (!isMasterPlaceDone(draft)) return "/onboarding/place";
-  return "/cabinet";
-}
-
 export function upsertService(service: MasterService): MasterDraft {
   const draft = loadMasterDraft();
   const idx = draft.services.findIndex((s) => s.id === service.id);

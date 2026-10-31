@@ -45,8 +45,8 @@ const withBreak = generateSlotsFromBusy(
 // 10:00 then next would be 11:30 but end is 12:00 so only one 60-min slot
 assert(withBreak.length === 1, `break spacing → 1 slot, got ${withBreak.length}`);
 
-// Legacy schedule without custom hours: Mon–Fri 10–20, 60 min → many slots
-const legacy = generateSlotsFromBusy(
+// ScheduleKind preset without custom hours: Mon–Fri 10–20, 60 min → many slots
+const preset = generateSlotsFromBusy(
   {
     schedule: "weekday",
     timezone: "Europe/Moscow",
@@ -58,6 +58,6 @@ const legacy = generateSlotsFromBusy(
   1,
   mondayMorningUtc,
 );
-assert(legacy.length === 10, `legacy weekday day → 10 slots, got ${legacy.length}`);
+assert(preset.length === 10, `preset weekday day → 10 slots, got ${preset.length}`);
 
 console.log("slots.test.ts: ok");

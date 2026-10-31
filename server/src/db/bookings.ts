@@ -9,7 +9,7 @@ import type { BookingRow, BookingStatus } from "./types.js";
 function mapBooking(row: Record<string, unknown>): BookingRow {
   return {
     id: String(row.id),
-    psychologist_id: Number(row.psychologist_id),
+    master_id: Number(row.master_id),
     client_id: Number(row.client_id),
     starts_at: String(row.starts_at),
     duration_min: Number(row.duration_min),
@@ -25,7 +25,7 @@ function mapBooking(row: Record<string, unknown>): BookingRow {
 }
 
 export type CreateBookingInput = {
-  psychologistId: number;
+  masterId: number;
   clientId: number;
   clientName: string;
   startsAt: string;
@@ -44,12 +44,12 @@ export async function createBooking(
     try {
       await db.execute({
         sql: `INSERT INTO bookings (
-          id, psychologist_id, client_id, starts_at, duration_min, price,
+          id, master_id, client_id, starts_at, duration_min, price,
           status, paid, client_name, reminded_24h, reminded_1h, created_at, updated_at
         ) VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, 0, 0, ?, ?)`,
         args: [
           id,
-          input.psychologistId,
+          input.masterId,
           input.clientId,
           input.startsAt,
           input.durationMin,
@@ -70,7 +70,7 @@ export async function createBooking(
 
     return {
       id,
-      psychologist_id: input.psychologistId,
+      master_id: input.masterId,
       client_id: input.clientId,
       starts_at: input.startsAt,
       duration_min: input.durationMin,
@@ -112,36 +112,36 @@ export async function getBooking(id: string): Promise<BookingRow | null> {
 }
 
 export async function listActiveStarts(
-  psychologistId: number,
+  masterId: number,
   fromIso: string,
   toIso: string,
 ): Promise<Set<string>> {
   return withDb(async (db) => {
     const result = await db.execute({
       sql: `SELECT starts_at FROM bookings
-        WHERE psychologist_id = ?
+        WHERE master_id = ?
           AND status != 'cancelled'
           AND starts_at >= ?
           AND starts_at < ?`,
-      args: [psychologistId, fromIso, toIso],
+      args: [masterId, fromIso, toIso],
     });
     return new Set(result.rows.map((r) => String(r.starts_at)));
   });
 }
 
-export async function listPsychologistBookings(
-  psychologistId: number,
+export async function listMasterBookings(
+  masterId: number,
   fromIso: string,
   toIso: string,
 ): Promise<BookingRow[]> {
   return withDb(async (db) => {
     const result = await db.execute({
       sql: `SELECT * FROM bookings
-        WHERE psychologist_id = ?
+        WHERE master_id = ?
           AND starts_at >= ?
           AND starts_at < ?
         ORDER BY starts_at ASC`,
-      args: [psychologistId, fromIso, toIso],
+      args: [masterId, fromIso, toIso],
     });
     return result.rows.map((r) =>
       mapBooking(r as unknown as Record<string, unknown>),
@@ -182,10 +182,7 @@ export async function cancelBooking(
     if (!row) throw new BookingRuleError("Booking not found");
     const booking = mapBooking(row as unknown as Record<string, unknown>);
 
-    if (
-      booking.client_id !== actorId &&
-      booking.psychologist_id !== actorId
-    ) {
+    if (booking.client_id !== actorId && booking.master_id !== actorId) {
       throw new BookingRuleError("Forbidden");
     }
     if (booking.status === "cancelled") {
@@ -266,7 +263,7 @@ export async function rescheduleBooking(
 
 export async function markPaid(
   id: string,
-  psychologistId: number,
+  masterId: number,
 ): Promise<BookingRow> {
   return withDb(async (db) => {
     const result = await db.execute({
@@ -277,7 +274,7 @@ export async function markPaid(
     if (!row) throw new BookingRuleError("Booking not found");
     const booking = mapBooking(row as unknown as Record<string, unknown>);
 
-    if (booking.psychologist_id !== psychologistId) {
+    if (booking.master_id !== masterId) {
       throw new BookingRuleError("Forbidden");
     }
     if (booking.status === "cancelled") {
@@ -294,10 +291,10 @@ export async function markPaid(
 }
 
 export type ReminderCandidate = BookingRow & {
-  psychologist_name: string;
-  psychologist_timezone: string;
+  master_name: string;
+  master_timezone: string;
   client_telegram_id: number;
-  psychologist_telegram_id: number;
+  master_telegram_id: number;
 };
 
 export async function listDueReminders(
@@ -312,9 +309,9 @@ export async function listDueReminders(
 
   return withDb(async (db) => {
     const result = await db.execute({
-      sql: `SELECT b.*, p.name AS psychologist_name, p.timezone AS psychologist_timezone
+      sql: `SELECT b.*, p.name AS master_name, p.timezone AS master_timezone
         FROM bookings b
-        JOIN master_profiles p ON p.user_id = b.psychologist_id
+        JOIN master_profiles p ON p.user_id = b.master_id
         WHERE b.status != 'cancelled'
           AND b.${flagCol} = 0
           AND b.starts_at >= ?
@@ -326,10 +323,10 @@ export async function listDueReminders(
       const base = mapBooking(r as unknown as Record<string, unknown>);
       return {
         ...base,
-        psychologist_name: String(r.psychologist_name),
-        psychologist_timezone: String(r.psychologist_timezone),
+        master_name: String(r.master_name),
+        master_timezone: String(r.master_timezone),
         client_telegram_id: base.client_id,
-        psychologist_telegram_id: base.psychologist_id,
+        master_telegram_id: base.master_id,
       };
     });
   });

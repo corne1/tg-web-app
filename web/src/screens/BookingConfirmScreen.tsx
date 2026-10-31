@@ -10,8 +10,8 @@ import { useMainButton } from "../hooks/useMainButton";
 import { useTelegram } from "../hooks/useTelegram";
 
 type BookingState = {
-  psychologistId: number;
-  psychologistName: string;
+  masterId: number;
+  masterName: string;
   startsAt: string;
   dayLabel: string;
   date: string;
@@ -44,7 +44,7 @@ export function BookingConfirmScreen() {
     setError(null);
     try {
       await createBooking({
-        psychologistId: state.psychologistId,
+        masterId: state.masterId,
         startsAt: state.startsAt,
       });
       webApp?.HapticFeedback?.notificationOccurred("success");
@@ -58,12 +58,12 @@ export function BookingConfirmScreen() {
   }, [navigate, state, submitting, webApp]);
 
   const goClient = useCallback(() => {
-    if (state?.psychologistId) {
-      navigate(`/client/${state.psychologistId}`);
+    if (state?.masterId) {
+      navigate(`/client/${state.masterId}`);
       return;
     }
     navigate("/client");
-  }, [navigate, state?.psychologistId]);
+  }, [navigate, state?.masterId]);
 
   useBackButton(goClient);
   useMainButton({
@@ -98,7 +98,7 @@ export function BookingConfirmScreen() {
         <ConfirmCardSkeleton />
       ) : (
         <div className="summary-card">
-          <p className="summary-label">Консультация с {state.psychologistName}</p>
+          <p className="summary-label">Консультация с {state.masterName}</p>
           <p className="summary-main">
             {state.dayLabel}, {state.date} · {state.time}
           </p>

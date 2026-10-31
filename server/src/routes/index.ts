@@ -6,10 +6,7 @@ import { citiesRouter } from "./cities.js";
 import { cronRouter } from "./cron.js";
 import { masterRouter } from "./master.js";
 import { meRouter } from "./me.js";
-import {
-  psychologistsAliasRouter,
-  publicMasterRouter,
-} from "./publicMaster.js";
+import { publicMasterRouter } from "./publicMaster.js";
 
 export const apiRouter = Router();
 
@@ -22,7 +19,6 @@ apiRouter.use("/cities", citiesRouter);
 apiRouter.use(meRouter);
 apiRouter.use("/master", masterRouter);
 apiRouter.use("/masters", publicMasterRouter);
-apiRouter.use("/psychologists", psychologistsAliasRouter);
 apiRouter.use("/cabinet", cabinetRouter);
 apiRouter.use("/bookings", bookingsRouter);
 apiRouter.use("/cron", cronRouter);

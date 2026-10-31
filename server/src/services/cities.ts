@@ -89,12 +89,6 @@ export async function getRussiaCities(): Promise<CityHit[]> {
   }
 }
 
-/** @deprecated Prefer getRussiaCities — kept for callers that only need names. */
-export async function getRussiaCityNames(): Promise<string[]> {
-  const cities = await getRussiaCities();
-  return cities.map((c) => c.name);
-}
-
 function rankCity(name: string, q: string): number {
   const lower = name.toLowerCase();
   let score = 0;

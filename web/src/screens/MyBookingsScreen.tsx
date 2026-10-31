@@ -71,7 +71,7 @@ export function MyBookingsScreen() {
         <div className="empty-inline">
           <p>Нет предстоящих записей</p>
           <p className="screen-subtitle">
-            Откройте ссылку психолога в Telegram, чтобы выбрать слот.
+            Откройте ссылку мастера в Telegram, чтобы выбрать слот.
           </p>
           {!isTelegram && (
             <UiMainButton onClick={bookAgain}>Как записаться</UiMainButton>
@@ -85,7 +85,7 @@ export function MyBookingsScreen() {
                 <p className="booking-when">
                   {b.date}, {b.time}
                 </p>
-                <p className="booking-who">с {b.psychologistName}</p>
+                <p className="booking-who">с {b.masterName}</p>
               </div>
               <div className="booking-actions">
                 <SecondaryButton
@@ -93,7 +93,7 @@ export function MyBookingsScreen() {
                   className="btn-sm"
                   onClick={() =>
                     navigate(
-                      `/client/${b.psychologistId}?reschedule=${encodeURIComponent(b.id)}`,
+                      `/client/${b.masterId}?reschedule=${encodeURIComponent(b.id)}`,
                     )
                   }
                 >

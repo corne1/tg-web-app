@@ -12,7 +12,7 @@ export interface Session {
   paid?: boolean;
 }
 
-/** Per-day hours synced from onboarding (server may omit for legacy profiles). */
+/** Per-day hours synced from onboarding (server may omit when unset). */
 export type WorkingHoursDto = Record<
   "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun",
   { enabled: boolean; start: string; end: string }
@@ -56,9 +56,6 @@ export type MasterPlaceDto = {
   };
 };
 
-/** @deprecated Use MasterProfile */
-export type PsychologistProfile = MasterProfile;
-
 export interface MasterServiceDto {
   id: string;
   title: string;
@@ -92,20 +89,13 @@ export interface PublicMaster {
   workingHours?: WorkingHoursDto | null;
 }
 
-/** @deprecated Use PublicMaster */
-export type PublicPsychologist = PublicMaster;
-
 export interface ClientBooking {
   id: string;
   startsAt: string;
   date: string;
   time: string;
-  /** @deprecated Prefer masterId */
-  psychologistId: number;
-  masterId?: number;
-  /** @deprecated Prefer masterName */
-  psychologistName: string;
-  masterName?: string;
+  masterId: number;
+  masterName: string;
   duration?: number;
   price?: number;
   status?: SessionStatus;

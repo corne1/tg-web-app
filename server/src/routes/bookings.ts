@@ -24,24 +24,21 @@ export const bookingsRouter = Router();
 bookingsRouter.post("/", requireSession, async (req: AuthedRequest, res) => {
   const tg = req.telegramUser!;
   const body = req.body ?? {};
-  // Accept masterId (preferred) or legacy psychologistId
-  const psychologistId = Number(
-    body.masterId ?? body.psychologistId,
-  );
+  const masterId = Number(body.masterId);
   const startsAt = String(body.startsAt ?? "");
 
-  if (!Number.isFinite(psychologistId) || !startsAt) {
-    res.status(400).json({ error: "psychologistId and startsAt required" });
+  if (!Number.isFinite(masterId) || !startsAt) {
+    res.status(400).json({ error: "masterId and startsAt required" });
     return;
   }
-  if (psychologistId === tg.id) {
+  if (masterId === tg.id) {
     res.status(400).json({ error: "Cannot book yourself" });
     return;
   }
 
-  const profile = await getProfile(psychologistId);
+  const profile = await getProfile(masterId);
   if (!profile) {
-    res.status(404).json({ error: "Psychologist not found" });
+    res.status(404).json({ error: "Master not found" });
     return;
   }
 
@@ -58,7 +55,7 @@ bookingsRouter.post("/", requireSession, async (req: AuthedRequest, res) => {
   try {
     await upsertUser(tg);
     const booking = await createBooking({
-      psychologistId,
+      masterId,
       clientId: tg.id,
       clientName,
       startsAt,
@@ -68,8 +65,8 @@ bookingsRouter.post("/", requireSession, async (req: AuthedRequest, res) => {
 
     void notifyBookingCreated({
       booking,
-      psychologistName: profile.name,
-      psychologistTimezone: profile.timezone,
+      masterName: profile.name,
+      masterTimezone: profile.timezone,
     });
 
     res.status(201).json({
@@ -78,7 +75,6 @@ bookingsRouter.post("/", requireSession, async (req: AuthedRequest, res) => {
         startsAt: booking.starts_at,
         time: formatTime(booking.starts_at, profile.timezone),
         date: formatDateLabel(booking.starts_at, profile.timezone),
-        psychologistName: profile.name,
         masterName: profile.name,
         duration: booking.duration_min,
         price: booking.price,
@@ -100,16 +96,14 @@ bookingsRouter.get("/mine", requireSession, async (req: AuthedRequest, res) => {
   const rows = await listClientBookings(tg.id);
   const enriched = await Promise.all(
     rows.map(async (b) => {
-      const profile = await getProfile(b.psychologist_id);
+      const profile = await getProfile(b.master_id);
       const tz = profile?.timezone ?? "Europe/Moscow";
       return {
         id: b.id,
         startsAt: b.starts_at,
         date: formatDateLabel(b.starts_at, tz),
         time: formatTime(b.starts_at, tz),
-        psychologistId: b.psychologist_id,
-        masterId: b.psychologist_id,
-        psychologistName: profile?.name ?? "Психолог",
+        masterId: b.master_id,
         masterName: profile?.name ?? "Мастер",
         duration: b.duration_min,
         price: b.price,
@@ -132,20 +126,18 @@ bookingsRouter.post(
       res.status(404).json({ error: "Booking not found" });
       return;
     }
-    const profile = await getProfile(existing.psychologist_id);
+    const profile = await getProfile(existing.master_id);
     const cancelHours =
-      existing.psychologist_id === tg.id
-        ? 0
-        : (profile?.cancel_hours ?? 24);
+      existing.master_id === tg.id ? 0 : (profile?.cancel_hours ?? 24);
 
     try {
       const booking = await cancelBooking(id, tg.id, cancelHours);
       if (profile) {
         void notifyBookingCancelled({
           booking,
-          psychologistName: profile.name,
-          psychologistTimezone: profile.timezone,
-          by: existing.client_id === tg.id ? "client" : "psychologist",
+          masterName: profile.name,
+          masterTimezone: profile.timezone,
+          by: existing.client_id === tg.id ? "client" : "master",
         });
       }
       res.json({ ok: true, booking: { id: booking.id, status: booking.status } });
@@ -177,9 +169,9 @@ bookingsRouter.post(
       res.status(404).json({ error: "Booking not found" });
       return;
     }
-    const profile = await getProfile(existing.psychologist_id);
+    const profile = await getProfile(existing.master_id);
     if (!profile) {
-      res.status(404).json({ error: "Psychologist not found" });
+      res.status(404).json({ error: "Master not found" });
       return;
     }
 

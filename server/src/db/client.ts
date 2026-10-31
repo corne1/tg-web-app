@@ -80,7 +80,7 @@ export async function migrate(): Promise<void> {
       )`,
       `CREATE TABLE IF NOT EXISTS bookings (
         id TEXT PRIMARY KEY NOT NULL,
-        psychologist_id INTEGER NOT NULL REFERENCES users(id),
+        master_id INTEGER NOT NULL REFERENCES users(id),
         client_id INTEGER NOT NULL REFERENCES users(id),
         starts_at TEXT NOT NULL,
         duration_min INTEGER NOT NULL,
@@ -93,13 +93,8 @@ export async function migrate(): Promise<void> {
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
       )`,
-      `CREATE INDEX IF NOT EXISTS idx_bookings_psychologist_starts
-        ON bookings(psychologist_id, starts_at)`,
       `CREATE INDEX IF NOT EXISTS idx_bookings_client_starts
         ON bookings(client_id, starts_at)`,
-      `CREATE UNIQUE INDEX IF NOT EXISTS idx_bookings_active_slot
-        ON bookings(psychologist_id, starts_at)
-        WHERE status != 'cancelled'`,
       `CREATE TABLE IF NOT EXISTS master_services (
         id TEXT PRIMARY KEY NOT NULL,
         master_id INTEGER NOT NULL REFERENCES users(id),
@@ -121,6 +116,26 @@ export async function migrate(): Promise<void> {
     "write",
   );
 
+  // Existing DBs: psychologist_id → master_id (no-op when already renamed / fresh schema).
+  await tryExec(
+    db,
+    `ALTER TABLE bookings RENAME COLUMN psychologist_id TO master_id`,
+  );
+  await tryExec(db, `DROP INDEX IF EXISTS idx_bookings_psychologist_starts`);
+  await tryExec(
+    db,
+    `CREATE INDEX IF NOT EXISTS idx_bookings_master_starts
+      ON bookings(master_id, starts_at)`,
+  );
+  // Recreate unique slot index against master_id (name reused).
+  await tryExec(db, `DROP INDEX IF EXISTS idx_bookings_active_slot`);
+  await tryExec(
+    db,
+    `CREATE UNIQUE INDEX IF NOT EXISTS idx_bookings_active_slot
+      ON bookings(master_id, starts_at)
+      WHERE status != 'cancelled'`,
+  );
+
   // Additive columns for custom onboarding hours (slot generation source of truth).
   await tryExec(
     db,
@@ -135,7 +150,7 @@ export async function migrate(): Promise<void> {
     `ALTER TABLE master_profiles ADD COLUMN place_json TEXT`,
   );
 
-  // One-time: copy legacy psychologist_profiles → master_profiles, then drop.
+  // One-time: copy psychologist_profiles → master_profiles, then drop.
   try {
     const legacy = await db.execute(`SELECT * FROM psychologist_profiles`);
     for (const row of legacy.rows) {

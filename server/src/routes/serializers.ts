@@ -1,4 +1,4 @@
-import { bookingDeepLink, psychologistDeepLink } from "../config.js";
+import { bookingDeepLink, masterDeepLink } from "../config.js";
 import { listServices } from "../db/services.js";
 import type { MasterProfileRow } from "../db/types.js";
 import type { WorkingHours } from "../lib/workingHours.js";
@@ -25,7 +25,7 @@ export function serializeProfile(profile: MasterProfileRow) {
     dayBreakMin: profile.day_break_min,
     place: profile.place,
     bookingLink:
-      bookingDeepLink(profile.slug) ?? psychologistDeepLink(profile.user_id),
+      bookingDeepLink(profile.slug) ?? masterDeepLink(profile.user_id),
   };
 }
 

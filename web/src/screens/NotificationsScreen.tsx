@@ -12,7 +12,7 @@ type Toast = string | null;
 export function NotificationsScreen() {
   const navigate = useNavigate();
   const [toast, setToast] = useState<Toast>(null);
-  const [name, setName] = useState("психологом");
+  const [name, setName] = useState("мастером");
 
   useEffect(() => {
     void fetchMe()
@@ -62,7 +62,7 @@ export function NotificationsScreen() {
       </section>
 
       <section className="notif-block">
-        <h2 className="notif-role">Психологу</h2>
+        <h2 className="notif-role">Мастеру</h2>
         <div className="notif-card">
           <p className="notif-text">Новая запись: Анна, четверг, 14:00.</p>
           <div className="notif-actions">

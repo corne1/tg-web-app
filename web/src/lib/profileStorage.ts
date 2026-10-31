@@ -1,10 +1,23 @@
 import type { MasterProfile } from "../types";
 
-/** Legacy key kept for existing installs. */
-const PROFILE_CACHE_KEY = "psychologistProfileCache";
+const PROFILE_CACHE_KEY = "masterProfileCache";
+const OLD_PROFILE_CACHE_KEY = "psychologistProfileCache";
+
+function readRawCache(): string | null {
+  const current = localStorage.getItem(PROFILE_CACHE_KEY);
+  if (current) return current;
+  const old = localStorage.getItem(OLD_PROFILE_CACHE_KEY);
+  if (old) {
+    localStorage.setItem(PROFILE_CACHE_KEY, old);
+    localStorage.removeItem(OLD_PROFILE_CACHE_KEY);
+    return old;
+  }
+  return null;
+}
 
 /** Local cache of server profile (optional offline hint for hub routing). */
 export function cacheProfile(profile: MasterProfile | null): void {
+  localStorage.removeItem(OLD_PROFILE_CACHE_KEY);
   if (!profile) {
     localStorage.removeItem(PROFILE_CACHE_KEY);
     return;
@@ -14,7 +27,7 @@ export function cacheProfile(profile: MasterProfile | null): void {
 
 export function getCachedProfile(): MasterProfile | null {
   try {
-    const raw = localStorage.getItem(PROFILE_CACHE_KEY);
+    const raw = readRawCache();
     if (!raw) return null;
     return JSON.parse(raw) as MasterProfile;
   } catch {

@@ -42,9 +42,6 @@ export type MasterProfileRow = {
   updated_at: string;
 };
 
-/** @deprecated alias while migrating call sites */
-export type PsychologistProfileRow = MasterProfileRow;
-
 export type MasterServiceRow = {
   id: string;
   master_id: number;
@@ -63,7 +60,7 @@ export type BookingStatus = "pending" | "confirmed" | "cancelled" | "paid";
 
 export type BookingRow = {
   id: string;
-  psychologist_id: number;
+  master_id: number;
   client_id: number;
   starts_at: string;
   duration_min: number;

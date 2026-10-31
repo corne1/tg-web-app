@@ -4,28 +4,28 @@ import { formatDateLabel, formatTime } from "./time.js";
 
 export async function notifyBookingCreated(opts: {
   booking: BookingRow;
-  psychologistName: string;
-  psychologistTimezone: string;
+  masterName: string;
+  masterTimezone: string;
 }): Promise<void> {
   const bot = createBot();
   if (!bot) return;
 
-  const { booking, psychologistName, psychologistTimezone } = opts;
-  const when = `${formatDateLabel(booking.starts_at, psychologistTimezone)} · ${formatTime(booking.starts_at, psychologistTimezone)}`;
+  const { booking, masterName, masterTimezone } = opts;
+  const when = `${formatDateLabel(booking.starts_at, masterTimezone)} · ${formatTime(booking.starts_at, masterTimezone)}`;
 
   try {
     await bot.api.sendMessage(
-      booking.psychologist_id,
+      booking.master_id,
       `Новая запись: ${booking.client_name}, ${when}.`,
     );
   } catch (err) {
-    console.error("[notify] psychologist", err);
+    console.error("[notify] master", err);
   }
 
   try {
     await bot.api.sendMessage(
       booking.client_id,
-      `Вы записаны к ${psychologistName}: ${when}.`,
+      `Вы записаны к ${masterName}: ${when}.`,
     );
   } catch (err) {
     console.error("[notify] client", err);
@@ -34,23 +34,21 @@ export async function notifyBookingCreated(opts: {
 
 export async function notifyBookingCancelled(opts: {
   booking: BookingRow;
-  psychologistName: string;
-  psychologistTimezone: string;
-  by: "client" | "psychologist";
+  masterName: string;
+  masterTimezone: string;
+  by: "client" | "master";
 }): Promise<void> {
   const bot = createBot();
   if (!bot) return;
 
-  const when = `${formatDateLabel(opts.booking.starts_at, opts.psychologistTimezone)} · ${formatTime(opts.booking.starts_at, opts.psychologistTimezone)}`;
+  const when = `${formatDateLabel(opts.booking.starts_at, opts.masterTimezone)} · ${formatTime(opts.booking.starts_at, opts.masterTimezone)}`;
 
   const otherId =
-    opts.by === "client"
-      ? opts.booking.psychologist_id
-      : opts.booking.client_id;
+    opts.by === "client" ? opts.booking.master_id : opts.booking.client_id;
   const text =
     opts.by === "client"
       ? `Клиент ${opts.booking.client_name} отменил запись: ${when}.`
-      : `Психолог ${opts.psychologistName} отменил вашу запись: ${when}.`;
+      : `Мастер ${opts.masterName} отменил вашу запись: ${when}.`;
 
   try {
     await bot.api.sendMessage(otherId, text);
@@ -61,7 +59,7 @@ export async function notifyBookingCancelled(opts: {
 
 export async function notifyReminder(opts: {
   clientId: number;
-  psychologistName: string;
+  masterName: string;
   startsAt: string;
   timezone: string;
   kind: "24h" | "1h";
@@ -71,7 +69,7 @@ export async function notifyReminder(opts: {
 
   const when = `${formatDateLabel(opts.startsAt, opts.timezone)} · ${formatTime(opts.startsAt, opts.timezone)}`;
   const prefix = opts.kind === "24h" ? "Напоминаем: завтра" : "Напоминаем: через час";
-  const text = `${prefix} у вас консультация с ${opts.psychologistName} (${when}).`;
+  const text = `${prefix} у вас консультация с ${opts.masterName} (${when}).`;
 
   try {
     await bot.api.sendMessage(opts.clientId, text);

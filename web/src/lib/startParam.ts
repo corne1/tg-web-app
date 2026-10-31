@@ -33,11 +33,3 @@ export function parseEntryContext(
 
   return { mode: "default" };
 }
-
-/** @deprecated use parseEntryContext */
-export function parsePsychologistStartParam(
-  startParam: string | undefined | null,
-): number | null {
-  const ctx = parseEntryContext(startParam);
-  return ctx.mode === "client" && "masterId" in ctx ? ctx.masterId : null;
-}

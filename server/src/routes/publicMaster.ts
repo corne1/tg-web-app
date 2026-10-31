@@ -36,12 +36,6 @@ async function handleGetSlots(req: AuthedRequest, res: import("express").Respons
   const days = Math.min(14, Math.max(1, Number(req.query.days ?? 7)));
   const slots = await generateSlots(profile, days);
   res.json({
-    psychologist: {
-      id: profile.user_id,
-      name: profile.name,
-      duration: profile.duration,
-      price: profile.price,
-    },
     master: {
       id: profile.user_id,
       name: profile.name,
@@ -52,14 +46,5 @@ async function handleGetSlots(req: AuthedRequest, res: import("express").Respons
   });
 }
 
-// Canonical master paths
 publicMasterRouter.get("/:id", requireSession, handleGetMaster);
 publicMasterRouter.get("/:id/slots", requireSession, handleGetSlots);
-
-/**
- * Legacy psychologist path aliases — same handlers.
- * Mounted at /psychologists from the API root.
- */
-export const psychologistsAliasRouter = Router();
-psychologistsAliasRouter.get("/:id", requireSession, handleGetMaster);
-psychologistsAliasRouter.get("/:id/slots", requireSession, handleGetSlots);

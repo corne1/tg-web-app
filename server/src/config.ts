@@ -48,9 +48,10 @@ export const config = {
   cronSecret: process.env.CRON_SECRET ?? "",
 };
 
-export function psychologistDeepLink(psychologistId: number): string | null {
+/** Fallback deep link by Telegram user id (`startapp=p_<id>`). Prefer bookingDeepLink(slug). */
+export function masterDeepLink(masterId: number): string | null {
   if (!config.botUsername) return null;
-  return `https://t.me/${config.botUsername}?startapp=p_${psychologistId}`;
+  return `https://t.me/${config.botUsername}?startapp=p_${masterId}`;
 }
 
 export function bookingDeepLink(slug: string): string | null {

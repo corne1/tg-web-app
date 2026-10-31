@@ -25,9 +25,9 @@ cronRouter.get("/reminders", async (req, res) => {
     for (const row of due) {
       await notifyReminder({
         clientId: row.client_telegram_id,
-        psychologistName: row.psychologist_name,
+        masterName: row.master_name,
         startsAt: row.starts_at,
-        timezone: row.psychologist_timezone,
+        timezone: row.master_timezone,
         kind,
       });
       await markReminded(row.id, kind);

@@ -266,7 +266,7 @@ export function App() {
           <Route path="/client/confirm" element={<BookingConfirmScreen />} />
           <Route path="/client/bookings" element={<MyBookingsScreen />} />
           <Route path="/client" element={<SlotSelectionScreen />} />
-          <Route path="/client/:psychologistId" element={<SlotSelectionScreen />} />
+          <Route path="/client/:masterId" element={<SlotSelectionScreen />} />
           <Route path="/notifications" element={<NotificationsScreen />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

@@ -1,9 +1,6 @@
 import { Router } from "express";
-import {
-  bookingDeepLink,
-  psychologistDeepLink,
-} from "../config.js";
-import { listPsychologistBookings } from "../db/bookings.js";
+import { bookingDeepLink, masterDeepLink } from "../config.js";
+import { listMasterBookings } from "../db/bookings.js";
 import { ensureMasterProfile } from "../db/profiles.js";
 import { upsertUser } from "../db/users.js";
 import { requireSession, type AuthedRequest } from "../middleware.js";
@@ -34,8 +31,7 @@ cabinetRouter.get(
     if (!onboardingComplete) {
       res.json({
         sessions: [],
-        bookingLink:
-          bookingDeepLink(profile.slug) ?? psychologistDeepLink(tg.id),
+        bookingLink: bookingDeepLink(profile.slug) ?? masterDeepLink(tg.id),
         onboardingComplete: false,
         onboardingStep: profile.onboarding_step,
         profile: serializeProfile(profile),
@@ -56,7 +52,7 @@ cabinetRouter.get(
       to = addLocalDays(today, 7, tz);
     }
 
-    const rows = await listPsychologistBookings(
+    const rows = await listMasterBookings(
       tg.id,
       from.toISOString(),
       to.toISOString(),
@@ -72,8 +68,7 @@ cabinetRouter.get(
         status: b.status,
         paid: b.paid,
       })),
-      bookingLink:
-        bookingDeepLink(profile.slug) ?? psychologistDeepLink(tg.id),
+      bookingLink: bookingDeepLink(profile.slug) ?? masterDeepLink(tg.id),
       onboardingComplete: true,
       onboardingStep: profile.onboarding_step,
       profile: serializeProfile(profile),

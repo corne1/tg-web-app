@@ -100,7 +100,7 @@ export function parseWorkingHoursJson(
   }
 }
 
-/** Infer coarse ScheduleKind from custom hours (legacy field kept in sync). */
+/** Infer coarse ScheduleKind from custom hours (kept in sync with `schedule` column). */
 export function scheduleKindFromHours(hours: WorkingHours): ScheduleKind {
   const enabled = WEEKDAY_IDS.filter((id) => hours[id].enabled);
   if (enabled.length === 0) return "manual";
@@ -116,8 +116,8 @@ export function scheduleKindFromHours(hours: WorkingHours): ScheduleKind {
 }
 
 /**
- * Window for a JS weekday. Prefer custom working hours when present;
- * otherwise fall back to ScheduleKind presets (legacy).
+ * Window for a JS weekday. Prefer `working_hours` when set;
+ * otherwise ScheduleKind presets for profiles without custom hours JSON.
  */
 export function windowsFor(
   schedule: ScheduleKind,
@@ -140,14 +140,14 @@ export function windowsFor(
     };
   }
 
-  // weekday: 0=Sun … 6=Sat — legacy presets
+  // Presets when working_hours_json is null (0=Sun … 6=Sat).
   if (schedule === "weekend") {
     if (weekday === 0 || weekday === 6) {
       return { startHour: 12, endHour: 18, startMin: 12 * 60, endMin: 18 * 60 };
     }
     return null;
   }
-  // weekday + manual (MVP): Mon–Fri 10–20
+  // weekday + manual: Mon–Fri 10–20
   if (weekday >= 1 && weekday <= 5) {
     return { startHour: 10, endHour: 20, startMin: 10 * 60, endMin: 20 * 60 };
   }

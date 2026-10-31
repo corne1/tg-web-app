@@ -15,9 +15,6 @@ export type CityHit = {
   region: string | null;
 };
 
-/** @deprecated Prefer MasterProfile */
-export type { MasterProfile as PsychologistProfile } from "./types";
-
 export type AppUser = {
   id: number;
   first_name: string;
@@ -94,16 +91,6 @@ export async function fetchMe(): Promise<{
     profile: data.profile,
     services: data.services ?? [],
   };
-}
-
-export async function saveProfile(
-  profile: MasterProfile,
-): Promise<MasterProfile> {
-  const data = await request<{ profile: MasterProfile }>("/api/profile", {
-    method: "PUT",
-    body: JSON.stringify(profile),
-  });
-  return data.profile;
 }
 
 export async function saveMasterProfile(input: {
@@ -225,28 +212,14 @@ export async function resolveCity(query: string): Promise<string | null> {
   return data.city;
 }
 
-/** Canonical public master fetch (`/masters` + legacy `/psychologists`). */
 export async function fetchMaster(
   id: number | string,
 ): Promise<PublicMaster> {
   return request(`/api/masters/${encodeURIComponent(String(id))}`);
 }
 
-/** @deprecated Use fetchMaster — same payload via legacy path */
-export async function fetchPsychologist(
-  id: number | string,
-): Promise<PublicMaster> {
-  return request(`/api/psychologists/${encodeURIComponent(String(id))}`);
-}
-
 export async function fetchSlots(masterId: number | string): Promise<{
-  psychologist: {
-    id: number;
-    name: string;
-    duration: number;
-    price: number;
-  };
-  master?: {
+  master: {
     id: number;
     name: string;
     duration: number;
@@ -272,8 +245,7 @@ export async function fetchCabinetSessions(
 }
 
 export async function createBooking(input: {
-  psychologistId?: number;
-  masterId?: number;
+  masterId: number;
   startsAt: string;
 }): Promise<{
   booking: {
@@ -281,7 +253,7 @@ export async function createBooking(input: {
     startsAt: string;
     time: string;
     date: string;
-    psychologistName: string;
+    masterName: string;
     duration: number;
     price: number;
     status: string;
@@ -290,8 +262,7 @@ export async function createBooking(input: {
   return request("/api/bookings", {
     method: "POST",
     body: JSON.stringify({
-      psychologistId: input.psychologistId ?? input.masterId,
-      masterId: input.masterId ?? input.psychologistId,
+      masterId: input.masterId,
       startsAt: input.startsAt,
     }),
   });

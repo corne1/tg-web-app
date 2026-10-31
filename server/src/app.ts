@@ -3,7 +3,7 @@ import cors from "cors";
 import { webhookCallback } from "grammy";
 import { config } from "./config.js";
 import { migrate } from "./db/client.js";
-import { apiRouter } from "./routes.js";
+import { apiRouter } from "./routes/index.js";
 import { parseCookies } from "./middleware.js";
 import { createBot } from "./bot.js";
 

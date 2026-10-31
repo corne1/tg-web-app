@@ -11,7 +11,7 @@ import type { TimeSlot } from "../types";
 
 export function SlotSelectionScreen() {
   const navigate = useNavigate();
-  const { psychologistId: paramId } = useParams();
+  const { masterId: paramId } = useParams();
   const [search] = useSearchParams();
   const { isTelegram } = useTelegram();
 
@@ -50,7 +50,7 @@ export function SlotSelectionScreen() {
         const data = await fetchSlots(masterKey);
         if (cancelled) return;
         setSlots(data.slots);
-        setMeta(data.psychologist);
+        setMeta(data.master);
       } catch (err) {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : "Не удалось загрузить слоты");
@@ -98,8 +98,8 @@ export function SlotSelectionScreen() {
 
     navigate("/client/confirm", {
       state: {
-        psychologistId: meta.id,
-        psychologistName: meta.name,
+        masterId: meta.id,
+        masterName: meta.name,
         startsAt: selected.startsAt,
         dayLabel: selected.dayLabel,
         date: selected.date,

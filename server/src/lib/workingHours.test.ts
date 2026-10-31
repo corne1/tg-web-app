@@ -39,11 +39,11 @@ const weekendOnly: WorkingHours = {
 };
 assert(scheduleKindFromHours(weekendOnly) === "weekend", "schedule weekend");
 
-// Legacy presets (no custom hours)
-const wedLegacy = windowsFor("weekday", 3, null);
-assert(wedLegacy?.startMin === 10 * 60 && wedLegacy.endMin === 20 * 60, "legacy weekday");
-assert(windowsFor("weekday", 0, null) == null, "legacy sunday off");
-assert(windowsFor("weekend", 6, null)?.startHour === 12, "legacy sat");
+// ScheduleKind presets when working_hours is null
+const wedPreset = windowsFor("weekday", 3, null);
+assert(wedPreset?.startMin === 10 * 60 && wedPreset.endMin === 20 * 60, "preset weekday");
+assert(windowsFor("weekday", 0, null) == null, "preset sunday off");
+assert(windowsFor("weekend", 6, null)?.startHour === 12, "preset sat");
 
 // Custom hours override presets
 const wedCustom = windowsFor("weekday", 3, monFri); // Wed
