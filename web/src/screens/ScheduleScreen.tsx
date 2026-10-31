@@ -94,6 +94,9 @@ export function ScheduleScreen() {
       subtitle="Нагрузка на сегодня и завтра"
       footer={
         <div className="footer-links">
+          <Link to="/onboarding" className="text-link">
+            Вернуться к онбордингу
+          </Link>
           <Link to="/cabinet/empty" className="text-link">
             Поделиться ссылкой
           </Link>

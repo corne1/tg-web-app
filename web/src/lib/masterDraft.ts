@@ -276,45 +276,6 @@ export const PLACE_OPTIONS: {
   },
 ];
 
-/** Cities for step-4 search (local list; server geo later). */
-export const CITY_SUGGESTIONS = [
-  "Москва",
-  "Санкт-Петербург",
-  "Казань",
-  "Новосибирск",
-  "Екатеринбург",
-  "Нижний Новгород",
-  "Самара",
-  "Ростов-на-Дону",
-  "Краснодар",
-  "Уфа",
-  "Воронеж",
-  "Пермь",
-  "Волгоград",
-  "Красноярск",
-  "Саратов",
-  "Тюмень",
-  "Тольятти",
-  "Ижевск",
-  "Барнаул",
-  "Иркутск",
-  "Хабаровск",
-  "Ярославль",
-  "Владивосток",
-  "Махачкала",
-  "Томск",
-  "Оренбург",
-  "Кемерово",
-  "Новокузнецк",
-  "Рязань",
-  "Астрахань",
-  "Пенза",
-  "Липецк",
-  "Киров",
-  "Челябинск",
-  "Сочи",
-];
-
 const emptyPlace = (): PlaceDetails => ({
   city: "",
   address: "",
@@ -444,15 +405,6 @@ export function masterHomePath(draft = loadMasterDraft()): string {
   if (!hasEnabledWorkingDay(draft.hours)) return "/onboarding/hours";
   if (!isMasterPlaceDone(draft)) return "/onboarding/place";
   return "/cabinet";
-}
-
-export function filterCities(query: string, limit = 8): string[] {
-  const q = query.trim().toLowerCase();
-  if (!q) return CITY_SUGGESTIONS.slice(0, limit);
-  return CITY_SUGGESTIONS.filter((c) => c.toLowerCase().includes(q)).slice(
-    0,
-    limit,
-  );
 }
 
 export function upsertService(service: MasterService): MasterDraft {

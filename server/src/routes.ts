@@ -46,6 +46,10 @@ import {
   formatTime,
   startOfLocalDay,
 } from "./services/time.js";
+import {
+  resolveRussiaCity,
+  searchRussiaCities,
+} from "./services/cities.js";
 import type { MasterProfileRow, ScheduleKind } from "./db/types.js";
 
 export const apiRouter = Router();
@@ -87,6 +91,24 @@ function serializeService(row: Awaited<ReturnType<typeof listServices>>[number])
 
 apiRouter.get("/health", (_req, res) => {
   res.json({ ok: true });
+});
+
+/** Search Russian cities (HH areas API, cached). */
+apiRouter.get("/cities", requireSession, async (req: AuthedRequest, res) => {
+  const q = String(req.query.q ?? "");
+  const limit = Number(req.query.limit ?? 8);
+  try {
+    if (req.query.resolve === "1" || req.query.resolve === "true") {
+      const city = await resolveRussiaCity(q);
+      res.json({ city });
+      return;
+    }
+    const cities = await searchRussiaCities(q, Number.isFinite(limit) ? limit : 8);
+    res.json({ cities });
+  } catch (err) {
+    console.error("[cities]", err);
+    res.status(502).json({ error: "City search unavailable" });
+  }
 });
 
 /**

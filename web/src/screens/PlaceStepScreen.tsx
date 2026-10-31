@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   completeMasterOnboarding,
+  resolveCity,
+  searchCities,
   setMasterOnboardingStep,
 } from "../api";
 import { MasterSetupChrome } from "../components/master/MasterSetupChrome";
@@ -9,7 +11,6 @@ import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
 import { useTelegram } from "../hooks/useTelegram";
 import {
-  filterCities,
   isPlaceDetailsValid,
   loadMasterDraft,
   needsStudioPlace,
@@ -105,6 +106,8 @@ export function PlaceStepScreen() {
   );
   const [cityField, setCityField] = useState<CityField | null>(null);
   const [cityQuery, setCityQuery] = useState("");
+  const [citySuggestions, setCitySuggestions] = useState<string[]>([]);
+  const [cityLoading, setCityLoading] = useState(false);
   const [cityError, setCityError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -113,6 +116,36 @@ export function PlaceStepScreen() {
   useEffect(() => {
     void setMasterOnboardingStep(4).catch(() => undefined);
   }, []);
+
+  useEffect(() => {
+    if (!cityField) {
+      setCitySuggestions([]);
+      setCityLoading(false);
+      return;
+    }
+    const q = cityQuery.trim();
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      setCityLoading(true);
+      void searchCities(q, 12)
+        .then((cities) => {
+          if (!cancelled) setCitySuggestions(cities);
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setCitySuggestions([]);
+            setCityError("Не удалось загрузить города. Попробуйте ещё раз");
+          }
+        })
+        .finally(() => {
+          if (!cancelled) setCityLoading(false);
+        });
+    }, 250);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [cityField, cityQuery]);
 
   const persist = useCallback(
     (
@@ -134,11 +167,6 @@ export function PlaceStepScreen() {
       });
     },
     [placeMode, studioPlace, visitPlace],
-  );
-
-  const citySuggestions = useMemo(
-    () => filterCities(cityQuery),
-    [cityQuery],
   );
 
   const canContinueStage1 = Boolean(placeMode);
@@ -268,19 +296,31 @@ export function PlaceStepScreen() {
     [cityField, persist, placeMode, studioPlace, visitPlace, webApp],
   );
 
-  const tryCommitCityQuery = useCallback(() => {
+  const tryCommitCityQuery = useCallback(async () => {
     const q = cityQuery.trim();
     if (!q) {
       setCityError("Укажите город");
       return;
     }
-    const match = CITY_EXACT(q);
-    if (!match) {
-      setCityError("Город не найден. Выберите город из списка");
+    const local = citySuggestions.find((c) => c.toLowerCase() === q.toLowerCase());
+    if (local) {
+      selectCity(local);
       return;
     }
-    selectCity(match);
-  }, [cityQuery, selectCity]);
+    setCityLoading(true);
+    try {
+      const match = await resolveCity(q);
+      if (!match) {
+        setCityError("Город не найден. Выберите город из списка");
+        return;
+      }
+      selectCity(match);
+    } catch {
+      setCityError("Не удалось проверить город. Попробуйте ещё раз");
+    } finally {
+      setCityLoading(false);
+    }
+  }, [cityQuery, citySuggestions, selectCity]);
 
   useBackButton(goBack);
   useMainButton({ text: "", visible: false, onClick: () => undefined });
@@ -307,7 +347,8 @@ export function PlaceStepScreen() {
           <button
             type="button"
             className="ms-btn-primary"
-            onClick={tryCommitCityQuery}
+            disabled={cityLoading}
+            onClick={() => void tryCommitCityQuery()}
           >
             Готово
           </button>
@@ -347,9 +388,19 @@ export function PlaceStepScreen() {
           </ul>
         ) : (
           <div className="ms-city-empty">
-            <p className="ms-city-empty-title">Ничего не найдено</p>
+            <p className="ms-city-empty-title">
+              {cityLoading
+                ? "Поиск…"
+                : cityQuery.trim()
+                  ? "Ничего не найдено"
+                  : "Введите город"}
+            </p>
             <p className="ms-city-empty-text">
-              Проверьте написание или выберите другой город
+              {cityLoading
+                ? "Загружаем список городов России"
+                : cityQuery.trim()
+                  ? "Проверьте написание или выберите другой город"
+                  : "Начните вводить название — появятся подсказки"}
             </p>
           </div>
         )}
@@ -573,12 +624,6 @@ export function PlaceStepScreen() {
       )}
     </MasterSetupChrome>
   );
-}
-
-function CITY_EXACT(query: string): string | null {
-  const q = query.trim().toLowerCase();
-  const hit = filterCities(q, 50).find((c) => c.toLowerCase() === q);
-  return hit ?? null;
 }
 
 function Chevron() {

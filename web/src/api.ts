@@ -155,6 +155,27 @@ export async function setMasterOnboardingStep(
   return data.profile;
 }
 
+export async function searchCities(
+  query: string,
+  limit = 8,
+): Promise<string[]> {
+  const params = new URLSearchParams({
+    q: query,
+    limit: String(limit),
+  });
+  const data = await request<{ cities: string[] }>(`/api/cities?${params}`);
+  return data.cities;
+}
+
+export async function resolveCity(query: string): Promise<string | null> {
+  const params = new URLSearchParams({
+    q: query,
+    resolve: "1",
+  });
+  const data = await request<{ city: string | null }>(`/api/cities?${params}`);
+  return data.city;
+}
+
 export async function fetchPsychologist(
   id: number | string,
 ): Promise<PublicPsychologist> {
