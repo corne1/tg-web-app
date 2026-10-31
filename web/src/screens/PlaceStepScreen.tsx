@@ -344,6 +344,7 @@ export function PlaceStepScreen() {
         onClose={handleClose}
         toast={toast}
         toastTone={toastTone}
+        onToastDismiss={() => setToast(null)}
         footer={
           <button
             type="button"
@@ -417,6 +418,7 @@ export function PlaceStepScreen() {
       onClose={handleClose}
       toast={toast}
       toastTone={toastTone}
+      onToastDismiss={() => setToast(null)}
       footer={
         <>
           <button

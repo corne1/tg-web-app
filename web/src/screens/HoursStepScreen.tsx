@@ -214,6 +214,8 @@ export function HoursStepScreen() {
     setTimeout(() => setToast(null), 2200);
   }, [copyTargets, hours, persist, sheet, webApp]);
 
+  const dismissToast = useCallback(() => setToast(null), []);
+
   useBackButton(goBack);
   useMainButton({ text: "", visible: false, onClick: () => undefined });
 
@@ -225,6 +227,7 @@ export function HoursStepScreen() {
       onClose={handleClose}
       toast={toast}
       toastTone="success"
+      onToastDismiss={dismissToast}
       footer={
         <>
           <p className="ms-next-hint">Следующий шаг — Место приёма</p>

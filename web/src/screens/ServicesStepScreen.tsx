@@ -15,6 +15,10 @@ import {
   serviceInitials,
   type MasterService,
 } from "../lib/masterDraft";
+import actionCopyIcon from "../assets/onboarding/action-copy.svg";
+import actionEditIcon from "../assets/onboarding/action-edit.svg";
+import actionTrashIcon from "../assets/onboarding/action-trash.svg";
+import modalTrashIcon from "../assets/onboarding/modal-trash.svg";
 import plusCircleIcon from "../assets/onboarding/plus-circle.svg";
 import servicesEmptyIllu from "../assets/onboarding/services-empty.svg";
 import timerIcon from "../assets/onboarding/timer.svg";
@@ -45,6 +49,10 @@ export function ServicesStepScreen() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [toastTone, setToastTone] = useState<"success" | "danger">("success");
+
+  const deleteService = deleteId
+    ? services.find((s) => s.id === deleteId) ?? null
+    : null;
 
   const refresh = useCallback(() => {
     setServices(loadMasterDraft().services);
@@ -131,6 +139,7 @@ export function ServicesStepScreen() {
   useBackButton(goBack);
   useMainButton({ text: "", visible: false, onClick: () => undefined });
 
+  const dismissToast = useCallback(() => setToast(null), []);
   const hasServices = services.length > 0;
 
   return (
@@ -141,6 +150,7 @@ export function ServicesStepScreen() {
       onClose={handleClose}
       toast={toast}
       toastTone={toastTone}
+      onToastDismiss={dismissToast}
       footer={
         <>
           <p className="ms-next-hint">Следующий шаг — Рабочее время</p>
@@ -243,6 +253,14 @@ export function ServicesStepScreen() {
                       role="menuitem"
                       onClick={() => openForm("edit", s.id)}
                     >
+                      <img
+                        className="ms-action-menu-icon"
+                        src={actionEditIcon}
+                        width={16}
+                        height={16}
+                        alt=""
+                        aria-hidden
+                      />
                       <span>Редактировать</span>
                     </button>
                     <button
@@ -250,8 +268,17 @@ export function ServicesStepScreen() {
                       role="menuitem"
                       onClick={() => openForm("duplicate", s.id)}
                     >
+                      <img
+                        className="ms-action-menu-icon"
+                        src={actionCopyIcon}
+                        width={16}
+                        height={16}
+                        alt=""
+                        aria-hidden
+                      />
                       <span>Дублировать</span>
                     </button>
+                    <div className="ms-action-menu-sep" role="separator" />
                     <button
                       type="button"
                       role="menuitem"
@@ -261,6 +288,14 @@ export function ServicesStepScreen() {
                         setDeleteId(s.id);
                       }}
                     >
+                      <img
+                        className="ms-action-menu-icon"
+                        src={actionTrashIcon}
+                        width={16}
+                        height={16}
+                        alt=""
+                        aria-hidden
+                      />
                       <span>Удалить</span>
                     </button>
                   </div>
@@ -305,27 +340,34 @@ export function ServicesStepScreen() {
           />
           <div className="ms-modal" role="dialog" aria-modal="true" aria-labelledby="del-title">
             <div className="ms-modal-warn" aria-hidden>
-              !
+              <img
+                className="ms-modal-warn-icon"
+                src={modalTrashIcon}
+                width={20}
+                height={20}
+                alt=""
+              />
             </div>
             <h3 id="del-title">Удалить услугу?</h3>
             <p>
-              Услуга перестанет быть доступной для онлайн-записи. Это действие можно отменить,
-              добавив услугу снова.
+              «{deleteService?.title ?? "Услуга"}» перестанет быть доступна для новых записей.
             </p>
-            <button
-              type="button"
-              className="ms-btn-danger"
-              onClick={() => void confirmDelete()}
-            >
-              Удалить
-            </button>
-            <button
-              type="button"
-              className="ms-btn-ghost-text"
-              onClick={() => setDeleteId(null)}
-            >
-              Отмена
-            </button>
+            <div className="ms-modal-actions">
+              <button
+                type="button"
+                className="ms-btn-danger"
+                onClick={() => void confirmDelete()}
+              >
+                Удалить
+              </button>
+              <button
+                type="button"
+                className="ms-btn-ghost-text"
+                onClick={() => setDeleteId(null)}
+              >
+                Отмена
+              </button>
+            </div>
           </div>
         </div>
       )}
