@@ -1285,9 +1285,11 @@ input {
 }
 
 .ms-empty-illu {
-  width: min(220px, 70%);
-  height: auto;
-  margin-bottom: 0.35rem;
+  width: 160px;
+  height: 120px;
+  display: block;
+  margin: 0 auto 0.35rem;
+  object-fit: contain;
 }
 
 .ms-empty-title {
@@ -1350,7 +1352,7 @@ input {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
+  gap: 12px;
 }
 
 .ms-service-card {
@@ -1368,8 +1370,8 @@ input {
   width: 44px;
   height: 44px;
   border-radius: var(--ms-radius-full);
-  background: var(--ms-purple);
-  color: #fff;
+  background: var(--ms-purple-soft);
+  color: var(--ms-purple);
   font-size: 13px;
   font-weight: 600;
   letter-spacing: -0.13px;
@@ -1386,7 +1388,7 @@ input {
 
 .ms-service-title {
   margin: 0;
-  font-weight: 500;
+  font-weight: 600;
   font-size: 16px;
   letter-spacing: -0.16px;
   line-height: 24px;
@@ -1394,31 +1396,61 @@ input {
 }
 
 .ms-service-sub {
-  margin: 2px 0 0;
+  margin: 4px 0 0;
   color: var(--ms-muted);
   font-size: 13px;
   font-weight: 400;
   letter-spacing: -0.13px;
   line-height: 18px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ms-service-duration {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ms-service-timer {
+  width: 16px;
+  height: 16px;
+  display: block;
+  flex: 0 0 auto;
+}
+
+.ms-service-sep {
+  color: var(--ms-tertiary);
 }
 
 .ms-service-more {
   appearance: none;
-  border: none;
-  background: transparent;
-  color: var(--ms-muted);
+  border: 1px solid var(--ms-line-soft);
+  background: #fff;
+  color: var(--ms-ink-strong);
   width: 36px;
   height: 36px;
-  border-radius: 999px;
+  border-radius: var(--ms-radius-full);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   padding: 0;
+  box-shadow: var(--ms-shadow-e1);
+  flex: 0 0 auto;
 }
 
 .ms-service-more:active {
-  background: #e5e5ea;
+  background: var(--ms-soft);
+}
+
+.ms-btn-plus-icon {
+  width: 20px;
+  height: 20px;
+  display: block;
+  flex: 0 0 auto;
 }
 
 .ms-action-menu {

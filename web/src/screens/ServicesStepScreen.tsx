@@ -15,34 +15,20 @@ import {
   serviceInitials,
   type MasterService,
 } from "../lib/masterDraft";
+import plusCircleIcon from "../assets/onboarding/plus-circle.svg";
+import servicesEmptyIllu from "../assets/onboarding/services-empty.svg";
+import timerIcon from "../assets/onboarding/timer.svg";
+
 function EmptyIllustration() {
   return (
-    <svg
+    <img
       className="ms-empty-illu"
-      viewBox="0 0 220 140"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
+      src={servicesEmptyIllu}
+      width={160}
+      height={120}
+      alt=""
       aria-hidden
-    >
-      <rect x="28" y="18" width="164" height="96" rx="18" fill="#EDE7FF" />
-      <rect
-        x="40"
-        y="32"
-        width="140"
-        height="88"
-        rx="16"
-        fill="#fff"
-        stroke="#E5E5EA"
-        strokeWidth="1.5"
-      />
-      <circle cx="72" cy="76" r="22" fill="#EDE7FF" />
-      <rect x="58" y="68" width="28" height="20" rx="3" stroke="#6B4EFF" strokeWidth="1.6" />
-      <circle cx="72" cy="74" r="5" stroke="#6B4EFF" strokeWidth="1.6" />
-      <path d="M60 84l8-6 5 4 7-8 10 10H60z" fill="#6B4EFF" opacity="0.35" />
-      <rect x="106" y="58" width="56" height="8" rx="4" fill="#E5E5EA" />
-      <rect x="106" y="74" width="44" height="8" rx="4" fill="#E5E5EA" />
-      <rect x="106" y="90" width="36" height="8" rx="4" fill="#EDE7FF" />
-    </svg>
+    />
   );
 }
 
@@ -196,14 +182,14 @@ export function ServicesStepScreen() {
             className="ms-btn-outline"
             onClick={() => openForm("new")}
           >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-              <path
-                d="M8 3v10M3 8h10"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-              />
-            </svg>
+            <img
+              className="ms-btn-plus-icon"
+              src={plusCircleIcon}
+              width={20}
+              height={20}
+              alt=""
+              aria-hidden
+            />
             Добавить первую услугу
           </button>
         </div>
@@ -219,7 +205,21 @@ export function ServicesStepScreen() {
                 <div className="ms-service-meta">
                   <p className="ms-service-title">{s.title}</p>
                   <p className="ms-service-sub">
-                    {formatDuration(s.durationMin)} · {formatPrice(s)}
+                    <span className="ms-service-duration">
+                      <img
+                        className="ms-service-timer"
+                        src={timerIcon}
+                        width={16}
+                        height={16}
+                        alt=""
+                        aria-hidden
+                      />
+                      {formatDuration(s.durationMin)}
+                    </span>
+                    <span className="ms-service-sep" aria-hidden>
+                      ·
+                    </span>
+                    <span>{formatPrice(s)}</span>
                   </p>
                 </div>
                 <button
@@ -230,9 +230,9 @@ export function ServicesStepScreen() {
                   onClick={() => setMenuId((id) => (id === s.id ? null : s.id))}
                 >
                   <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden>
-                    <circle cx="9" cy="4" r="1.4" fill="currentColor" />
-                    <circle cx="9" cy="9" r="1.4" fill="currentColor" />
-                    <circle cx="9" cy="14" r="1.4" fill="currentColor" />
+                    <circle cx="9" cy="4.5" r="1.35" fill="currentColor" />
+                    <circle cx="9" cy="9" r="1.35" fill="currentColor" />
+                    <circle cx="9" cy="13.5" r="1.35" fill="currentColor" />
                   </svg>
                 </button>
 
@@ -273,14 +273,14 @@ export function ServicesStepScreen() {
             className="ms-btn-outline"
             onClick={() => openForm("new")}
           >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-              <path
-                d="M8 3v10M3 8h10"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-              />
-            </svg>
+            <img
+              className="ms-btn-plus-icon"
+              src={plusCircleIcon}
+              width={20}
+              height={20}
+              alt=""
+              aria-hidden
+            />
             Добавить услугу
           </button>
         </div>
