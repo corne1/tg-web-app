@@ -1,3 +1,5 @@
+import type { WorkingHours } from "../lib/workingHours.js";
+
 export type StoredUser = {
   id: number;
   first_name: string;
@@ -25,6 +27,9 @@ export type MasterProfileRow = {
   duration: 50 | 60;
   price: number;
   schedule: ScheduleKind;
+  /** Custom weekly hours from onboarding; null → use schedule presets in slots. */
+  working_hours: WorkingHours | null;
+  day_break_min: number | null;
   timezone: string;
   cancel_hours: number;
   status: MasterProfileStatus;

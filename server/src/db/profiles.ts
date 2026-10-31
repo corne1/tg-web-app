@@ -1,3 +1,9 @@
+import {
+  normalizeWorkingHours,
+  parseWorkingHoursJson,
+  scheduleKindFromHours,
+  type WorkingHours,
+} from "../lib/workingHours.js";
 import { withDb } from "./client.js";
 import type {
   MasterProfileRow,
@@ -9,6 +15,14 @@ function mapProfile(row: Record<string, unknown>): MasterProfileRow {
   const statusRaw = String(row.status ?? "draft");
   const status: MasterProfileStatus =
     statusRaw === "active" ? "active" : "draft";
+  const workingHours = parseWorkingHoursJson(
+    row.working_hours_json != null ? String(row.working_hours_json) : null,
+  );
+  const dayBreakRaw = row.day_break_min;
+  const dayBreakMin =
+    dayBreakRaw == null || dayBreakRaw === ""
+      ? null
+      : Number(dayBreakRaw);
   return {
     user_id: Number(row.user_id),
     slug: String(row.slug),
@@ -18,6 +32,9 @@ function mapProfile(row: Record<string, unknown>): MasterProfileRow {
     duration: Number(row.duration) as 50 | 60,
     price: Number(row.price),
     schedule: String(row.schedule) as ScheduleKind,
+    working_hours: workingHours,
+    day_break_min:
+      dayBreakMin != null && Number.isFinite(dayBreakMin) ? dayBreakMin : null,
     timezone: String(row.timezone),
     cancel_hours: Number(row.cancel_hours),
     status,
@@ -41,6 +58,8 @@ export type UpsertProfileInput = {
   duration?: 50 | 60;
   price?: number;
   schedule?: ScheduleKind;
+  workingHours?: WorkingHours | null;
+  dayBreakMin?: number | null;
   timezone?: string;
   cancelHours?: number;
   specialty?: string | null;
@@ -81,13 +100,33 @@ export async function upsertProfile(
     const name = (input.name ?? prev?.name ?? "").trim() || "Мастер";
     const duration = input.duration ?? prev?.duration ?? 60;
     const price = input.price ?? prev?.price ?? 0;
-    const schedule = input.schedule ?? prev?.schedule ?? "weekday";
     const timezone = input.timezone ?? prev?.timezone ?? "Europe/Moscow";
     const cancelHours = input.cancelHours ?? prev?.cancel_hours ?? 24;
     const specialty =
       input.specialty !== undefined ? input.specialty : (prev?.specialty ?? null);
     const city = input.city ?? prev?.city ?? "Москва";
     const slug = prev?.slug ?? defaultSlug(input.userId);
+
+    let workingHours =
+      input.workingHours !== undefined
+        ? input.workingHours
+        : (prev?.working_hours ?? null);
+    if (workingHours) {
+      workingHours = normalizeWorkingHours(workingHours);
+    }
+
+    let dayBreakMin =
+      input.dayBreakMin !== undefined
+        ? input.dayBreakMin
+        : (prev?.day_break_min ?? null);
+    if (dayBreakMin != null && (!Number.isFinite(dayBreakMin) || dayBreakMin < 0)) {
+      dayBreakMin = null;
+    }
+
+    let schedule = input.schedule ?? prev?.schedule ?? "weekday";
+    if (input.workingHours !== undefined && workingHours) {
+      schedule = scheduleKindFromHours(workingHours);
+    }
 
     let status: MasterProfileStatus = input.status ?? prev?.status ?? "draft";
     let onboardingStep =
@@ -111,13 +150,17 @@ export async function upsertProfile(
     }
 
     const createdAt = prev?.created_at ?? now;
+    const workingHoursJson = workingHours
+      ? JSON.stringify(workingHours)
+      : null;
 
     await db.execute({
       sql: `INSERT INTO master_profiles (
         user_id, slug, name, specialty, city, duration, price, schedule,
+        working_hours_json, day_break_min,
         timezone, cancel_hours, status, onboarding_step, onboarding_completed_at,
         created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(user_id) DO UPDATE SET
         name = excluded.name,
         specialty = excluded.specialty,
@@ -125,6 +168,8 @@ export async function upsertProfile(
         duration = excluded.duration,
         price = excluded.price,
         schedule = excluded.schedule,
+        working_hours_json = excluded.working_hours_json,
+        day_break_min = excluded.day_break_min,
         timezone = excluded.timezone,
         cancel_hours = excluded.cancel_hours,
         status = excluded.status,
@@ -140,6 +185,8 @@ export async function upsertProfile(
         duration,
         price,
         schedule,
+        workingHoursJson,
+        dayBreakMin,
         timezone,
         cancelHours,
         status,
@@ -159,6 +206,8 @@ export async function upsertProfile(
       duration,
       price,
       schedule,
+      working_hours: workingHours,
+      day_break_min: dayBreakMin,
       timezone,
       cancel_hours: cancelHours,
       status,

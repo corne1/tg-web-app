@@ -16,11 +16,12 @@ import {
 } from "./lib/profileStorage";
 import {
   loadMasterDraft,
+  normalizeWorkingHours,
   saveMasterDraft,
   type MasterSpecialty,
 } from "./lib/masterDraft";
 import { parseEntryContext } from "./lib/startParam";
-import type { MasterServiceDto, PsychologistProfile } from "./types";
+import type { MasterProfile, MasterServiceDto } from "./types";
 import { BookingConfirmScreen } from "./screens/BookingConfirmScreen";
 import { EmptyStateScreen } from "./screens/EmptyStateScreen";
 import { MyBookingsScreen } from "./screens/MyBookingsScreen";
@@ -34,7 +35,7 @@ import { ServicesStepScreen } from "./screens/ServicesStepScreen";
 import { SlotSelectionScreen } from "./screens/SlotSelectionScreen";
 
 function syncDraftFromServer(
-  profile: PsychologistProfile | null,
+  profile: MasterProfile | null,
   services: MasterServiceDto[],
 ) {
   if (!profile) return;
@@ -44,6 +45,13 @@ function syncDraftFromServer(
     name: profile.name,
     specialty: (profile.specialty as MasterSpecialty | null) ?? null,
     city: profile.city ?? "Москва",
+    hours: profile.workingHours
+      ? normalizeWorkingHours(profile.workingHours)
+      : prev.hours,
+    dayBreakMin:
+      profile.dayBreakMin !== undefined
+        ? profile.dayBreakMin
+        : prev.dayBreakMin,
     services: services.map((s) => ({
       id: s.id,
       title: s.title,
@@ -61,7 +69,7 @@ function HomeRedirect({
   profile,
 }: {
   startParam: string | undefined;
-  profile: PsychologistProfile | null;
+  profile: MasterProfile | null;
 }) {
   const navigate = useNavigate();
   const [bootError, setBootError] = useState<string | null>(null);
@@ -125,7 +133,7 @@ function HomeRedirect({
 export function App() {
   const { initData, user: tgUser, startParam } = useTelegram();
   const [user, setUser] = useState<AppUser | null>(null);
-  const [profile, setProfile] = useState<PsychologistProfile | null>(null);
+  const [profile, setProfile] = useState<MasterProfile | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 

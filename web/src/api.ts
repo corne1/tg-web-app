@@ -1,12 +1,16 @@
 import type {
   ClientBooking,
+  MasterProfile,
   MasterServiceDto,
-  PsychologistProfile,
-  PublicPsychologist,
+  PublicMaster,
   SchedulePeriod,
   Session,
   TimeSlot,
+  WorkingHoursDto,
 } from "./types";
+
+/** @deprecated Prefer MasterProfile */
+export type { MasterProfile as PsychologistProfile } from "./types";
 
 export type AppUser = {
   id: number;
@@ -71,12 +75,12 @@ export async function authenticate(initData: string): Promise<{
 
 export async function fetchMe(): Promise<{
   user: AppUser;
-  profile: PsychologistProfile | null;
+  profile: MasterProfile | null;
   services: MasterServiceDto[];
 }> {
   const data = await request<{
     user: AppUser;
-    profile: PsychologistProfile | null;
+    profile: MasterProfile | null;
     services?: MasterServiceDto[];
   }>("/api/me");
   return {
@@ -87,9 +91,9 @@ export async function fetchMe(): Promise<{
 }
 
 export async function saveProfile(
-  profile: PsychologistProfile,
-): Promise<PsychologistProfile> {
-  const data = await request<{ profile: PsychologistProfile }>("/api/profile", {
+  profile: MasterProfile,
+): Promise<MasterProfile> {
+  const data = await request<{ profile: MasterProfile }>("/api/profile", {
     method: "PUT",
     body: JSON.stringify(profile),
   });
@@ -100,14 +104,28 @@ export async function saveMasterProfile(input: {
   name: string;
   specialty: string;
   city?: string;
-}): Promise<PsychologistProfile> {
-  const data = await request<{ profile: PsychologistProfile }>(
+}): Promise<MasterProfile> {
+  const data = await request<{ profile: MasterProfile }>(
     "/api/master/profile",
     {
       method: "PUT",
       body: JSON.stringify(input),
     },
   );
+  return data.profile;
+}
+
+export async function saveMasterHours(input: {
+  hours: WorkingHoursDto;
+  dayBreakMin?: number | null;
+}): Promise<MasterProfile> {
+  const data = await request<{ profile: MasterProfile }>("/api/master/hours", {
+    method: "PUT",
+    body: JSON.stringify({
+      hours: input.hours,
+      dayBreakMin: input.dayBreakMin ?? null,
+    }),
+  });
   return data.profile;
 }
 
@@ -130,16 +148,25 @@ export async function deleteMasterService(id: string): Promise<void> {
   });
 }
 
-export async function completeMasterOnboarding(): Promise<PsychologistProfile> {
-  const data = await request<{ profile: PsychologistProfile }>(
+export async function completeMasterOnboarding(input?: {
+  hours?: WorkingHoursDto;
+  dayBreakMin?: number | null;
+}): Promise<MasterProfile> {
+  const data = await request<{ profile: MasterProfile }>(
     "/api/master/complete",
-    { method: "POST", body: "{}" },
+    {
+      method: "POST",
+      body: JSON.stringify({
+        hours: input?.hours,
+        dayBreakMin: input?.dayBreakMin ?? null,
+      }),
+    },
   );
   return data.profile;
 }
 
 export async function ensureMasterProfile(): Promise<{
-  profile: PsychologistProfile;
+  profile: MasterProfile;
   services: MasterServiceDto[];
 }> {
   return request("/api/master/ensure", { method: "POST", body: "{}" });
@@ -147,8 +174,8 @@ export async function ensureMasterProfile(): Promise<{
 
 export async function setMasterOnboardingStep(
   step: number,
-): Promise<PsychologistProfile> {
-  const data = await request<{ profile: PsychologistProfile }>(
+): Promise<MasterProfile> {
+  const data = await request<{ profile: MasterProfile }>(
     "/api/master/onboarding-step",
     { method: "PUT", body: JSON.stringify({ step }) },
   );
@@ -176,14 +203,28 @@ export async function resolveCity(query: string): Promise<string | null> {
   return data.city;
 }
 
+/** Canonical public master fetch (`/masters` + legacy `/psychologists`). */
+export async function fetchMaster(
+  id: number | string,
+): Promise<PublicMaster> {
+  return request(`/api/masters/${encodeURIComponent(String(id))}`);
+}
+
+/** @deprecated Use fetchMaster — same payload via legacy path */
 export async function fetchPsychologist(
   id: number | string,
-): Promise<PublicPsychologist> {
+): Promise<PublicMaster> {
   return request(`/api/psychologists/${encodeURIComponent(String(id))}`);
 }
 
-export async function fetchSlots(psychologistId: number | string): Promise<{
+export async function fetchSlots(masterId: number | string): Promise<{
   psychologist: {
+    id: number;
+    name: string;
+    duration: number;
+    price: number;
+  };
+  master?: {
     id: number;
     name: string;
     duration: number;
@@ -192,7 +233,7 @@ export async function fetchSlots(psychologistId: number | string): Promise<{
   slots: TimeSlot[];
 }> {
   return request(
-    `/api/psychologists/${encodeURIComponent(String(psychologistId))}/slots?days=7`,
+    `/api/masters/${encodeURIComponent(String(masterId))}/slots?days=7`,
   );
 }
 
@@ -203,13 +244,14 @@ export async function fetchCabinetSessions(
   bookingLink: string | null;
   onboardingComplete?: boolean;
   onboardingStep?: number;
-  profile?: PsychologistProfile;
+  profile?: MasterProfile;
 }> {
   return request(`/api/cabinet/sessions?period=${period}`);
 }
 
 export async function createBooking(input: {
-  psychologistId: number;
+  psychologistId?: number;
+  masterId?: number;
   startsAt: string;
 }): Promise<{
   booking: {
@@ -225,7 +267,11 @@ export async function createBooking(input: {
 }> {
   return request("/api/bookings", {
     method: "POST",
-    body: JSON.stringify(input),
+    body: JSON.stringify({
+      psychologistId: input.psychologistId ?? input.masterId,
+      masterId: input.masterId ?? input.psychologistId,
+      startsAt: input.startsAt,
+    }),
   });
 }
 

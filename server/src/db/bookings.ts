@@ -1,4 +1,8 @@
 import { randomUUID } from "node:crypto";
+import {
+  canCancelBooking,
+  canRescheduleBooking,
+} from "../lib/bookingRules.js";
 import { withDb } from "./client.js";
 import type { BookingRow, BookingStatus } from "./types.js";
 
@@ -188,12 +192,13 @@ export async function cancelBooking(
       throw new BookingRuleError("Already cancelled");
     }
 
-    const hoursLeft =
-      (new Date(booking.starts_at).getTime() - Date.now()) / (1000 * 60 * 60);
-    if (hoursLeft < cancelHours && booking.client_id === actorId) {
-      throw new BookingRuleError(
-        `Cancel at least ${cancelHours}h before the session`,
-      );
+    const cancelCheck = canCancelBooking({
+      startsAt: booking.starts_at,
+      cancelHours,
+      actorIsClient: booking.client_id === actorId,
+    });
+    if (!cancelCheck.ok) {
+      throw new BookingRuleError(cancelCheck.reason);
     }
 
     const now = new Date().toISOString();
@@ -227,12 +232,12 @@ export async function rescheduleBooking(
       throw new BookingRuleError("Booking cancelled");
     }
 
-    const hoursLeft =
-      (new Date(booking.starts_at).getTime() - Date.now()) / (1000 * 60 * 60);
-    if (hoursLeft < cancelHours) {
-      throw new BookingRuleError(
-        `Reschedule at least ${cancelHours}h before the session`,
-      );
+    const rescheduleCheck = canRescheduleBooking({
+      startsAt: booking.starts_at,
+      cancelHours,
+    });
+    if (!rescheduleCheck.ok) {
+      throw new BookingRuleError(rescheduleCheck.reason);
     }
 
     const now = new Date().toISOString();

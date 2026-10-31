@@ -1,5 +1,6 @@
 import { listActiveStarts } from "../db/bookings.js";
-import type { PsychologistProfileRow, ScheduleKind } from "../db/types.js";
+import type { MasterProfileRow } from "../db/types.js";
+import { windowsFor } from "../lib/workingHours.js";
 import {
   addLocalDays,
   formatDateShort,
@@ -19,52 +20,43 @@ export type GeneratedSlot = {
   available: boolean;
 };
 
-type DayWindow = { startHour: number; endHour: number };
+export { windowsFor };
 
-function windowsFor(
-  schedule: ScheduleKind,
-  weekday: number,
-): DayWindow | null {
-  // weekday: 0=Sun … 6=Sat
-  if (schedule === "weekend") {
-    if (weekday === 0 || weekday === 6) {
-      return { startHour: 12, endHour: 18 };
-    }
-    return null;
-  }
-  // weekday + manual (MVP): Mon–Fri 10–20
-  if (weekday >= 1 && weekday <= 5) {
-    return { startHour: 10, endHour: 20 };
-  }
-  return null;
-}
+export type SlotProfileInput = Pick<
+  MasterProfileRow,
+  "schedule" | "timezone" | "duration" | "working_hours" | "day_break_min"
+>;
 
-export async function generateSlots(
-  profile: PsychologistProfileRow,
+/** Pure slot generation (busy set injected) — unit-testable without DB. */
+export function generateSlotsFromBusy(
+  profile: SlotProfileInput,
+  busy: Set<string>,
   days = 7,
-): Promise<GeneratedSlot[]> {
+  nowMs = Date.now(),
+): GeneratedSlot[] {
   const tz = profile.timezone;
-  const todayStart = startOfLocalDay(new Date(), tz);
-  const rangeEnd = addLocalDays(todayStart, days, tz);
-  const busy = await listActiveStarts(
-    profile.user_id,
-    todayStart.toISOString(),
-    rangeEnd.toISOString(),
-  );
-
+  const todayStart = startOfLocalDay(new Date(nowMs), tz);
   const slots: GeneratedSlot[] = [];
-  const now = Date.now();
+  const stepMin = profile.duration;
+  const dayBreak =
+    profile.day_break_min != null && profile.day_break_min > 0
+      ? profile.day_break_min
+      : 0;
 
   for (let d = 0; d < days; d++) {
     const dayStart = addLocalDays(todayStart, d, tz);
     const parts = zonedParts(dayStart, tz);
-    const window = windowsFor(profile.schedule, parts.weekday);
+    const window = windowsFor(
+      profile.schedule,
+      parts.weekday,
+      profile.working_hours,
+    );
     if (!window) continue;
 
     for (
-      let mins = window.startHour * 60;
-      mins + profile.duration <= window.endHour * 60;
-      mins += profile.duration
+      let mins = window.startMin;
+      mins + stepMin <= window.endMin;
+      mins += stepMin + dayBreak
     ) {
       const hour = Math.floor(mins / 60);
       const minute = mins % 60;
@@ -76,7 +68,7 @@ export async function generateSlots(
         minute,
         tz,
       );
-      if (new Date(startsAt).getTime() <= now) continue;
+      if (new Date(startsAt).getTime() <= nowMs) continue;
 
       slots.push({
         id: startsAt,
@@ -90,4 +82,19 @@ export async function generateSlots(
   }
 
   return slots;
+}
+
+export async function generateSlots(
+  profile: MasterProfileRow,
+  days = 7,
+): Promise<GeneratedSlot[]> {
+  const tz = profile.timezone;
+  const todayStart = startOfLocalDay(new Date(), tz);
+  const rangeEnd = addLocalDays(todayStart, days, tz);
+  const busy = await listActiveStarts(
+    profile.user_id,
+    todayStart.toISOString(),
+    rangeEnd.toISOString(),
+  );
+  return generateSlotsFromBusy(profile, busy, days);
 }

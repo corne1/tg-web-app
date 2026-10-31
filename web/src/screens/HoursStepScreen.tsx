@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { setMasterOnboardingStep } from "../api";
+import { saveMasterHours, setMasterOnboardingStep } from "../api";
 import { MasterSetupChrome } from "../components/master/MasterSetupChrome";
 import { MsArrowRight } from "../components/master/MsArrowRight";
 import { useBackButton } from "../hooks/useBackButton";
@@ -22,6 +22,11 @@ import {
   type WorkingHours,
 } from "../lib/masterDraft";
 import { cacheProfile } from "../lib/profileStorage";
+import {
+  copyHoursToDays,
+  toggleWorkingDay,
+  updateWorkingDayTime,
+} from "../lib/workingHoursMutations";
 
 type Sheet =
   | { kind: "time"; day: WeekdayId; field: "start" | "end" }
@@ -116,18 +121,35 @@ export function HoursStepScreen() {
 
   const canContinue = hasEnabledWorkingDay(hours);
 
+  const syncHoursToServer = useCallback(
+    async (nextHours = hours, nextBreak = dayBreakMin) => {
+      try {
+        const profile = await saveMasterHours({
+          hours: nextHours,
+          dayBreakMin: nextBreak,
+        });
+        cacheProfile(profile);
+      } catch {
+        // Local draft remains; server sync retries on next continue/complete.
+      }
+    },
+    [dayBreakMin, hours],
+  );
+
   const handleContinue = useCallback(() => {
     if (!canContinue) return;
     persist();
+    void syncHoursToServer();
     webApp?.HapticFeedback?.impactOccurred("light");
     navigate("/onboarding/place");
-  }, [canContinue, navigate, persist, webApp]);
+  }, [canContinue, navigate, persist, syncHoursToServer, webApp]);
 
   const handleSaveExit = useCallback(() => {
     persist();
+    void syncHoursToServer();
     webApp?.HapticFeedback?.notificationOccurred("success");
     navigate("/");
-  }, [navigate, persist, webApp]);
+  }, [navigate, persist, syncHoursToServer, webApp]);
 
   const applyPreset = useCallback((id: Exclude<HoursPresetId, "manual">) => {
     const next = applyHoursPreset(id);
@@ -140,10 +162,7 @@ export function HoursStepScreen() {
   const toggleDay = useCallback(
     (id: WeekdayId) => {
       setHours((prev) => {
-        const next = {
-          ...prev,
-          [id]: { ...prev[id], enabled: !prev[id].enabled },
-        };
+        const next = toggleWorkingDay(prev, id);
         setPreset("manual");
         persist(next, "manual");
         return next;
@@ -156,10 +175,7 @@ export function HoursStepScreen() {
   const updateDayTime = useCallback(
     (id: WeekdayId, patch: Partial<DayHours>) => {
       setHours((prev) => {
-        const next = {
-          ...prev,
-          [id]: { ...prev[id], ...patch },
-        };
+        const next = updateWorkingDayTime(prev, id, patch);
         setPreset("manual");
         persist(next, "manual");
         return next;
@@ -189,16 +205,8 @@ export function HoursStepScreen() {
 
   const applyCopy = useCallback(() => {
     if (!sheet || sheet.kind !== "copy-targets") return;
-    const source = hours[sheet.source];
     setHours((prev) => {
-      const next = { ...prev };
-      for (const id of copyTargets) {
-        next[id] = {
-          enabled: true,
-          start: source.start,
-          end: source.end,
-        };
-      }
+      const next = copyHoursToDays(prev, sheet.source, copyTargets);
       setPreset("manual");
       persist(next, "manual");
       return next;
@@ -212,7 +220,7 @@ export function HoursStepScreen() {
     );
     webApp?.HapticFeedback?.notificationOccurred("success");
     setTimeout(() => setToast(null), 2200);
-  }, [copyTargets, hours, persist, sheet, webApp]);
+  }, [copyTargets, persist, sheet, webApp]);
 
   const dismissToast = useCallback(() => setToast(null), []);
 

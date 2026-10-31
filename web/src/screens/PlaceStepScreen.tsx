@@ -1,18 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  completeMasterOnboarding,
-  resolveCity,
-  searchCities,
-  setMasterOnboardingStep,
-} from "../api";
+import { completeMasterOnboarding, setMasterOnboardingStep } from "../api";
 import { MasterSetupChrome } from "../components/master/MasterSetupChrome";
 import { MsArrowRight } from "../components/master/MsArrowRight";
 import { useBackButton } from "../hooks/useBackButton";
+import { useCitySearch } from "../hooks/useCitySearch";
 import { useMainButton } from "../hooks/useMainButton";
 import { useTelegram } from "../hooks/useTelegram";
 import {
-  isPlaceDetailsValid,
   loadMasterDraft,
   needsStudioPlace,
   needsVisitPlace,
@@ -21,9 +16,17 @@ import {
   type PlaceDetails,
   type PlaceMode,
 } from "../lib/masterDraft";
+import {
+  canContinuePlaceStage1,
+  canContinuePlaceStage2,
+  deriveDraftCity,
+  nextPlaceStage,
+  prevPlaceStage,
+  type PlaceStage,
+} from "../lib/placeStepFlow";
 import { cacheProfile } from "../lib/profileStorage";
 
-type Stage = 1 | 2 | 3;
+type Stage = PlaceStage;
 type CityField = "studio" | "visit";
 
 function IconStudio() {
@@ -107,9 +110,13 @@ export function PlaceStepScreen() {
   );
   const [cityField, setCityField] = useState<CityField | null>(null);
   const [cityQuery, setCityQuery] = useState("");
-  const [citySuggestions, setCitySuggestions] = useState<string[]>([]);
-  const [cityLoading, setCityLoading] = useState(false);
-  const [cityError, setCityError] = useState<string | null>(null);
+  const {
+    suggestions: citySuggestions,
+    loading: cityLoading,
+    error: cityError,
+    setError: setCityError,
+    commitQuery: commitCityQuery,
+  } = useCitySearch(Boolean(cityField), cityQuery, 12);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [toastTone, setToastTone] = useState<"success" | "danger">("success");
@@ -117,36 +124,6 @@ export function PlaceStepScreen() {
   useEffect(() => {
     void setMasterOnboardingStep(4).catch(() => undefined);
   }, []);
-
-  useEffect(() => {
-    if (!cityField) {
-      setCitySuggestions([]);
-      setCityLoading(false);
-      return;
-    }
-    const q = cityQuery.trim();
-    let cancelled = false;
-    const timer = window.setTimeout(() => {
-      setCityLoading(true);
-      void searchCities(q, 12)
-        .then((cities) => {
-          if (!cancelled) setCitySuggestions(cities);
-        })
-        .catch(() => {
-          if (!cancelled) {
-            setCitySuggestions([]);
-            setCityError("Не удалось загрузить города. Попробуйте ещё раз");
-          }
-        })
-        .finally(() => {
-          if (!cancelled) setCityLoading(false);
-        });
-    }, 250);
-    return () => {
-      cancelled = true;
-      window.clearTimeout(timer);
-    };
-  }, [cityField, cityQuery]);
 
   const persist = useCallback(
     (
@@ -160,33 +137,17 @@ export function PlaceStepScreen() {
         placeMode: nextMode,
         studioPlace: nextStudio,
         visitPlace: nextVisit,
-        city:
-          nextStudio.city.trim() ||
-          nextVisit.city.trim() ||
-          draft.city ||
-          "Москва",
+        city: deriveDraftCity(nextStudio, nextVisit, draft.city),
       });
     },
     [placeMode, studioPlace, visitPlace],
   );
 
-  const canContinueStage1 = Boolean(placeMode);
-  const canContinueStage2 = useMemo(() => {
-    if (!placeMode) return false;
-    if (
-      needsStudioPlace(placeMode) &&
-      !isPlaceDetailsValid(studioPlace, true)
-    ) {
-      return false;
-    }
-    if (
-      needsVisitPlace(placeMode) &&
-      !isPlaceDetailsValid(visitPlace, false)
-    ) {
-      return false;
-    }
-    return true;
-  }, [placeMode, studioPlace, visitPlace]);
+  const canContinueStage1 = canContinuePlaceStage1(placeMode);
+  const canContinueStage2 = useMemo(
+    () => canContinuePlaceStage2(placeMode, studioPlace, visitPlace),
+    [placeMode, studioPlace, visitPlace],
+  );
 
   const goBack = useCallback(() => {
     if (cityField) {
@@ -196,12 +157,12 @@ export function PlaceStepScreen() {
       return;
     }
     if (stage > 1) {
-      setStage((s) => (s === 3 ? 2 : 1));
+      setStage((s) => prevPlaceStage(s));
       return;
     }
     persist();
     navigate("/onboarding/hours");
-  }, [cityField, navigate, persist, stage]);
+  }, [cityField, navigate, persist, setCityError, stage]);
 
   const handleClose = useCallback(() => {
     persist();
@@ -223,21 +184,25 @@ export function PlaceStepScreen() {
       if (!canContinueStage1) return;
       persist();
       webApp?.HapticFeedback?.impactOccurred("light");
-      setStage(2);
+      setStage(nextPlaceStage(1));
       return;
     }
     if (stage === 2) {
       if (!canContinueStage2) return;
       persist();
       webApp?.HapticFeedback?.impactOccurred("light");
-      setStage(3);
+      setStage(nextPlaceStage(2));
       return;
     }
     if (saving) return;
     setSaving(true);
     try {
       persist();
-      const profile = await completeMasterOnboarding();
+      const draft = loadMasterDraft();
+      const profile = await completeMasterOnboarding({
+        hours: draft.hours,
+        dayBreakMin: draft.dayBreakMin,
+      });
       cacheProfile(profile);
       webApp?.HapticFeedback?.notificationOccurred("success");
       navigate("/cabinet");
@@ -274,7 +239,7 @@ export function PlaceStepScreen() {
       setCityQuery(current);
       setCityError(null);
     },
-    [studioPlace.city, visitPlace.city],
+    [setCityError, studioPlace.city, visitPlace.city],
   );
 
   const selectCity = useCallback(
@@ -294,7 +259,7 @@ export function PlaceStepScreen() {
       setCityError(null);
       webApp?.HapticFeedback?.selectionChanged?.();
     },
-    [cityField, persist, placeMode, studioPlace, visitPlace, webApp],
+    [cityField, persist, placeMode, setCityError, studioPlace, visitPlace, webApp],
   );
 
   const tryCommitCityQuery = useCallback(async () => {
@@ -303,25 +268,20 @@ export function PlaceStepScreen() {
       setCityError("Укажите город");
       return;
     }
-    const local = citySuggestions.find((c) => c.toLowerCase() === q.toLowerCase());
+    const local = citySuggestions.find(
+      (c) => c.toLowerCase() === q.toLowerCase(),
+    );
     if (local) {
       selectCity(local);
       return;
     }
-    setCityLoading(true);
-    try {
-      const match = await resolveCity(q);
-      if (!match) {
-        setCityError("Город не найден. Выберите город из списка");
-        return;
-      }
-      selectCity(match);
-    } catch {
-      setCityError("Не удалось проверить город. Попробуйте ещё раз");
-    } finally {
-      setCityLoading(false);
+    const match = await commitCityQuery(q);
+    if (!match) {
+      setCityError("Город не найден. Выберите город из списка");
+      return;
     }
-  }, [cityQuery, citySuggestions, selectCity]);
+    selectCity(match);
+  }, [cityQuery, citySuggestions, commitCityQuery, selectCity, setCityError]);
 
   useBackButton(goBack);
   useMainButton({ text: "", visible: false, onClick: () => undefined });

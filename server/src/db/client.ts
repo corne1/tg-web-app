@@ -121,6 +121,16 @@ export async function migrate(): Promise<void> {
     "write",
   );
 
+  // Additive columns for custom onboarding hours (slot generation source of truth).
+  await tryExec(
+    db,
+    `ALTER TABLE master_profiles ADD COLUMN working_hours_json TEXT`,
+  );
+  await tryExec(
+    db,
+    `ALTER TABLE master_profiles ADD COLUMN day_break_min INTEGER`,
+  );
+
   // One-time: copy legacy psychologist_profiles → master_profiles, then drop.
   try {
     const legacy = await db.execute(`SELECT * FROM psychologist_profiles`);
