@@ -48,7 +48,6 @@ export function ServiceFormScreen({ mode }: { mode: Mode }) {
   const [errors, setErrors] = useState<Errors>({});
   const [sheet, setSheet] = useState<Sheet>(null);
   const [sheetPanel, setSheetPanel] = useState<SheetPanel>("list");
-  const [sheetDraftDuration, setSheetDraftDuration] = useState(60);
   const [sheetDraftBreak, setSheetDraftBreak] = useState(0);
   const [customHours, setCustomHours] = useState(0);
   const [customMinutes, setCustomMinutes] = useState(40);
@@ -65,13 +64,6 @@ export function ServiceFormScreen({ mode }: { mode: Mode }) {
     }
     return { title: "Новая услуга", cta: "Создать услугу" };
   }, [mode]);
-
-  const durationLabel = form.useCustomDuration
-    ? form.customDuration
-      ? formatDuration(Number(form.customDuration) || 0)
-      : "Выбрать другое время"
-    : (DURATION_OPTIONS.find((o) => o.value === form.durationMin)?.label ??
-      formatDuration(form.durationMin));
 
   const breakLabel = form.useCustomBreak
     ? form.customBreak
@@ -90,26 +82,30 @@ export function ServiceFormScreen({ mode }: { mode: Mode }) {
     navigate("/");
   }, [navigate, webApp]);
 
+  const openCustomDuration = useCallback(() => {
+    const mins = form.useCustomDuration
+      ? Number(form.customDuration) || 40
+      : 40;
+    const parts = splitDurationMinutes(mins);
+    setCustomHours(parts.hours);
+    setCustomMinutes(parts.minutes);
+    setSheetPanel("custom");
+    setSheet("duration");
+  }, [form.customDuration, form.useCustomDuration]);
+
   const openSheet = useCallback(
     (next: Sheet) => {
       if (next === "duration") {
-        const mins = form.useCustomDuration
-          ? Number(form.customDuration) || 40
-          : form.durationMin;
-        const parts = splitDurationMinutes(mins);
-        setCustomHours(parts.hours);
-        setCustomMinutes(parts.minutes);
-        setSheetDraftDuration(form.durationMin);
-        setSheetPanel(form.useCustomDuration ? "custom" : "list");
-      } else if (next === "break") {
-        setSheetDraftBreak(
-          form.useCustomBreak ? 0 : form.breakAfterMin,
-        );
+        openCustomDuration();
+        return;
+      }
+      if (next === "break") {
+        setSheetDraftBreak(form.useCustomBreak ? 0 : form.breakAfterMin);
         setSheetPanel(form.useCustomBreak ? "custom" : "list");
       }
       setSheet(next);
     },
-    [form],
+    [form.breakAfterMin, form.useCustomBreak, openCustomDuration],
   );
 
   const closeSheet = useCallback(() => {
@@ -224,20 +220,83 @@ export function ServiceFormScreen({ mode }: { mode: Mode }) {
             )}
           </label>
 
-          <div className="ms-field">
-            <span className="ms-label">Длительность</span>
-            <button
-              type="button"
-              className={`ms-select ${showErr("durationMin") ? "is-invalid" : ""}`}
-              onClick={() => openSheet("duration")}
+          <fieldset className="ms-field ms-duration-block">
+            <legend className="ms-label">Длительность</legend>
+            <div
+              className={`ms-duration-options ${
+                showErr("durationMin") ? "is-invalid" : ""
+              }`}
+              role="radiogroup"
+              aria-label="Длительность услуги"
             >
-              <span>{durationLabel}</span>
-              <Chevron />
-            </button>
+              {DURATION_OPTIONS.filter((o) => o.value !== -1).map((opt) => {
+                const active =
+                  sheet !== "duration" &&
+                  !form.useCustomDuration &&
+                  form.durationMin === opt.value;
+                const id = `duration-${opt.value}`;
+                return (
+                  <label
+                    key={opt.value}
+                    className="ms-duration-option"
+                    htmlFor={id}
+                  >
+                    <input
+                      id={id}
+                      type="radio"
+                      name="service-duration"
+                      className="ms-sheet-radio-input"
+                      checked={active}
+                      onChange={() =>
+                        setForm((f) => ({
+                          ...f,
+                          useCustomDuration: false,
+                          durationMin: opt.value,
+                        }))
+                      }
+                    />
+                    <span
+                      className={`ms-radio ${active ? "is-on" : ""}`}
+                      aria-hidden
+                    />
+                    <span className="ms-duration-option-label">{opt.label}</span>
+                  </label>
+                );
+              })}
+              <label
+                className="ms-duration-option"
+                htmlFor="duration-custom"
+              >
+                <input
+                  id="duration-custom"
+                  type="radio"
+                  name="service-duration"
+                  className="ms-sheet-radio-input"
+                  checked={form.useCustomDuration || sheet === "duration"}
+                  onChange={openCustomDuration}
+                  onClick={() => {
+                    if (form.useCustomDuration || sheet === "duration") {
+                      openCustomDuration();
+                    }
+                  }}
+                />
+                <span
+                  className={`ms-radio ${
+                    form.useCustomDuration || sheet === "duration" ? "is-on" : ""
+                  }`}
+                  aria-hidden
+                />
+                <span className="ms-duration-option-label">
+                  {form.useCustomDuration && form.customDuration
+                    ? formatDuration(Number(form.customDuration) || 0)
+                    : "Выбрать другое время"}
+                </span>
+              </label>
+            </div>
             {showErr("durationMin") && (
               <span className="ms-field-error">{errors.durationMin}</span>
             )}
-          </div>
+          </fieldset>
 
           <fieldset className="ms-field ms-price-block">
             <legend className="ms-label">Цена</legend>
@@ -411,101 +470,58 @@ export function ServiceFormScreen({ mode }: { mode: Mode }) {
           >
             <ServiceSheetHeader
               title={
-                sheetPanel === "custom"
-                  ? sheet === "duration"
-                    ? "Своя длительность"
-                    : "Выбрать другое время"
-                  : sheet === "duration"
-                    ? "Длительность услуги"
+                sheet === "duration"
+                  ? "Своя длительность"
+                  : sheetPanel === "custom"
+                    ? "Выбрать другое время"
                     : "Длительность перерыва"
               }
               onClose={closeSheet}
               onBack={
-                sheetPanel === "custom"
+                sheet === "break" && sheetPanel === "custom"
                   ? () => setSheetPanel("list")
                   : undefined
               }
             />
-            {sheetPanel === "list" ? (
+            {sheet === "break" && sheetPanel === "list" ? (
               <>
                 <div className="ms-sheet-picker-group">
                   <ul
                     className="ms-sheet-list ms-sheet-picker-list"
                     role="radiogroup"
-                    aria-label={
-                      sheet === "duration"
-                        ? "Длительность услуги"
-                        : "Длительность перерыва"
-                    }
+                    aria-label="Длительность перерыва"
                   >
-                    {sheet === "duration" &&
-                      DURATION_OPTIONS.filter((o) => o.value !== -1).map(
-                        (opt) => {
-                          const active = sheetDraftDuration === opt.value;
-                          return (
-                            <li key={opt.value}>
-                              <button
-                                type="button"
-                                role="radio"
-                                aria-checked={active}
-                                className={`ms-sheet-item ms-sheet-item-row ${active ? "is-active" : ""}`}
-                                onClick={() =>
-                                  setSheetDraftDuration(opt.value)
-                                }
-                              >
-                                <span className="ms-sheet-item-label">
-                                  {opt.label}
-                                </span>
-                                <span
-                                  className={`ms-radio ${active ? "is-on" : ""}`}
-                                  aria-hidden
-                                />
-                              </button>
-                            </li>
-                          );
-                        },
-                      )}
-                    {sheet === "break" &&
-                      BREAK_OPTIONS.filter((o) => o.value !== -1).map((opt) => {
-                        const active = sheetDraftBreak === opt.value;
-                        return (
-                          <li key={opt.value}>
-                            <button
-                              type="button"
-                              role="radio"
-                              aria-checked={active}
-                              className={`ms-sheet-item ms-sheet-item-row ${active ? "is-active" : ""}`}
-                              onClick={() => setSheetDraftBreak(opt.value)}
-                            >
-                              <span className="ms-sheet-item-label">
-                                {opt.label}
-                              </span>
-                              <span
-                                className={`ms-radio ${active ? "is-on" : ""}`}
-                                aria-hidden
-                              />
-                            </button>
-                          </li>
-                        );
-                      })}
+                    {BREAK_OPTIONS.filter((o) => o.value !== -1).map((opt) => {
+                      const active = sheetDraftBreak === opt.value;
+                      return (
+                        <li key={opt.value}>
+                          <button
+                            type="button"
+                            role="radio"
+                            aria-checked={active}
+                            className={`ms-sheet-item ms-sheet-item-row ${active ? "is-active" : ""}`}
+                            onClick={() => setSheetDraftBreak(opt.value)}
+                          >
+                            <span className="ms-sheet-item-label">
+                              {opt.label}
+                            </span>
+                            <span
+                              className={`ms-radio ${active ? "is-on" : ""}`}
+                              aria-hidden
+                            />
+                          </button>
+                        </li>
+                      );
+                    })}
                   </ul>
                   <button
                     type="button"
                     className="ms-sheet-alt-action"
                     onClick={() => {
-                      if (sheet === "duration") {
-                        const mins = form.useCustomDuration
-                          ? Number(form.customDuration) || 40
-                          : 40;
-                        const parts = splitDurationMinutes(mins);
-                        setCustomHours(parts.hours);
-                        setCustomMinutes(parts.minutes);
-                      } else {
-                        setForm((f) => ({
-                          ...f,
-                          customBreak: f.customBreak || "20",
-                        }));
-                      }
+                      setForm((f) => ({
+                        ...f,
+                        customBreak: f.customBreak || "20",
+                      }));
                       setSheetPanel("custom");
                     }}
                   >
@@ -520,19 +536,11 @@ export function ServiceFormScreen({ mode }: { mode: Mode }) {
                     type="button"
                     className="ms-btn-primary"
                     onClick={() => {
-                      if (sheet === "duration") {
-                        setForm((f) => ({
-                          ...f,
-                          useCustomDuration: false,
-                          durationMin: sheetDraftDuration,
-                        }));
-                      } else {
-                        setForm((f) => ({
-                          ...f,
-                          useCustomBreak: false,
-                          breakAfterMin: sheetDraftBreak,
-                        }));
-                      }
+                      setForm((f) => ({
+                        ...f,
+                        useCustomBreak: false,
+                        breakAfterMin: sheetDraftBreak,
+                      }));
                       closeSheet();
                     }}
                   >

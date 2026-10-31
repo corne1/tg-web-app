@@ -1722,6 +1722,43 @@ input {
   width: 100%;
 }
 
+.ms-duration-block {
+  gap: 6px;
+}
+
+.ms-duration-options {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.ms-duration-options.is-invalid {
+  outline: 3px solid rgba(217, 45, 32, 0.12);
+  border-radius: var(--ms-radius-input);
+}
+
+.ms-duration-option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 40px;
+  margin: 0;
+  padding: 8px 0;
+  cursor: pointer;
+  color: var(--ms-ink);
+}
+
+.ms-duration-option-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+}
+
 /* Price block: label + 2 radio options (Dropdown-Item + Input), gap 6 / 12 / 4 */
 .ms-price-block {
   gap: 6px;
