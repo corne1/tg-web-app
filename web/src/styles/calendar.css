@@ -3454,7 +3454,9 @@ label.ms-sheet-item {
 
 .ms-cab-staff {
   display: flex;
+  align-items: stretch;
   gap: 12px;
+  min-height: 88px;
   overflow-x: auto;
   padding-bottom: 2px;
   -webkit-overflow-scrolling: touch;
@@ -3465,29 +3467,55 @@ label.ms-sheet-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  width: 64px;
+  justify-content: flex-start;
+  gap: 8px;
+  width: 72px;
+  min-height: 100%;
+  align-self: stretch;
 }
 
-.ms-cab-avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--ms-radius-full);
+.tg-avatar {
+  position: relative;
+  flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: var(--ms-fill2);
-  color: var(--ms-ink);
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: -0.14px;
+  border-radius: var(--ms-radius-full);
+  overflow: hidden;
+  color: #fff;
+  box-sizing: border-box;
   border: 2px solid transparent;
 }
 
-.ms-cab-staff-item.is-active .ms-cab-avatar {
+.tg-avatar-img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.tg-avatar-letter {
+  position: relative;
+  z-index: 1;
+  font-size: 0.42em;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+.ms-cab-avatar.tg-avatar {
+  width: 64px;
+  height: 64px;
+}
+
+.ms-cab-staff-item.is-active .ms-cab-avatar.tg-avatar {
   border-color: var(--ms-purple);
-  background: var(--ms-purple-soft);
-  color: var(--ms-purple);
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--ms-purple-soft);
 }
 
 .ms-cab-staff-name {
@@ -3497,7 +3525,7 @@ label.ms-sheet-item {
   line-height: 16px;
   color: var(--ms-muted);
   text-align: center;
-  max-width: 64px;
+  max-width: 72px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

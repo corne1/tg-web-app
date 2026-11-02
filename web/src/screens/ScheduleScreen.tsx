@@ -1,9 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchCabinetSessions, markBookingPaid } from "../api";
+import {
+  fetchCabinetSessions,
+  fetchMe,
+  markBookingPaid,
+  type AppUser,
+} from "../api";
 import { MasterTabBar } from "../components/master/MasterTabBar";
+import { TgAvatar } from "../components/master/TgAvatar";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
+import { useTelegram } from "../hooks/useTelegram";
 import { WEEKDAYS } from "../lib/masterDraft";
 import { cacheProfile, masterResumePath } from "../lib/profileStorage";
 import {
@@ -11,7 +18,6 @@ import {
   addDays,
   dayTitle,
   firstName,
-  initials,
   monthTitle,
   sameDay,
   sessionEndClock,
@@ -93,10 +99,12 @@ function toneForSession(index: number, cancelled: boolean): CardTone | "muted" {
 
 export function ScheduleScreen() {
   const navigate = useNavigate();
+  const { user: tgUser } = useTelegram();
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [weekCursor, setWeekCursor] = useState(() => startOfWeek(new Date()));
   const [sessions, setSessions] = useState<Session[]>([]);
   const [profile, setProfile] = useState<MasterProfile | null>(null);
+  const [appUser, setAppUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -104,7 +112,11 @@ export function ScheduleScreen() {
     setLoading(true);
     setError(null);
     try {
-      const data = await fetchCabinetSessions("week");
+      const [data, me] = await Promise.all([
+        fetchCabinetSessions("week"),
+        fetchMe().catch(() => null),
+      ]);
+      if (me?.user) setAppUser(me.user);
       if (data.profile) {
         cacheProfile(data.profile);
         setProfile(data.profile);
@@ -147,7 +159,25 @@ export function ScheduleScreen() {
   const visibleSessions = daySessions.filter((s) => s.status !== "cancelled");
   const durationMin = profile?.duration ?? 60;
   const hoursText = workHoursLabel(selectedDate, profile?.workingHours);
-  const masterName = profile?.name?.trim() || "Мастер";
+
+  const tgDisplayName = [tgUser?.first_name, tgUser?.last_name]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+  const appDisplayName = [appUser?.first_name, appUser?.last_name]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+  const masterName =
+    tgDisplayName ||
+    appDisplayName ||
+    profile?.name?.trim() ||
+    "Мастер";
+  const avatarUserId = tgUser?.id ?? appUser?.id ?? profile?.userId ?? 0;
+  const photoUrl = tgUser?.photo_url || appUser?.photo_url || null;
+  const staffLabel = firstName(
+    tgUser?.first_name || appUser?.first_name || masterName,
+  );
 
   const selectDay = useCallback((day: Date) => {
     setSelectedDate(day);
@@ -269,10 +299,15 @@ export function ScheduleScreen() {
 
         <div className="ms-cab-staff" aria-label="Мастер">
           <div className="ms-cab-staff-item is-active">
-            <span className="ms-cab-avatar" aria-hidden>
-              {initials(masterName)}
-            </span>
-            <span className="ms-cab-staff-name">{firstName(masterName)}</span>
+            <TgAvatar
+              className="ms-cab-avatar"
+              photoUrl={photoUrl}
+              name={tgUser?.first_name || appUser?.first_name || masterName}
+              userId={avatarUserId}
+              size={64}
+              alt={staffLabel}
+            />
+            <span className="ms-cab-staff-name">{staffLabel}</span>
           </div>
         </div>
 
