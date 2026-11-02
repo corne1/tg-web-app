@@ -3086,3 +3086,612 @@ label.ms-sheet-item {
   flex: 0 0 auto;
   margin-top: 0;
 }
+
+/* Success screen — end of master onboarding
+   Figma: Project!! / 21207:8897 «Экран успеха. Конец онбординга мастера» */
+.master-setup.ms-success {
+  background: #fff;
+}
+
+.ms-success-body {
+  gap: 16px;
+  justify-content: center;
+  padding-top: calc(24px + env(safe-area-inset-top, 0px));
+}
+
+.ms-success-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  padding: 8px 8px 8px;
+}
+
+.ms-success-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 8px 24px rgba(98, 61, 245, 0.12));
+}
+
+.ms-success-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.24px;
+  line-height: 32px;
+  color: var(--ms-ink-strong);
+}
+
+.ms-success-lead {
+  margin: 0;
+  max-width: 320px;
+  font-size: 16px;
+  font-weight: 400;
+  letter-spacing: -0.16px;
+  line-height: 24px;
+  color: var(--ms-muted);
+}
+
+.ms-success-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  padding: 16px;
+  box-sizing: border-box;
+  border-radius: var(--ms-radius-card);
+  background: var(--ms-fill2);
+  border: none;
+  box-shadow: none;
+}
+
+.ms-success-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ms-success-globe {
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--ms-radius-full);
+  background: var(--ms-purple-soft);
+}
+
+.ms-success-card-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.16px;
+  line-height: 24px;
+  color: var(--ms-ink);
+}
+
+.ms-success-url {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 16px;
+  box-sizing: border-box;
+  border-radius: var(--ms-radius-full);
+  border: 1px solid var(--ms-line-soft);
+  background: #fff;
+  color: var(--ms-tertiary);
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ms-success-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+}
+
+.ms-success-action {
+  margin-top: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+}
+
+.ms-success-action img {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+}
+
+.ms-success-preview {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 16px;
+  box-sizing: border-box;
+  border: none;
+  border-radius: var(--ms-radius-card);
+  background: var(--ms-fill2);
+  box-shadow: none;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+}
+
+.ms-success-preview:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.ms-success-preview:not(:disabled):active {
+  background: var(--ms-soft);
+}
+
+.ms-success-preview-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ms-success-preview-title {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.16px;
+  line-height: 24px;
+  color: var(--ms-ink);
+}
+
+.ms-success-preview-sub {
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  color: var(--ms-muted);
+}
+
+.ms-success-preview-chevron {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--ms-radius-full);
+  border: 1px solid var(--ms-line-soft);
+  background: #fff;
+  color: var(--ms-ink);
+  box-shadow: var(--ms-shadow-e1);
+}
+
+.master-setup.ms-success .ms-footer {
+  background: #fff;
+  border-top-color: transparent;
+}
+
+/* Cabinet — schedule (Figma Project!! / 21207:9665 «Расписание») */
+.master-setup.ms-cabinet {
+  background: #fff;
+}
+
+.ms-cab-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+  padding: calc(16px + env(safe-area-inset-top, 0px)) 16px 8px;
+}
+
+.ms-cab-title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.28px;
+  line-height: 36px;
+  color: var(--ms-ink-strong);
+}
+
+.ms-cab-add {
+  appearance: none;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: var(--ms-radius-full);
+  background: var(--ms-purple);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(98, 61, 245, 0.28);
+}
+
+.ms-cab-add:active {
+  transform: scale(0.96);
+}
+
+.ms-cab-body {
+  gap: 16px;
+  padding-top: 8px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+}
+
+.ms-cab-month-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ms-cab-month {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--ms-ink);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.16px;
+  line-height: 24px;
+  cursor: pointer;
+}
+
+.ms-cab-week-nav {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.ms-cab-week-btn {
+  appearance: none;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--ms-radius-full);
+  border: 1px solid var(--ms-line-soft);
+  background: #fff;
+  color: var(--ms-ink);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.ms-cab-week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+  width: 100%;
+}
+
+.ms-cab-day {
+  appearance: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--ms-muted);
+}
+
+.ms-cab-day-wd {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: -0.12px;
+  line-height: 16px;
+}
+
+.ms-cab-day-num {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--ms-radius-full);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  color: var(--ms-ink);
+}
+
+.ms-cab-day.is-today .ms-cab-day-num {
+  box-shadow: inset 0 0 0 1.5px var(--ms-purple-border);
+}
+
+.ms-cab-day.is-active .ms-cab-day-wd {
+  color: var(--ms-purple);
+}
+
+.ms-cab-day.is-active .ms-cab-day-num {
+  background: var(--ms-purple);
+  color: #fff;
+  box-shadow: none;
+}
+
+.ms-cab-day-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ms-cab-day-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.18px;
+  line-height: 26px;
+  color: var(--ms-ink-strong);
+}
+
+.ms-cab-hours {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  color: var(--ms-muted);
+}
+
+.ms-cab-staff {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ms-cab-staff-item {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 64px;
+}
+
+.ms-cab-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--ms-radius-full);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ms-fill2);
+  color: var(--ms-ink);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.14px;
+  border: 2px solid transparent;
+}
+
+.ms-cab-staff-item.is-active .ms-cab-avatar {
+  border-color: var(--ms-purple);
+  background: var(--ms-purple-soft);
+  color: var(--ms-purple);
+}
+
+.ms-cab-staff-name {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: -0.12px;
+  line-height: 16px;
+  color: var(--ms-muted);
+  text-align: center;
+  max-width: 64px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ms-cab-staff-item.is-active .ms-cab-staff-name {
+  color: var(--ms-ink);
+}
+
+.ms-cab-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 8px;
+}
+
+.ms-cab-section-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.16px;
+  line-height: 24px;
+  color: var(--ms-ink);
+}
+
+.ms-cab-slots {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ms-cab-slot {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 10px;
+  align-items: stretch;
+}
+
+.ms-cab-slot-time {
+  padding-top: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.13px;
+  line-height: 18px;
+  color: var(--ms-tertiary);
+}
+
+.ms-cab-slot-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  min-height: 72px;
+  box-sizing: border-box;
+}
+
+.ms-cab-slot.tone-amber .ms-cab-slot-card {
+  background: #fff4e5;
+}
+
+.ms-cab-slot.tone-sky .ms-cab-slot-card {
+  background: #e8f3ff;
+}
+
+.ms-cab-slot.tone-violet .ms-cab-slot-card {
+  background: #efeaff;
+}
+
+.ms-cab-slot.tone-mint .ms-cab-slot-card {
+  background: #e8f8ef;
+}
+
+.ms-cab-slot.tone-muted .ms-cab-slot-card,
+.ms-cab-slot.is-cancelled .ms-cab-slot-card {
+  background: var(--ms-fill2);
+  opacity: 0.72;
+}
+
+.ms-cab-slot-range {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: -0.12px;
+  line-height: 16px;
+  color: var(--ms-muted);
+}
+
+.ms-cab-slot-name {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.16px;
+  line-height: 24px;
+  color: var(--ms-ink-strong);
+}
+
+.ms-cab-slot-sub {
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  color: var(--ms-muted);
+}
+
+.ms-cab-slot-pay {
+  appearance: none;
+  align-self: flex-start;
+  margin-top: 8px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--ms-purple);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.13px;
+  line-height: 18px;
+  cursor: pointer;
+}
+
+.ms-cab-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 20px 4px;
+}
+
+.ms-cab-empty-text {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: -0.15px;
+  line-height: 22px;
+  color: var(--ms-muted);
+}
+
+.ms-cab-empty-link {
+  appearance: none;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--ms-purple);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  cursor: pointer;
+}
+
+.ms-tabbar {
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  margin: 0 12px calc(10px + env(safe-area-inset-bottom, 0px));
+  padding: 8px 6px;
+  border-radius: 24px;
+  background: #fff;
+  border: 1px solid var(--ms-line-soft);
+  box-shadow: 0 8px 28px rgba(25, 24, 27, 0.08);
+}
+
+.ms-tabbar-item {
+  appearance: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 52px;
+  padding: 6px 4px;
+  border-radius: 16px;
+  text-decoration: none;
+  color: var(--ms-muted);
+}
+
+.ms-tabbar-item.is-active {
+  color: var(--ms-purple);
+  background: var(--ms-purple-soft);
+}
+
+.ms-tabbar-icon {
+  display: inline-flex;
+  width: 24px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+}
+
+.ms-tabbar-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: -0.11px;
+  line-height: 14px;
+}

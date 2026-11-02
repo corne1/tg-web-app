@@ -23,10 +23,13 @@ import {
 import { parseEntryContext } from "./lib/startParam";
 import type { MasterProfile, MasterServiceDto } from "./types";
 import { BookingConfirmScreen } from "./screens/BookingConfirmScreen";
+import { CabinetProfileScreen } from "./screens/CabinetProfileScreen";
+import { ClientsScreen } from "./screens/ClientsScreen";
 import { EmptyStateScreen } from "./screens/EmptyStateScreen";
 import { MyBookingsScreen } from "./screens/MyBookingsScreen";
 import { NotificationsScreen } from "./screens/NotificationsScreen";
 import { OnboardingScreen } from "./screens/OnboardingScreen";
+import { OnboardingSuccessScreen } from "./screens/OnboardingSuccessScreen";
 import { ScheduleScreen } from "./screens/ScheduleScreen";
 import { HoursStepScreen } from "./screens/HoursStepScreen";
 import { PlaceStepScreen } from "./screens/PlaceStepScreen";
@@ -261,7 +264,13 @@ export function App() {
           />
           <Route path="/onboarding/hours" element={<HoursStepScreen />} />
           <Route path="/onboarding/place" element={<PlaceStepScreen />} />
+          <Route
+            path="/onboarding/success"
+            element={<OnboardingSuccessScreen />}
+          />
           <Route path="/cabinet" element={<ScheduleScreen />} />
+          <Route path="/cabinet/clients" element={<ClientsScreen />} />
+          <Route path="/cabinet/profile" element={<CabinetProfileScreen />} />
           <Route path="/cabinet/empty" element={<EmptyStateScreen />} />
           <Route path="/client/confirm" element={<BookingConfirmScreen />} />
           <Route path="/client/bookings" element={<MyBookingsScreen />} />

@@ -1,52 +1,119 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { fetchCabinetSessions, markBookingPaid } from "../api";
-import { ScreenShell } from "../components/calendar/ScreenShell";
-import { UiMainButton } from "../components/calendar/UiMainButton";
+import { MasterTabBar } from "../components/master/MasterTabBar";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
+import { WEEKDAYS } from "../lib/masterDraft";
 import { cacheProfile, masterResumePath } from "../lib/profileStorage";
-import type { SchedulePeriod, Session } from "../types";
-
-const PERIODS: { id: SchedulePeriod; label: string }[] = [
-  { id: "today", label: "Сегодня" },
-  { id: "tomorrow", label: "Завтра" },
-  { id: "week", label: "Неделя" },
-];
+import {
+  CARD_TONES,
+  addDays,
+  dayTitle,
+  firstName,
+  initials,
+  monthTitle,
+  sameDay,
+  sessionEndClock,
+  sessionStartDate,
+  startOfWeek,
+  workHoursLabel,
+  type CardTone,
+} from "../lib/scheduleUi";
+import type { MasterProfile, Session } from "../types";
+import { cx } from "../ui";
 
 function statusLabel(status: Session["status"]) {
   switch (status) {
     case "confirmed":
-      return "подтверждена";
+      return "Подтверждена";
     case "cancelled":
-      return "отменена";
+      return "Отменена";
     case "pending":
-      return "ожидает";
+      return "Ожидает";
     case "paid":
-      return "оплачена";
+      return "Оплачена";
   }
+}
+
+function PlusIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden>
+      <path
+        d="M10 4.167v11.666M4.167 10h11.666"
+        stroke="#fff"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function CalendarIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden>
+      <rect
+        x="2.75"
+        y="4.25"
+        width="12.5"
+        height="11"
+        rx="2"
+        stroke="currentColor"
+        strokeWidth="1.4"
+      />
+      <path
+        d="M2.75 7.5h12.5M6 2.75v2.5M12 2.75v2.5"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function ClockIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <circle cx="8" cy="8" r="5.75" stroke="currentColor" strokeWidth="1.3" />
+      <path
+        d="M8 5.25V8l2 1.5"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function toneForSession(index: number, cancelled: boolean): CardTone | "muted" {
+  if (cancelled) return "muted";
+  return CARD_TONES[index % CARD_TONES.length];
 }
 
 export function ScheduleScreen() {
   const navigate = useNavigate();
-  const [period, setPeriod] = useState<SchedulePeriod>("today");
+  const [selectedDate, setSelectedDate] = useState(() => new Date());
+  const [weekCursor, setWeekCursor] = useState(() => startOfWeek(new Date()));
   const [sessions, setSessions] = useState<Session[]>([]);
-  const [bookingLink, setBookingLink] = useState<string | null>(null);
+  const [profile, setProfile] = useState<MasterProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async (p: SchedulePeriod) => {
+  const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await fetchCabinetSessions(p);
-      if (data.profile) cacheProfile(data.profile);
+      const data = await fetchCabinetSessions("week");
+      if (data.profile) {
+        cacheProfile(data.profile);
+        setProfile(data.profile);
+      }
       if (data.onboardingComplete === false) {
         navigate(masterResumePath(data.profile ?? null), { replace: true });
         return;
       }
       setSessions(data.sessions);
-      setBookingLink(data.bookingLink);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ошибка загрузки");
       setSessions([]);
@@ -56,18 +123,48 @@ export function ScheduleScreen() {
   }, [navigate]);
 
   useEffect(() => {
-    void load(period);
-  }, [load, period]);
+    void load();
+  }, [load]);
 
-  const grouped = useMemo(() => {
-    const map = new Map<string, Session[]>();
-    for (const s of sessions) {
-      const list = map.get(s.dateLabel) ?? [];
-      list.push(s);
-      map.set(s.dateLabel, list);
-    }
-    return [...map.entries()];
-  }, [sessions]);
+  const weekDays = useMemo(
+    () => Array.from({ length: 7 }, (_, i) => addDays(weekCursor, i)),
+    [weekCursor],
+  );
+
+  const daySessions = useMemo(() => {
+    return sessions
+      .filter((s) => {
+        const d = sessionStartDate(s.startsAt);
+        return d ? sameDay(d, selectedDate) : false;
+      })
+      .sort((a, b) => {
+        const da = sessionStartDate(a.startsAt)?.getTime() ?? 0;
+        const db = sessionStartDate(b.startsAt)?.getTime() ?? 0;
+        return da - db;
+      });
+  }, [selectedDate, sessions]);
+
+  const visibleSessions = daySessions.filter((s) => s.status !== "cancelled");
+  const durationMin = profile?.duration ?? 60;
+  const hoursText = workHoursLabel(selectedDate, profile?.workingHours);
+  const masterName = profile?.name?.trim() || "Мастер";
+
+  const selectDay = useCallback((day: Date) => {
+    setSelectedDate(day);
+    setWeekCursor(startOfWeek(day));
+  }, []);
+
+  const shiftWeek = useCallback((delta: number) => {
+    setWeekCursor((prev) => {
+      const next = addDays(prev, delta * 7);
+      setSelectedDate((sel) => {
+        const offset =
+          (sel.getTime() - startOfWeek(sel).getTime()) / (24 * 60 * 60 * 1000);
+        return addDays(next, Math.round(offset));
+      });
+      return next;
+    });
+  }, []);
 
   async function markPaid(id: string) {
     try {
@@ -86,94 +183,164 @@ export function ScheduleScreen() {
   useBackButton(goHome);
   useMainButton({ text: "", visible: false, onClick: () => undefined });
 
-  const empty = !loading && sessions.filter((s) => s.status !== "cancelled").length === 0;
+  const empty =
+    !loading && visibleSessions.length === 0 && daySessions.length === 0;
 
   return (
-    <ScreenShell
-      title="Расписание"
-      subtitle="Нагрузка на сегодня и завтра"
-      footer={
-        <div className="footer-links">
-          <Link to="/onboarding" className="text-link">
-            Вернуться к онбордингу
-          </Link>
-          <Link to="/cabinet/empty" className="text-link">
-            Поделиться ссылкой
-          </Link>
-          {bookingLink && (
-            <Link to="/notifications" className="text-link">
-              Уведомления →
-            </Link>
-          )}
-        </div>
-      }
-    >
-      <div className="period-switch" role="tablist">
-        {PERIODS.map((p) => (
+    <div className="master-setup ms-cabinet">
+      <header className="ms-cab-header">
+        <h1 className="ms-cab-title">Расписание</h1>
+        <button
+          type="button"
+          className="ms-cab-add"
+          aria-label="Поделиться ссылкой"
+          onClick={() => navigate("/cabinet/empty")}
+        >
+          <PlusIcon />
+        </button>
+      </header>
+
+      <div className="ms-body ms-cab-body">
+        <div className="ms-cab-month-row">
           <button
-            key={p.id}
             type="button"
-            role="tab"
-            aria-selected={period === p.id}
-            className={`period-btn ${period === p.id ? "is-active" : ""}`}
-            onClick={() => setPeriod(p.id)}
+            className="ms-cab-month"
+            onClick={() => {
+              const today = new Date();
+              setSelectedDate(today);
+              setWeekCursor(startOfWeek(today));
+            }}
+            aria-label="Перейти к сегодня"
           >
-            {p.label}
+            <CalendarIcon />
+            <span>{monthTitle(selectedDate)}</span>
           </button>
-        ))}
-      </div>
-
-      {error && <p className="error">{error}</p>}
-
-      {loading ? (
-        <p className="screen-subtitle">Загрузка…</p>
-      ) : empty ? (
-        <div className="empty-inline">
-          <p>Нет записей за выбранный период</p>
-          <Link to="/cabinet/empty" className="text-link">
-            Отправить ссылку клиентам →
-          </Link>
+          <div className="ms-cab-week-nav">
+            <button
+              type="button"
+              className="ms-cab-week-btn"
+              aria-label="Предыдущая неделя"
+              onClick={() => shiftWeek(-1)}
+            >
+              ‹
+            </button>
+            <button
+              type="button"
+              className="ms-cab-week-btn"
+              aria-label="Следующая неделя"
+              onClick={() => shiftWeek(1)}
+            >
+              ›
+            </button>
+          </div>
         </div>
-      ) : (
-        <div className="session-groups">
-          {grouped.map(([label, items]) => (
-            <section key={label} className="session-group">
-              <h2 className="group-title">{label}</h2>
-              <ul className="session-list">
-                {items.map((session) => {
-                  const paid = Boolean(session.paid) || session.status === "paid";
-                  const cancelled = session.status === "cancelled";
-                  return (
-                    <li
-                      key={session.id}
-                      className={`session-card ${cancelled ? "is-cancelled" : ""}`}
-                    >
-                      <div className="session-meta">
-                        <span className="session-time">{session.time}</span>
-                        <span className="session-name">{session.clientName}</span>
-                        <span
-                          className={`session-status status-${paid ? "paid" : session.status}`}
-                        >
-                          {paid ? "оплачена" : statusLabel(session.status)}
-                        </span>
+
+        <div className="ms-cab-week" role="listbox" aria-label="Дни недели">
+          {weekDays.map((day, index) => {
+            const active = sameDay(day, selectedDate);
+            const today = sameDay(day, new Date());
+            return (
+              <button
+                key={day.toISOString()}
+                type="button"
+                role="option"
+                aria-selected={active}
+                className={cx(
+                  "ms-cab-day",
+                  active && "is-active",
+                  today && !active && "is-today",
+                )}
+                onClick={() => selectDay(day)}
+              >
+                <span className="ms-cab-day-wd">{WEEKDAYS[index].short}</span>
+                <span className="ms-cab-day-num">{day.getDate()}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="ms-cab-day-meta">
+          <h2 className="ms-cab-day-title">{dayTitle(selectedDate)}</h2>
+          <p className="ms-cab-hours">
+            <ClockIcon />
+            <span>{hoursText}</span>
+          </p>
+        </div>
+
+        <div className="ms-cab-staff" aria-label="Мастер">
+          <div className="ms-cab-staff-item is-active">
+            <span className="ms-cab-avatar" aria-hidden>
+              {initials(masterName)}
+            </span>
+            <span className="ms-cab-staff-name">{firstName(masterName)}</span>
+          </div>
+        </div>
+
+        <section className="ms-cab-timeline" aria-label="Расписание дня">
+          <h3 className="ms-cab-section-title">Расписание дня</h3>
+
+          {error && <p className="ms-footer-error">{error}</p>}
+
+          {loading ? (
+            <p className="ms-cab-empty-text">Загрузка…</p>
+          ) : empty ? (
+            <div className="ms-cab-empty">
+              <p className="ms-cab-empty-text">Нет записей на этот день</p>
+              <button
+                type="button"
+                className="ms-cab-empty-link"
+                onClick={() => navigate("/cabinet/empty")}
+              >
+                Отправить ссылку клиентам →
+              </button>
+            </div>
+          ) : (
+            <ul className="ms-cab-slots">
+              {daySessions.map((session, index) => {
+                const paid =
+                  Boolean(session.paid) || session.status === "paid";
+                const cancelled = session.status === "cancelled";
+                const tone = toneForSession(index, cancelled);
+                const end = sessionEndClock(
+                  session.startsAt,
+                  durationMin,
+                  session.time,
+                );
+                return (
+                  <li
+                    key={session.id}
+                    className={cx("ms-cab-slot", `tone-${tone}`, cancelled && "is-cancelled")}
+                  >
+                    <div className="ms-cab-slot-time" aria-hidden>
+                      <span>{session.time}</span>
+                    </div>
+                    <div className="ms-cab-slot-card">
+                      <div className="ms-cab-slot-range">
+                        {session.time}–{end}
+                      </div>
+                      <div className="ms-cab-slot-name">{session.clientName}</div>
+                      <div className="ms-cab-slot-sub">
+                        {paid ? "Оплачена" : statusLabel(session.status)}
                       </div>
                       {!cancelled && !paid && (
-                        <UiMainButton
-                          fullWidth={false}
-                          className="btn-sm"
+                        <button
+                          type="button"
+                          className="ms-cab-slot-pay"
                           onClick={() => void markPaid(session.id)}
                         >
                           Отметить оплату
-                        </UiMainButton>
+                        </button>
                       )}
-                    </li>
-                  );
-                })}
-              </ul>
-            </section>
-          ))}
-        </div>
-      )}
-    </ScreenShell>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+      </div>
+
+      <MasterTabBar />
+    </div>
   );
 }

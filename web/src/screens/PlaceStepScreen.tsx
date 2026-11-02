@@ -386,7 +386,13 @@ export function PlaceStepScreen() {
       });
       cacheProfile(profile);
       webApp?.HapticFeedback?.notificationOccurred("success");
-      navigate("/cabinet");
+      navigate("/onboarding/success", {
+        replace: true,
+        state: {
+          profile,
+          bookingLink: profile.bookingLink ?? null,
+        },
+      });
     } catch (err) {
       showToast(
         err instanceof Error ? err.message : "Не удалось опубликовать",
