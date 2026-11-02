@@ -1,0 +1,30 @@
+---
+description: Pixel-perfect Figma → web UI; no inventing layout/copy/assets
+alwaysApply: true
+---
+
+# Figma → web (pixel-perfect)
+
+When implementing or changing UI under `web/`:
+
+## Required inputs
+- Need a Figma URL with `fileKey` + `node-id`. If missing — ask; do not invent screens.
+- Default file if user refers to Project onboarding: `uvCRuWVVgWqmE55UVGV44f`.
+
+## Mandatory workflow (before editing)
+1. Load **figma-design-to-code** skill, then `create_session` for the file.
+2. `get_design_context` + screenshot for the target node (and child nodes if response is sparse).
+3. Read Figma **comments** on that frame (browser Comments panel if MCP has no comments API).
+4. Reuse project tokens (`--ms-*` in `web/src/styles/calendar.css`) and existing components/assets. Map Figma values to tokens; do not hardcode random purples/spacings.
+
+## Hard rules
+- ❌ No layout/copy/icons/spacing “by eye” or from chat paste alone when Figma is available.
+- ❌ No emoji/placeholder icons; use Figma exports / project SVGs only.
+- ❌ On MCP rate limit / missing screenshot — **stop and report**; do not freestyle a “close enough” UI.
+- ✅ Match typography, gaps, radii, colors, states, and CTAs to the screenshot.
+- ✅ Treat `get_design_context` code as visual reference; adapt to React + existing patterns (no absolute-position dump unless required).
+
+## Done criteria
+- Visual pass against the Figma screenshot for the requested screen only.
+- List any unresolved Figma comments and whether code satisfies them.
+- `npm run build` in `web/` succeeds after UI changes.

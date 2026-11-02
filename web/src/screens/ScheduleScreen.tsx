@@ -1,28 +1,29 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  fetchCabinetSessions,
-  fetchMe,
-  markBookingPaid,
-  type AppUser,
-} from "../api";
+import { fetchCabinetSessions, markBookingPaid } from "../api";
+import calendarIcon from "../assets/cabinet/calendar.svg";
+import circlePlusIcon from "../assets/cabinet/circle-plus.svg";
+import clockIcon from "../assets/cabinet/clock.svg";
+import clockPurpleIcon from "../assets/cabinet/clock-purple.svg";
+import plusBtnIcon from "../assets/cabinet/plus-btn.svg";
+import plusWhiteIcon from "../assets/cabinet/plus-white.svg";
+import timerIcon from "../assets/cabinet/timer.svg";
+import usersRoundIcon from "../assets/cabinet/users-round.svg";
 import { MasterTabBar } from "../components/master/MasterTabBar";
-import { TgAvatar } from "../components/master/TgAvatar";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
-import { useTelegram } from "../hooks/useTelegram";
 import { WEEKDAYS } from "../lib/masterDraft";
 import { cacheProfile, masterResumePath } from "../lib/profileStorage";
 import {
   CARD_TONES,
   addDays,
   dayTitle,
-  firstName,
   monthTitle,
   sameDay,
   sessionEndClock,
   sessionStartDate,
   startOfWeek,
+  workDayRange,
   workHoursLabel,
   type CardTone,
 } from "../lib/scheduleUi";
@@ -42,54 +43,8 @@ function statusLabel(status: Session["status"]) {
   }
 }
 
-function PlusIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden>
-      <path
-        d="M10 4.167v11.666M4.167 10h11.666"
-        stroke="#fff"
-        strokeWidth="1.75"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function CalendarIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden>
-      <rect
-        x="2.75"
-        y="4.25"
-        width="12.5"
-        height="11"
-        rx="2"
-        stroke="currentColor"
-        strokeWidth="1.4"
-      />
-      <path
-        d="M2.75 7.5h12.5M6 2.75v2.5M12 2.75v2.5"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function ClockIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <circle cx="8" cy="8" r="5.75" stroke="currentColor" strokeWidth="1.3" />
-      <path
-        d="M8 5.25V8l2 1.5"
-        stroke="currentColor"
-        strokeWidth="1.3"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
+function dayKey(date: Date): string {
+  return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
 }
 
 function toneForSession(index: number, cancelled: boolean): CardTone | "muted" {
@@ -99,24 +54,19 @@ function toneForSession(index: number, cancelled: boolean): CardTone | "muted" {
 
 export function ScheduleScreen() {
   const navigate = useNavigate();
-  const { user: tgUser } = useTelegram();
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [weekCursor, setWeekCursor] = useState(() => startOfWeek(new Date()));
   const [sessions, setSessions] = useState<Session[]>([]);
   const [profile, setProfile] = useState<MasterProfile | null>(null);
-  const [appUser, setAppUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const weekTouchX = useRef<number | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const [data, me] = await Promise.all([
-        fetchCabinetSessions("week"),
-        fetchMe().catch(() => null),
-      ]);
-      if (me?.user) setAppUser(me.user);
+      const data = await fetchCabinetSessions("week");
       if (data.profile) {
         cacheProfile(data.profile);
         setProfile(data.profile);
@@ -143,6 +93,16 @@ export function ScheduleScreen() {
     [weekCursor],
   );
 
+  const bookedDayKeys = useMemo(() => {
+    const keys = new Set<string>();
+    for (const session of sessions) {
+      if (session.status === "cancelled") continue;
+      const d = sessionStartDate(session.startsAt);
+      if (d) keys.add(dayKey(d));
+    }
+    return keys;
+  }, [sessions]);
+
   const daySessions = useMemo(() => {
     return sessions
       .filter((s) => {
@@ -158,26 +118,8 @@ export function ScheduleScreen() {
 
   const visibleSessions = daySessions.filter((s) => s.status !== "cancelled");
   const durationMin = profile?.duration ?? 60;
+  const workRange = workDayRange(selectedDate, profile?.workingHours);
   const hoursText = workHoursLabel(selectedDate, profile?.workingHours);
-
-  const tgDisplayName = [tgUser?.first_name, tgUser?.last_name]
-    .filter(Boolean)
-    .join(" ")
-    .trim();
-  const appDisplayName = [appUser?.first_name, appUser?.last_name]
-    .filter(Boolean)
-    .join(" ")
-    .trim();
-  const masterName =
-    tgDisplayName ||
-    appDisplayName ||
-    profile?.name?.trim() ||
-    "Мастер";
-  const avatarUserId = tgUser?.id ?? appUser?.id ?? profile?.userId ?? 0;
-  const photoUrl = tgUser?.photo_url || appUser?.photo_url || null;
-  const staffLabel = firstName(
-    tgUser?.first_name || appUser?.first_name || masterName,
-  );
 
   const selectDay = useCallback((day: Date) => {
     setSelectedDate(day);
@@ -195,6 +137,16 @@ export function ScheduleScreen() {
       return next;
     });
   }, []);
+
+  const goToday = useCallback(() => {
+    const today = new Date();
+    setSelectedDate(today);
+    setWeekCursor(startOfWeek(today));
+  }, []);
+
+  const goAdd = useCallback(() => {
+    navigate("/cabinet/booking/new");
+  }, [navigate]);
 
   async function markPaid(id: string) {
     try {
@@ -215,6 +167,8 @@ export function ScheduleScreen() {
 
   const empty =
     !loading && visibleSessions.length === 0 && daySessions.length === 0;
+  const isDayOff = Boolean(profile?.workingHours) && !workRange;
+  const showFreeSlot = empty && Boolean(workRange);
 
   return (
     <div className="master-setup ms-cabinet">
@@ -223,93 +177,89 @@ export function ScheduleScreen() {
         <button
           type="button"
           className="ms-cab-add"
-          aria-label="Поделиться ссылкой"
-          onClick={() => navigate("/cabinet/empty")}
+          aria-label="Добавить запись"
+          onClick={goAdd}
         >
-          <PlusIcon />
+          <img src={plusWhiteIcon} width={20} height={20} alt="" />
         </button>
       </header>
 
       <div className="ms-body ms-cab-body">
-        <div className="ms-cab-month-row">
-          <button
-            type="button"
-            className="ms-cab-month"
-            onClick={() => {
-              const today = new Date();
-              setSelectedDate(today);
-              setWeekCursor(startOfWeek(today));
+        <div className="ms-cab-panel">
+          <div className="ms-cab-month-row">
+            <h2 className="ms-cab-month-title">{monthTitle(selectedDate)}</h2>
+            <button
+              type="button"
+              className="ms-cab-cal-btn"
+              onClick={goToday}
+              aria-label="Перейти к сегодня"
+            >
+              <img src={calendarIcon} width={20} height={20} alt="" />
+            </button>
+          </div>
+
+          <div
+            className="ms-cab-week"
+            role="listbox"
+            aria-label="Дни недели"
+            onTouchStart={(e) => {
+              weekTouchX.current = e.changedTouches[0]?.clientX ?? null;
             }}
-            aria-label="Перейти к сегодня"
+            onTouchEnd={(e) => {
+              const start = weekTouchX.current;
+              weekTouchX.current = null;
+              if (start == null) return;
+              const end = e.changedTouches[0]?.clientX;
+              if (end == null) return;
+              const delta = end - start;
+              if (Math.abs(delta) < 48) return;
+              shiftWeek(delta < 0 ? 1 : -1);
+            }}
           >
-            <CalendarIcon />
-            <span>{monthTitle(selectedDate)}</span>
-          </button>
-          <div className="ms-cab-week-nav">
-            <button
-              type="button"
-              className="ms-cab-week-btn"
-              aria-label="Предыдущая неделя"
-              onClick={() => shiftWeek(-1)}
-            >
-              ‹
-            </button>
-            <button
-              type="button"
-              className="ms-cab-week-btn"
-              aria-label="Следующая неделя"
-              onClick={() => shiftWeek(1)}
-            >
-              ›
-            </button>
+            {weekDays.map((day, index) => {
+              const active = sameDay(day, selectedDate);
+              const hasBookings = bookedDayKeys.has(dayKey(day));
+              return (
+                <button
+                  key={day.toISOString()}
+                  type="button"
+                  role="option"
+                  aria-selected={active}
+                  className={cx("ms-cab-day", active && "is-active")}
+                  onClick={() => selectDay(day)}
+                >
+                  <span className="ms-cab-day-wd">{WEEKDAYS[index].short}</span>
+                  <span className="ms-cab-day-num">
+                    <span className="ms-cab-day-num-text">{day.getDate()}</span>
+                    {hasBookings ? (
+                      <span
+                        className="ms-cab-day-dot"
+                        aria-hidden
+                      />
+                    ) : null}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        <div className="ms-cab-week" role="listbox" aria-label="Дни недели">
-          {weekDays.map((day, index) => {
-            const active = sameDay(day, selectedDate);
-            const today = sameDay(day, new Date());
-            return (
-              <button
-                key={day.toISOString()}
-                type="button"
-                role="option"
-                aria-selected={active}
-                className={cx(
-                  "ms-cab-day",
-                  active && "is-active",
-                  today && !active && "is-today",
-                )}
-                onClick={() => selectDay(day)}
-              >
-                <span className="ms-cab-day-wd">{WEEKDAYS[index].short}</span>
-                <span className="ms-cab-day-num">{day.getDate()}</span>
-              </button>
-            );
-          })}
-        </div>
+        <hr className="ms-cab-rule" />
 
         <div className="ms-cab-day-meta">
           <h2 className="ms-cab-day-title">{dayTitle(selectedDate)}</h2>
           <p className="ms-cab-hours">
-            <ClockIcon />
+            <img
+              src={isDayOff ? clockIcon : timerIcon}
+              width={20}
+              height={20}
+              alt=""
+            />
             <span>{hoursText}</span>
           </p>
         </div>
 
-        <div className="ms-cab-staff" aria-label="Мастер">
-          <div className="ms-cab-staff-item is-active">
-            <TgAvatar
-              className="ms-cab-avatar"
-              photoUrl={photoUrl}
-              name={tgUser?.first_name || appUser?.first_name || masterName}
-              userId={avatarUserId}
-              size={64}
-              alt={staffLabel}
-            />
-            <span className="ms-cab-staff-name">{staffLabel}</span>
-          </div>
-        </div>
+        <hr className="ms-cab-rule" />
 
         <section className="ms-cab-timeline" aria-label="Расписание дня">
           <h3 className="ms-cab-section-title">Расписание дня</h3>
@@ -317,18 +267,66 @@ export function ScheduleScreen() {
           {error && <p className="ms-footer-error">{error}</p>}
 
           {loading ? (
-            <p className="ms-cab-empty-text">Загрузка…</p>
+            <p className="ms-cab-loading">Загрузка…</p>
           ) : empty ? (
-            <div className="ms-cab-empty">
-              <p className="ms-cab-empty-text">Нет записей на этот день</p>
-              <button
-                type="button"
-                className="ms-cab-empty-link"
-                onClick={() => navigate("/cabinet/empty")}
+            <>
+              {showFreeSlot && workRange ? (
+                <div className="ms-cab-free-row">
+                  <span className="ms-cab-free-time">{workRange.start}</span>
+                  <button
+                    type="button"
+                    className="ms-cab-free-pill"
+                    onClick={goAdd}
+                  >
+                    <img src={clockIcon} width={20} height={20} alt="" />
+                    <span className="ms-cab-free-label">
+                      Свободное время · {workRange.start}–{workRange.end}
+                    </span>
+                    <img src={circlePlusIcon} width={20} height={20} alt="" />
+                  </button>
+                </div>
+              ) : null}
+
+              <div
+                className={cx(
+                  "ms-cab-empty-card",
+                  isDayOff && "is-day-off",
+                )}
               >
-                Отправить ссылку клиентам →
-              </button>
-            </div>
+                <div className="ms-cab-empty-art" aria-hidden>
+                  <span className="ms-cab-empty-ring">
+                    <span className="ms-cab-empty-disc">
+                      <img
+                        src={isDayOff ? clockPurpleIcon : usersRoundIcon}
+                        width={28}
+                        height={28}
+                        alt=""
+                      />
+                    </span>
+                  </span>
+                </div>
+                <div className="ms-cab-empty-copy">
+                  <p className="ms-cab-empty-title">
+                    {isDayOff
+                      ? "Сегодня выходной"
+                      : "На выбранную дату пока нет записей"}
+                  </p>
+                  <p className="ms-cab-empty-sub">
+                    {isDayOff
+                      ? "Вы можете добавить запись на эту дату вручную"
+                      : "Добавьте первую услугу, чтобы записать клиента"}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="ms-cab-empty-cta"
+                  onClick={goAdd}
+                >
+                  <img src={plusBtnIcon} width={20} height={20} alt="" />
+                  <span>Добавить запись</span>
+                </button>
+              </div>
+            </>
           ) : (
             <ul className="ms-cab-slots">
               {daySessions.map((session, index) => {
@@ -344,7 +342,11 @@ export function ScheduleScreen() {
                 return (
                   <li
                     key={session.id}
-                    className={cx("ms-cab-slot", `tone-${tone}`, cancelled && "is-cancelled")}
+                    className={cx(
+                      "ms-cab-slot",
+                      `tone-${tone}`,
+                      cancelled && "is-cancelled",
+                    )}
                   >
                     <div className="ms-cab-slot-time" aria-hidden>
                       <span>{session.time}</span>

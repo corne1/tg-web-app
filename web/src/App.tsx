@@ -32,6 +32,8 @@ import { OnboardingScreen } from "./screens/OnboardingScreen";
 import { OnboardingSuccessScreen } from "./screens/OnboardingSuccessScreen";
 import { ScheduleScreen } from "./screens/ScheduleScreen";
 import { HoursStepScreen } from "./screens/HoursStepScreen";
+import { NewBookingClientScreen } from "./screens/NewBookingClientScreen";
+import { NewBookingStubScreen } from "./screens/NewBookingStubScreen";
 import { PlaceStepScreen } from "./screens/PlaceStepScreen";
 import { ServiceFormScreen } from "./screens/ServiceFormScreen";
 import { ServicesStepScreen } from "./screens/ServicesStepScreen";
@@ -272,6 +274,14 @@ export function App() {
           <Route path="/cabinet/clients" element={<ClientsScreen />} />
           <Route path="/cabinet/profile" element={<CabinetProfileScreen />} />
           <Route path="/cabinet/empty" element={<EmptyStateScreen />} />
+          <Route
+            path="/cabinet/booking/new"
+            element={<NewBookingClientScreen />}
+          />
+          <Route
+            path="/cabinet/booking/new/:stepKey"
+            element={<NewBookingStubScreen />}
+          />
           <Route path="/client/confirm" element={<BookingConfirmScreen />} />
           <Route path="/client/bookings" element={<MyBookingsScreen />} />
           <Route path="/client" element={<SlotSelectionScreen />} />

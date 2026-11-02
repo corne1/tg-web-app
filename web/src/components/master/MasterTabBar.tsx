@@ -1,7 +1,7 @@
 import { NavLink } from "react-router-dom";
 
 function IconSchedule({ active }: { active: boolean }) {
-  const stroke = active ? "#623DF5" : "#5E636E";
+  const stroke = active ? "#623DF5" : "#26282C";
   return (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
       <rect
@@ -24,16 +24,24 @@ function IconSchedule({ active }: { active: boolean }) {
 }
 
 function IconClients({ active }: { active: boolean }) {
-  const stroke = active ? "#623DF5" : "#5E636E";
+  const stroke = active ? "#623DF5" : "#26282C";
   return (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
-        d="M8 11a3.25 3.25 0 1 0 0-6.5A3.25 3.25 0 0 0 8 11ZM16.5 11.5a2.75 2.75 0 1 0 0-5.5 2.75 2.75 0 0 0 0 5.5Z"
+        d="M4 19.5c.85-2.7 2.85-4.25 5-4.25s4.15 1.55 5 4.25"
         stroke={stroke}
         strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+      <circle cx="9" cy="8.25" r="3" stroke={stroke} strokeWidth="1.5" />
+      <path
+        d="M15.5 11.75a2.5 2.5 0 1 0 0-5"
+        stroke={stroke}
+        strokeWidth="1.5"
+        strokeLinecap="round"
       />
       <path
-        d="M3.5 18.25c.7-2.4 2.7-3.75 4.5-3.75s3.8 1.35 4.5 3.75M14 14.75c1.5 0 3.2.95 3.9 3"
+        d="M16.5 15.25c1.35.15 2.85 1.1 3.5 3.25"
         stroke={stroke}
         strokeWidth="1.5"
         strokeLinecap="round"
@@ -43,7 +51,7 @@ function IconClients({ active }: { active: boolean }) {
 }
 
 function IconProfile({ active }: { active: boolean }) {
-  const stroke = active ? "#623DF5" : "#5E636E";
+  const stroke = active ? "#623DF5" : "#26282C";
   return (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
       <circle cx="12" cy="9" r="3.25" stroke={stroke} strokeWidth="1.5" />

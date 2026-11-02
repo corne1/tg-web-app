@@ -794,8 +794,12 @@ input {
   --ms-line-soft: #e9eaec; /* border/border-soft */
   --ms-soft: #f7f7f8; /* background/bg-fill1 */
   --ms-fill2: #eeeff1; /* background/bg-fill2 */
+  --ms-fill3: #e9eaec; /* background/bg-fill3 */
+  --ms-accent: #f4f1fd; /* primary/accent */
   --ms-info: #067ff9; /* state/info/key */
   --ms-shadow-e1: 0px 1px 1px 0px rgba(25, 24, 27, 0.04);
+  --ms-shadow-e2: 0px 4px 8px 0px rgba(25, 24, 27, 0.08);
+  --ms-shadow-e3: 0px 16px 24px -4px rgba(25, 24, 27, 0.12);
   /* radii from Figma Base Input / Text Area / cards */
   --ms-radius-input: 9999px;
   --ms-radius-textarea: 16px;
@@ -3281,7 +3285,7 @@ label.ms-sheet-item {
   border-top-color: transparent;
 }
 
-/* Cabinet — schedule (Figma Project!! / 21207:9665 «Расписание») */
+/* Cabinet — schedule (Figma 21252:46890 «Нет записей (рабочий день)») */
 .master-setup.ms-cabinet {
   background: #fff;
 }
@@ -3290,24 +3294,27 @@ label.ms-sheet-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
   flex-shrink: 0;
-  padding: calc(16px + env(safe-area-inset-top, 0px)) 16px 8px;
+  padding: calc(16px + env(safe-area-inset-top, 0px)) 16px 0;
 }
 
 .ms-cab-title {
   margin: 0;
-  font-size: 28px;
-  font-weight: 600;
-  letter-spacing: -0.28px;
-  line-height: 36px;
-  color: var(--ms-ink-strong);
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.24px;
+  line-height: 32px;
+  color: var(--ms-ink);
 }
 
 .ms-cab-add {
   appearance: none;
   width: 44px;
   height: 44px;
+  padding: 12px;
   border: none;
   border-radius: var(--ms-radius-full);
   background: var(--ms-purple);
@@ -3316,7 +3323,7 @@ label.ms-sheet-item {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 8px 20px rgba(98, 61, 245, 0.28);
+  flex-shrink: 0;
 }
 
 .ms-cab-add:active {
@@ -3324,9 +3331,15 @@ label.ms-sheet-item {
 }
 
 .ms-cab-body {
+  gap: 0;
+  padding: 24px 0 calc(16px + env(safe-area-inset-bottom, 0px));
+}
+
+.ms-cab-panel {
+  display: flex;
+  flex-direction: column;
   gap: 16px;
-  padding-top: 8px;
-  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  padding: 0 16px;
 }
 
 .ms-cab-month-row {
@@ -3336,38 +3349,29 @@ label.ms-sheet-item {
   gap: 12px;
 }
 
-.ms-cab-month {
+.ms-cab-month-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  line-height: 28px;
+  color: var(--ms-ink);
+}
+
+.ms-cab-cal-btn {
   appearance: none;
+  width: 36px;
+  height: 36px;
+  padding: 8px;
+  border-radius: var(--ms-radius-full);
+  border: 1px solid var(--ms-line);
+  background: #fff;
+  box-shadow: var(--ms-shadow-e1);
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: var(--ms-ink);
-  font-size: 16px;
-  font-weight: 600;
-  letter-spacing: -0.16px;
-  line-height: 24px;
+  justify-content: center;
   cursor: pointer;
-}
-
-.ms-cab-week-nav {
-  display: inline-flex;
-  gap: 4px;
-}
-
-.ms-cab-week-btn {
-  appearance: none;
-  width: 32px;
-  height: 32px;
-  border-radius: var(--ms-radius-full);
-  border: 1px solid var(--ms-line-soft);
-  background: #fff;
-  color: var(--ms-ink);
-  font-size: 18px;
-  line-height: 1;
-  cursor: pointer;
+  flex-shrink: 0;
 }
 
 .ms-cab-week {
@@ -3375,76 +3379,112 @@ label.ms-sheet-item {
   grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 4px;
   width: 100%;
+  touch-action: pan-y;
 }
 
 .ms-cab-day {
   appearance: none;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 0;
+  align-items: stretch;
+  gap: 4px;
+  padding: 0;
   border: none;
   background: transparent;
   cursor: pointer;
-  color: var(--ms-muted);
+  min-width: 0;
 }
 
 .ms-cab-day-wd {
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: -0.12px;
-  line-height: 16px;
-}
-
-.ms-cab-day-num {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--ms-radius-full);
-  display: inline-flex;
+  height: 24px;
+  display: flex;
   align-items: center;
   justify-content: center;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  color: var(--ms-tertiary);
+  text-align: center;
+}
+
+.ms-cab-day-num {
+  position: relative;
+  height: 40px;
+  width: 100%;
+  border-radius: var(--ms-radius-full);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 0;
+  box-sizing: border-box;
+}
+
+.ms-cab-day-num-text {
+  font-size: 14px;
+  font-weight: 500;
   letter-spacing: -0.14px;
   line-height: 20px;
   color: var(--ms-ink);
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.ms-cab-day.is-today .ms-cab-day-num {
-  box-shadow: inset 0 0 0 1.5px var(--ms-purple-border);
-}
-
-.ms-cab-day.is-active .ms-cab-day-wd {
-  color: var(--ms-purple);
+.ms-cab-day-dot {
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 2px;
+  border-radius: var(--ms-radius-full);
+  background: var(--ms-purple);
 }
 
 .ms-cab-day.is-active .ms-cab-day-num {
   background: var(--ms-purple);
+}
+
+.ms-cab-day.is-active .ms-cab-day-num-text {
   color: #fff;
-  box-shadow: none;
+  font-weight: 600;
+}
+
+.ms-cab-day.is-active .ms-cab-day-dot {
+  background: #fff;
+}
+
+.ms-cab-rule {
+  margin: 16px 0;
+  border: 0;
+  border-top: 1px solid var(--ms-line-soft);
+  width: 100%;
 }
 
 .ms-cab-day-meta {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  padding: 0 16px;
 }
 
 .ms-cab-day-title {
   margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  letter-spacing: -0.18px;
-  line-height: 26px;
-  color: var(--ms-ink-strong);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  line-height: 28px;
+  color: var(--ms-ink);
 }
 
 .ms-cab-hours {
   margin: 0;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   font-size: 14px;
   font-weight: 400;
   letter-spacing: -0.14px;
@@ -3452,26 +3492,8 @@ label.ms-sheet-item {
   color: var(--ms-muted);
 }
 
-.ms-cab-staff {
-  display: flex;
-  align-items: stretch;
-  gap: 12px;
-  min-height: 88px;
-  overflow-x: auto;
-  padding-bottom: 2px;
-  -webkit-overflow-scrolling: touch;
-}
-
-.ms-cab-staff-item {
-  flex: 0 0 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 8px;
-  width: 72px;
-  min-height: 100%;
-  align-self: stretch;
+.ms-cab-hours img {
+  flex-shrink: 0;
 }
 
 .tg-avatar {
@@ -3508,53 +3530,170 @@ label.ms-sheet-item {
   user-select: none;
 }
 
-.ms-cab-avatar.tg-avatar {
-  width: 64px;
-  height: 64px;
-}
-
-.ms-cab-staff-item.is-active .ms-cab-avatar.tg-avatar {
-  border-color: var(--ms-purple);
-  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--ms-purple-soft);
-}
-
-.ms-cab-staff-name {
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: -0.12px;
-  line-height: 16px;
-  color: var(--ms-muted);
-  text-align: center;
-  max-width: 72px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.ms-cab-staff-item.is-active .ms-cab-staff-name {
-  color: var(--ms-ink);
-}
-
 .ms-cab-timeline {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding-bottom: 8px;
+  gap: 16px;
+  padding: 0 0 8px;
 }
 
 .ms-cab-section-title {
   margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-  letter-spacing: -0.16px;
-  line-height: 24px;
+  padding: 0 16px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  line-height: 28px;
   color: var(--ms-ink);
+}
+
+.ms-cab-loading {
+  margin: 0;
+  padding: 0 16px;
+  font-size: 14px;
+  color: var(--ms-muted);
+}
+
+.ms-cab-free-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 16px;
+}
+
+.ms-cab-free-time {
+  width: 40px;
+  flex-shrink: 0;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  color: var(--ms-tertiary);
+}
+
+.ms-cab-free-pill {
+  appearance: none;
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: var(--ms-radius-full);
+  border: 1px solid var(--ms-line);
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+}
+
+.ms-cab-free-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  color: var(--ms-ink);
+}
+
+.ms-cab-free-pill img {
+  flex-shrink: 0;
+}
+
+.ms-cab-empty-card {
+  margin: 0 16px;
+  padding: 16px 20px;
+  border-radius: 20px;
+  background: var(--ms-fill2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  box-sizing: border-box;
+}
+
+.ms-cab-empty-art {
+  position: relative;
+  width: 100%;
+  height: 80px;
+}
+
+.ms-cab-empty-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: inline-flex;
+  align-items: center;
+  padding: 12px;
+  border-radius: 999px;
+  background: var(--ms-accent);
+  border: 1px solid var(--ms-line-soft);
+}
+
+.ms-cab-empty-disc {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid var(--ms-line-soft);
+  box-shadow: var(--ms-shadow-e2);
+}
+
+.ms-cab-empty-copy {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: center;
+}
+
+.ms-cab-empty-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  color: var(--ms-ink);
+}
+
+.ms-cab-empty-sub {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: -0.13px;
+  line-height: 18px;
+  color: var(--ms-muted);
+}
+
+.ms-cab-empty-cta {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border: none;
+  border-radius: var(--ms-radius-full);
+  background: var(--ms-purple);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  cursor: pointer;
+}
+
+.ms-cab-empty-cta span {
+  padding: 0 2px;
 }
 
 .ms-cab-slots {
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 0 16px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -3562,17 +3701,17 @@ label.ms-sheet-item {
 
 .ms-cab-slot {
   display: grid;
-  grid-template-columns: 48px minmax(0, 1fr);
-  gap: 10px;
+  grid-template-columns: 40px minmax(0, 1fr);
+  gap: 16px;
   align-items: stretch;
 }
 
 .ms-cab-slot-time {
   padding-top: 12px;
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: -0.13px;
-  line-height: 18px;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: -0.14px;
+  line-height: 20px;
   color: var(--ms-tertiary);
 }
 
@@ -3621,7 +3760,7 @@ label.ms-sheet-item {
   font-weight: 600;
   letter-spacing: -0.16px;
   line-height: 24px;
-  color: var(--ms-ink-strong);
+  color: var(--ms-ink);
 }
 
 .ms-cab-slot-sub {
@@ -3647,66 +3786,37 @@ label.ms-sheet-item {
   cursor: pointer;
 }
 
-.ms-cab-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 20px 4px;
-}
-
-.ms-cab-empty-text {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 400;
-  letter-spacing: -0.15px;
-  line-height: 22px;
-  color: var(--ms-muted);
-}
-
-.ms-cab-empty-link {
-  appearance: none;
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: var(--ms-purple);
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: -0.14px;
-  line-height: 20px;
-  cursor: pointer;
-}
-
 .ms-tabbar {
   flex-shrink: 0;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
-  margin: 0 12px calc(10px + env(safe-area-inset-bottom, 0px));
-  padding: 8px 6px;
-  border-radius: 24px;
-  background: #fff;
-  border: 1px solid var(--ms-line-soft);
-  box-shadow: 0 8px 28px rgba(25, 24, 27, 0.08);
+  gap: 0;
+  margin: 0 16px calc(16px + env(safe-area-inset-bottom, 0px));
+  padding: 4px 2px;
+  border-radius: 100px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid #fff;
+  box-shadow: var(--ms-shadow-e3);
 }
 
 .ms-tabbar-item {
   appearance: none;
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 2px;
-  min-height: 52px;
-  padding: 6px 4px;
-  border-radius: 16px;
+  min-height: 50px;
+  padding: 6px 8px 7px;
+  border-radius: 100px;
   text-decoration: none;
-  color: var(--ms-muted);
+  color: var(--ms-ink);
 }
 
 .ms-tabbar-item.is-active {
   color: var(--ms-purple);
-  background: var(--ms-purple-soft);
+  background: var(--ms-fill3);
 }
 
 .ms-tabbar-icon {
@@ -3718,8 +3828,429 @@ label.ms-sheet-item {
 }
 
 .ms-tabbar-label {
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: -0.11px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: -0.12px;
   line-height: 14px;
+  text-align: center;
+}
+
+/* New booking — step 1 select client (Figma 21213:141883) */
+.ms-nb {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-bottom: 8px;
+}
+
+.ms-nb-intro {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ms-nb-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.24px;
+  line-height: 32px;
+  color: var(--ms-ink);
+}
+
+.ms-nb-lead {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  color: var(--ms-muted);
+}
+
+.ms-nb-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.ms-nb-search-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 10px 0;
+  box-shadow: none !important;
+  border: none !important;
+  background: transparent;
+  border-radius: 0;
+  min-height: 44px;
+}
+
+.ms-nb-search-input:focus {
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.ms-nb-search {
+  box-sizing: border-box;
+  padding: 0 14px;
+  border-radius: var(--ms-radius-input);
+  border: 1px solid var(--ms-line);
+  background: #fff;
+  box-shadow: var(--ms-shadow-e1);
+  min-height: 48px;
+}
+
+.ms-nb-search:focus-within {
+  border-color: var(--ms-purple);
+  box-shadow: var(--ms-shadow-e1), 0 0 0 3px rgba(98, 61, 245, 0.16);
+}
+
+.ms-nb-add {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  border: none;
+  border-radius: 20px;
+  background: var(--ms-accent);
+  cursor: pointer;
+  text-align: left;
+}
+
+.ms-nb-add-icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--ms-radius-full);
+  background: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ms-nb-add-copy {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ms-nb-add-title {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.15px;
+  line-height: 22px;
+  color: var(--ms-ink);
+}
+
+.ms-nb-add-sub {
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: -0.13px;
+  line-height: 18px;
+  color: var(--ms-muted);
+}
+
+.ms-nb-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ms-nb-list-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.16px;
+  line-height: 24px;
+  color: var(--ms-ink);
+}
+
+.ms-nb-recent {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--ms-purple);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.13px;
+  line-height: 18px;
+  cursor: pointer;
+}
+
+.ms-nb-recent:not(.is-on) {
+  opacity: 0.55;
+}
+
+.ms-nb-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ms-nb-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 20px;
+  border: 1px solid var(--ms-line-soft);
+  background: var(--ms-fill2);
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.ms-nb-card.is-selected {
+  border-color: var(--ms-purple);
+  background: #fff;
+  box-shadow: 0 0 0 1px var(--ms-purple);
+}
+
+.ms-nb-avatar {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--ms-radius-full);
+  background: var(--ms-purple);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.16px;
+}
+
+.ms-nb-card-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-start;
+}
+
+.ms-nb-card-name {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.15px;
+  line-height: 22px;
+  color: var(--ms-ink);
+}
+
+.ms-nb-card-phone,
+.ms-nb-card-meta {
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: -0.13px;
+  line-height: 18px;
+  color: var(--ms-muted);
+}
+
+.ms-nb-note-chip {
+  appearance: none;
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 12px;
+  background: #e8f3ff;
+  color: #067ff9;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.13px;
+  line-height: 18px;
+  cursor: pointer;
+  max-width: 100%;
+}
+
+.ms-nb-note-chip span {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: left;
+}
+
+.ms-nb-radio {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  margin-top: 10px;
+  border-radius: var(--ms-radius-full);
+  border: 1.5px solid var(--ms-line);
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.ms-nb-radio.is-on {
+  border-color: var(--ms-purple);
+  border-width: 6px;
+}
+
+.ms-nb-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.ms-nb-footer-hint {
+  margin: 0;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: -0.13px;
+  line-height: 18px;
+  color: var(--ms-muted);
+}
+
+.ms-nb-continue {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.ms-nb-sheet-root {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.ms-nb-sheet-backdrop {
+  appearance: none;
+  position: absolute;
+  inset: 0;
+  border: none;
+  background: rgba(25, 24, 27, 0.4);
+  cursor: pointer;
+}
+
+.ms-nb-sheet {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-height: min(78dvh, 640px);
+  overflow: auto;
+  padding: 20px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+  border-radius: 24px 24px 0 0;
+  background: #fff;
+  box-shadow: var(--ms-shadow-e3);
+}
+
+.ms-nb-sheet-title {
+  margin: 0;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.18px;
+  line-height: 26px;
+  color: var(--ms-ink);
+}
+
+.ms-nb-sheet-client {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ms-nb-sheet-client-copy {
+  min-width: 0;
+}
+
+.ms-nb-sheet-client-name {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.15px;
+  line-height: 22px;
+  color: var(--ms-ink);
+}
+
+.ms-nb-sheet-client-sub {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: -0.13px;
+  line-height: 18px;
+  color: var(--ms-muted);
+}
+
+.ms-nb-sheet-notes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ms-nb-sheet-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 16px;
+  background: var(--ms-fill2);
+}
+
+.ms-nb-sheet-note-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.ms-nb-sheet-note-body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ms-nb-sheet-note-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  color: var(--ms-ink);
+}
+
+.ms-nb-sheet-note-text {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  color: var(--ms-ink);
+}
+
+.ms-nb-sheet-note-meta {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: -0.12px;
+  line-height: 16px;
+  color: var(--ms-tertiary);
+}
+
+.ms-nb-sheet-ok {
+  width: 100%;
 }

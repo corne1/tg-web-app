@@ -86,14 +86,24 @@ export function dayTitle(date: Date): string {
   return `${label}, ${date.getDate()} ${MONTHS_GEN[date.getMonth()]}`;
 }
 
+export function workDayRange(
+  date: Date,
+  hours: WorkingHours | null | undefined,
+): { start: string; end: string } | null {
+  if (!hours) return null;
+  const day = hours[weekdayIdFromDate(date)];
+  if (!day?.enabled) return null;
+  return { start: day.start, end: day.end };
+}
+
 export function workHoursLabel(
   date: Date,
   hours: WorkingHours | null | undefined,
 ): string {
   if (!hours) return "Рабочее время не задано";
-  const day = hours[weekdayIdFromDate(date)];
-  if (!day?.enabled) return "Выходной";
-  return `Рабочее время: ${day.start}–${day.end}`;
+  const range = workDayRange(date, hours);
+  if (!range) return "Выходной по графику";
+  return `Рабочее время · ${range.start}–${range.end}`;
 }
 
 export function formatClock(date: Date): string {
