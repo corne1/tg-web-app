@@ -2,7 +2,10 @@ import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { cx } from "./cx";
 import { ChevronDownIcon } from "./icons";
 
-type Props = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children"> & {
+type Props = Omit<
+  ButtonHTMLAttributes<HTMLButtonElement>,
+  "children" | "value"
+> & {
   invalid?: boolean;
   value: ReactNode;
 };
