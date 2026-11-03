@@ -4,21 +4,10 @@ import { MasterSetupChrome } from "../components/master/MasterSetupChrome";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
 
-const STEPS: Record<
-  string,
-  { step: 1 | 2 | 3 | 4; title: string }
-> = {
-  service: { step: 2, title: "Услуга" },
-  time: { step: 3, title: "Время" },
-  confirm: { step: 4, title: "Подтверждение" },
-  client: { step: 1, title: "Новый клиент" },
-};
-
-/** Placeholder until Figma steps 2–4 / new-client are implemented. */
+/** Placeholder for «новый клиент» until Figma form is wired. */
 export function NewBookingStubScreen() {
   const navigate = useNavigate();
-  const { stepKey = "service" } = useParams<{ stepKey: string }>();
-  const meta = STEPS[stepKey] ?? STEPS.service;
+  const { stepKey = "client" } = useParams<{ stepKey: string }>();
 
   const goBack = useCallback(
     () => navigate("/cabinet/booking/new"),
@@ -30,15 +19,17 @@ export function NewBookingStubScreen() {
 
   return (
     <MasterSetupChrome
-      step={meta.step}
-      progressFilled={meta.step}
+      step={1}
+      progressFilled={1}
       topTitle="Новая запись"
       onBack={goBack}
       onClose={goCabinet}
     >
       <div className="ms-nb">
-        <h2 className="ms-nb-title">{meta.title}</h2>
-        <p className="ms-nb-lead">Экран шага скоро будет по макету Figma.</p>
+        <h2 className="ms-nb-title">
+          {stepKey === "client" ? "Новый клиент" : "Шаг"}
+        </h2>
+        <p className="ms-nb-lead">Форма нового клиента — по макету Figma позже.</p>
       </div>
     </MasterSetupChrome>
   );

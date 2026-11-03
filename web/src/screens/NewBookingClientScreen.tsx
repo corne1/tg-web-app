@@ -11,9 +11,9 @@ import {
   filterBookingClients,
   readBookingDraft,
   sortClientsRecent,
-  writeBookingDraft,
   type BookingClient,
 } from "../lib/bookingClients";
+import { patchBookingDraft } from "../lib/bookingDraft";
 import { cx } from "../ui";
 
 function SearchIcon() {
@@ -129,7 +129,7 @@ export function NewBookingClientScreen() {
 
   const selectClient = useCallback((client: BookingClient) => {
     setSelectedId(client.id);
-    writeBookingDraft({ clientId: client.id });
+    patchBookingDraft({ clientId: client.id });
   }, []);
 
   const openNotes = useCallback((client: BookingClient, e: MouseEvent) => {
@@ -169,7 +169,7 @@ export function NewBookingClientScreen() {
               disabled={!canContinue}
               onClick={() => {
                 if (!selectedId) return;
-                writeBookingDraft({ clientId: selectedId });
+                patchBookingDraft({ clientId: selectedId });
                 navigate("/cabinet/booking/new/service");
               }}
             >
@@ -248,7 +248,10 @@ export function NewBookingClientScreen() {
                       }
                     }}
                   >
-                    <span className="ms-nb-avatar" aria-hidden>
+                    <span
+                      className={cx("ms-nb-avatar", `tone-${client.avatarTone}`)}
+                      aria-hidden
+                    >
                       {clientInitial(client.name)}
                     </span>
                     <span className="ms-nb-card-main">
@@ -299,8 +302,15 @@ export function NewBookingClientScreen() {
             <h2 id="ms-nb-sheet-title" className="ms-nb-sheet-title">
               Важно помнить
             </h2>
+            <div className="ms-nb-sheet-handle" aria-hidden />
             <div className="ms-nb-sheet-client">
-              <span className="ms-nb-avatar" aria-hidden>
+              <span
+                className={cx(
+                  "ms-nb-avatar",
+                  `tone-${notesClient.avatarTone}`,
+                )}
+                aria-hidden
+              >
                 {clientInitial(notesClient.name)}
               </span>
               <div className="ms-nb-sheet-client-copy">
