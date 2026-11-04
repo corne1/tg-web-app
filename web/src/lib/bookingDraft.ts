@@ -21,44 +21,59 @@ export type BookingDraft = {
 
 const DRAFT_KEY = "pomni.bookingDraft.v1";
 
+/** Demo catalog matching Figma 21228:16502 «Выбор услуги». */
 const DEMO_SERVICES: MasterService[] = [
   {
-    id: "demo-color",
-    title: "Окрашивание",
-    durationMin: 90,
-    price: 4500,
-    priceMode: "fixed",
-    breakAfterMin: 15,
-    description: "",
-  },
-  {
-    id: "demo-care",
-    title: "Уход для волос",
-    durationMin: 30,
+    id: "demo-manicure",
+    title: "Маникюр с покрытием",
+    durationMin: 60,
     price: 2000,
     priceMode: "fixed",
     breakAfterMin: 0,
     description: "",
   },
   {
-    id: "demo-cut",
-    title: "Стрижка",
-    durationMin: 45,
-    price: 2500,
-    priceMode: "fixed",
-    breakAfterMin: 10,
+    id: "demo-color",
+    title: "Окрашивание",
+    durationMin: 120,
+    price: 4000,
+    priceMode: "from",
+    breakAfterMin: 0,
     description: "",
   },
   {
-    id: "demo-manicure",
-    title: "Маникюр с покрытием",
-    durationMin: 90,
-    price: 2500,
+    id: "demo-style",
+    title: "Укладка",
+    durationMin: 45,
+    price: 1500,
+    priceMode: "fixed",
+    breakAfterMin: 0,
+    description: "",
+  },
+  {
+    id: "demo-care",
+    title: "Уход для волос",
+    durationMin: 30,
+    price: 1200,
     priceMode: "fixed",
     breakAfterMin: 0,
     description: "",
   },
 ];
+
+export function selectedServicesLabel(count: number): string {
+  const mod10 = count % 10;
+  const mod100 = count % 100;
+  let word = "услуг";
+  if (mod10 === 1 && mod100 !== 11) word = "услуга";
+  else if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20))
+    word = "услуги";
+  return `Выбрано: ${count} ${word}`;
+}
+
+export function serviceLetter(title: string): string {
+  return (title.trim().charAt(0) || "?").toUpperCase();
+}
 
 export function emptyBookingDraft(): BookingDraft {
   return { clientId: null, serviceIds: [], dateISO: null, time: null };
@@ -97,6 +112,8 @@ export function resolveBookingClient(clientId: string | null): BookingClient | n
 
 export function bookingCatalogServices(): MasterService[] {
   const fromDraft = loadMasterDraft().services;
+  // Figma empty state when master has no services; else draft list.
+  // Demo catalog only when draft empty so «Выбор услуги» remains testable.
   return fromDraft.length > 0 ? fromDraft : DEMO_SERVICES;
 }
 
