@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import welcomeMark from "../assets/onboarding/welcome-mark.svg";
+import welcomeLogotype from "../assets/onboarding/welcome-logotype.svg";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
 import { useTelegram } from "../hooks/useTelegram";
@@ -24,14 +24,12 @@ export function WelcomeMasterScreen() {
       <div className="ms-welcome-body">
         <div className="ms-welcome-brand">
           <img
-            className="ms-welcome-mark"
-            src={welcomeMark}
-            width={72}
-            height={72}
-            alt=""
-            aria-hidden
+            className="ms-welcome-logotype"
+            src={welcomeLogotype}
+            width={156}
+            height={128}
+            alt="ПОМНЮ"
           />
-          <p className="ms-welcome-wordmark">ПОМНЮ</p>
         </div>
 
         <h1 className="ms-welcome-title">
