@@ -72,7 +72,7 @@ export function OnboardingScreen() {
 
   const handleBack = useCallback(() => {
     persistLocal();
-    navigate("/");
+    navigate("/onboarding/welcome");
   }, [navigate, persistLocal]);
 
   const handleClose = useCallback(() => {

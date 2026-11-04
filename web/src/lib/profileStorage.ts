@@ -46,7 +46,9 @@ export function isOnboardingDone(profile?: MasterProfile | null): boolean {
 export function masterResumePath(profile?: MasterProfile | null): string {
   const p = profile ?? getCachedProfile();
   if (isOnboardingDone(p)) return "/cabinet";
-  const step = p?.onboardingStep ?? 1;
+  const step = p?.onboardingStep ?? 0;
+  // No profile progress yet → welcome (Figma 21201:36720).
+  if (!p?.name && !p?.specialty) return "/onboarding/welcome";
   if (step <= 1) return "/onboarding";
   if (step === 2) return "/onboarding/services";
   if (step === 3) return "/onboarding/hours";

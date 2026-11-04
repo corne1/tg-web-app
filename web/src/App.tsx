@@ -30,6 +30,7 @@ import { MyBookingsScreen } from "./screens/MyBookingsScreen";
 import { NotificationsScreen } from "./screens/NotificationsScreen";
 import { OnboardingScreen } from "./screens/OnboardingScreen";
 import { OnboardingSuccessScreen } from "./screens/OnboardingSuccessScreen";
+import { WelcomeMasterScreen } from "./screens/WelcomeMasterScreen";
 import { ScheduleScreen } from "./screens/ScheduleScreen";
 import { HoursStepScreen } from "./screens/HoursStepScreen";
 import { NewBookingClientScreen } from "./screens/NewBookingClientScreen";
@@ -139,7 +140,7 @@ function HomeRedirect({
           return;
         }
         setBootError(err instanceof Error ? err.message : "Не удалось открыть кабинет");
-        navigate("/onboarding", { replace: true });
+        navigate("/onboarding/welcome", { replace: true });
       }
     }
 
@@ -252,6 +253,10 @@ export function App() {
           <Route
             path="/"
             element={<HomeRedirect startParam={startParam} profile={profile} />}
+          />
+          <Route
+            path="/onboarding/welcome"
+            element={<WelcomeMasterScreen />}
           />
           <Route path="/onboarding" element={<OnboardingScreen />} />
           <Route path="/onboarding/services" element={<ServicesStepScreen />} />

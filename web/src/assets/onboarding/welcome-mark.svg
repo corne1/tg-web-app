@@ -1,0 +1,23 @@
+<svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Mark for Figma 21201:36720; replace with official export when MCP allows -->
+  <rect
+    x="12.5"
+    y="16.5"
+    width="47"
+    height="43"
+    rx="10"
+    stroke="#fff"
+    stroke-width="3"
+  />
+  <path d="M12.5 29.5h47" stroke="#fff" stroke-width="3" stroke-linecap="round" />
+  <path
+    d="M26 11v11M46 11v11"
+    stroke="#fff"
+    stroke-width="3"
+    stroke-linecap="round"
+  />
+  <path
+    d="M36 54c-7.2-4.6-12-8.4-12-13.2 0-3.7 2.9-6.3 6.2-6.3 2 0 3.8 1 4.8 2.5 1-1.5 2.8-2.5 4.8-2.5 3.3 0 6.2 2.6 6.2 6.3C46 45.6 41.2 49.4 36 54Z"
+    fill="#fff"
+  />
+</svg>

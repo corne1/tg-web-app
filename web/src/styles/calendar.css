@@ -828,6 +828,98 @@ input {
   animation: rise 0.35s ease-out;
 }
 
+/* Figma 21201:36720 «Добро пожаловать» */
+.master-setup.ms-welcome {
+  background: var(--ms-purple);
+  color: #fff;
+  padding: calc(24px + env(safe-area-inset-top, 0px)) 24px
+    calc(24px + env(safe-area-inset-bottom, 0px));
+  box-sizing: border-box;
+}
+
+.ms-welcome-body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  text-align: center;
+  min-height: 0;
+}
+
+.ms-welcome-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.ms-welcome-mark {
+  display: block;
+  width: 72px;
+  height: 72px;
+}
+
+.ms-welcome-wordmark {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 28px;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.ms-welcome-title {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.64px;
+  line-height: 38px;
+  color: #fff;
+}
+
+.ms-welcome-lead {
+  margin: 0;
+  max-width: 320px;
+  font-size: 16px;
+  font-weight: 400;
+  letter-spacing: -0.16px;
+  line-height: 22px;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.ms-welcome-footer {
+  flex-shrink: 0;
+  width: 100%;
+  padding-top: 16px;
+}
+
+.ms-welcome-cta {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 56px;
+  margin: 0;
+  padding: 16px 24px;
+  border: none;
+  border-radius: var(--ms-radius-full);
+  background: #fff;
+  color: var(--ms-purple);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.16px;
+  line-height: 22px;
+  cursor: pointer;
+}
+
+.ms-welcome-cta:active {
+  opacity: 0.92;
+}
+
 /* Figma Toolbar: nav (controls+stepper gap 16) → hero gap 24 */
 .ms-toolbar {
   display: flex;
