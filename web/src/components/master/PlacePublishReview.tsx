@@ -32,9 +32,10 @@ function StatusFilled() {
   return (
     <span className="ms-review-status">
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+        <circle cx="7" cy="7" r="7" fill="#12B76A" />
         <path
-          d="M3.5 7.2 5.8 9.5 10.5 4.5"
-          stroke="currentColor"
+          d="M4 7.1 5.9 9 10 4.9"
+          stroke="#fff"
           strokeWidth="1.5"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -62,6 +63,48 @@ function IconCalendar() {
         stroke="#9196A1"
         strokeWidth="1.4"
         strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function IconCalendarOff() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden>
+      <rect
+        x="3.25"
+        y="4.5"
+        width="13.5"
+        height="12.25"
+        rx="2"
+        stroke="#9196A1"
+        strokeWidth="1.4"
+      />
+      <path
+        d="M3.25 8.25h13.5M7 3.25v2.5M13 3.25v2.5"
+        stroke="#9196A1"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+      />
+      <path
+        d="M7.5 11.5 12.5 14.5M12.5 11.5 7.5 14.5"
+        stroke="#9196A1"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function ChevronDown() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <path
+        d="M4 6.5 8 10.5 12 6.5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );
@@ -175,7 +218,7 @@ export function PlacePublishReview({
           <h3 className="ms-review-card-title">1. Профиль мастера</h3>
           <StatusFilled />
         </header>
-        <div className="ms-review-profile">
+        <div className="ms-review-inset ms-review-profile">
           <img
             className="ms-avatar"
             src={avatarPlaceholder}
@@ -226,7 +269,9 @@ export function PlacePublishReview({
                     <span className="ms-service-sep" aria-hidden>
                       ·
                     </span>
-                    <span>{formatPrice(s)}</span>
+                    <span className="ms-review-service-price">
+                      {formatPrice(s)}
+                    </span>
                   </p>
                 </div>
               </li>
@@ -236,10 +281,11 @@ export function PlacePublishReview({
         {showAllToggle && !servicesExpanded && (
           <button
             type="button"
-            className="ms-link-btn ms-review-show-all"
+            className="ms-review-show-all"
             onClick={() => setServicesExpanded(true)}
           >
-            Показать все
+            <span>Показать все</span>
+            <ChevronDown />
           </button>
         )}
         <EditButton onClick={onEditServices} />
@@ -250,7 +296,7 @@ export function PlacePublishReview({
           <h3 className="ms-review-card-title">3. Рабочее время</h3>
           <StatusFilled />
         </header>
-        <ul className="ms-review-hours">
+        <ul className="ms-review-inset ms-review-hours">
           {hourRows.map((row) => (
             <li key={row.dayId} className="ms-review-hours-row">
               <span className="ms-review-hours-day">
@@ -263,7 +309,7 @@ export function PlacePublishReview({
           {daysOff ? (
             <li className="ms-review-hours-row">
               <span className="ms-review-hours-day">
-                <IconCalendar />
+                <IconCalendarOff />
                 <span className="ms-review-days-off-label">Выходные</span>
               </span>
               <span className="ms-review-hours-range">{daysOff}</span>
@@ -278,7 +324,7 @@ export function PlacePublishReview({
           <h3 className="ms-review-card-title">4. Место приёма</h3>
           <StatusFilled />
         </header>
-        <div className="ms-review-place-panel">
+        <div className="ms-review-inset ms-review-place-panel">
           {needsStudioPlace(placeMode) && studioLine && (
             <div className="ms-review-place-row">
               <IconHouseSmall />

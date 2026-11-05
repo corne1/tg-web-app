@@ -2985,11 +2985,11 @@ label.ms-sheet-item {
   flex-direction: column;
   gap: 16px;
   padding: 16px;
-  background: #fff;
-  border: 1px solid var(--ms-line-soft);
+  background: var(--ms-soft);
+  border: none;
   border-radius: var(--ms-radius-card);
   box-sizing: border-box;
-  box-shadow: var(--ms-shadow-e1);
+  box-shadow: none;
 }
 
 .ms-review-card-head {
@@ -3024,10 +3024,23 @@ label.ms-sheet-item {
   line-height: 16px;
 }
 
+.ms-review-status svg {
+  display: block;
+  flex: 0 0 auto;
+}
+
+.ms-review-inset {
+  background: #fff;
+  border: 1px solid var(--ms-line-soft);
+  border-radius: 16px;
+  box-sizing: border-box;
+}
+
 .ms-review-profile {
   display: flex;
   align-items: center;
   gap: 12px;
+  padding: 12px;
 }
 
 .ms-review-count {
@@ -3045,11 +3058,39 @@ label.ms-sheet-item {
 
 .ms-review-service-card {
   padding: 12px;
+  background: #fff;
+  border: 1px solid var(--ms-line-soft);
   box-shadow: none;
 }
 
+.ms-review-service-price {
+  color: var(--ms-ink);
+  font-weight: 600;
+}
+
 .ms-review-show-all {
-  align-self: flex-start;
+  appearance: none;
+  align-self: stretch;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 12px;
+  border-radius: var(--ms-radius-full);
+  border: 1px solid var(--ms-purple-border);
+  background: #fff;
+  color: var(--ms-purple);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  cursor: pointer;
+}
+
+.ms-review-show-all:active {
+  background: var(--ms-accent);
 }
 
 .ms-review-edit {
@@ -3070,16 +3111,17 @@ label.ms-sheet-item {
 }
 
 .ms-review-edit:active {
-  background: var(--ms-soft);
+  background: #fff;
+  opacity: 0.92;
 }
 
 .ms-review-hours {
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 4px 12px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 0;
 }
 
 .ms-review-hours-row {
@@ -3087,11 +3129,17 @@ label.ms-sheet-item {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  padding: 12px 0;
   font-size: 14px;
   font-weight: 500;
   letter-spacing: -0.14px;
   line-height: 20px;
   color: var(--ms-ink);
+  border-bottom: 1px solid var(--ms-line-soft);
+}
+
+.ms-review-hours-row:last-child {
+  border-bottom: none;
 }
 
 .ms-review-hours-day {
@@ -3114,18 +3162,20 @@ label.ms-sheet-item {
 .ms-review-place-panel {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 12px;
-  background: var(--ms-soft);
-  border: 1px solid var(--ms-line-soft);
-  border-radius: 16px;
-  box-sizing: border-box;
+  gap: 0;
+  padding: 4px 12px 12px;
 }
 
 .ms-review-place-row {
   display: flex;
   align-items: flex-start;
   gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--ms-line-soft);
+}
+
+.ms-review-place-row:last-of-type {
+  border-bottom: none;
 }
 
 .ms-review-place-text {
@@ -3137,30 +3187,31 @@ label.ms-sheet-item {
 
 .ms-review-place-title {
   margin: 0;
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: -0.14px;
-  line-height: 20px;
-  color: var(--ms-ink);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.13px;
+  line-height: 18px;
+  color: var(--ms-muted);
 }
 
 .ms-review-place-sub {
   margin: 0;
   font-size: 14px;
-  font-weight: 400;
+  font-weight: 500;
   letter-spacing: -0.14px;
   line-height: 20px;
-  color: var(--ms-muted);
+  color: var(--ms-ink);
 }
 
 .ms-review-visibility {
-  margin: 0;
+  margin: 8px 0 0;
   display: flex;
   align-items: flex-start;
   gap: 8px;
   padding: 10px 12px;
   border-radius: 12px;
-  background: var(--ms-fill2);
+  border: 1px solid var(--ms-line-soft);
+  background: var(--ms-soft);
   font-size: 13px;
   font-weight: 400;
   letter-spacing: -0.13px;
