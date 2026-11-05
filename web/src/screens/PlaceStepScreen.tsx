@@ -700,8 +700,14 @@ export function PlaceStepScreen() {
         </Field>
         {placeMode === "visit" && (
           <div className="ms-info ms-place-client-info" role="note">
-            <img src={infoIcon} alt="" className="ms-info-icon" />
-            <div>
+            <img
+              src={infoIcon}
+              alt=""
+              className="ms-info-icon"
+              width={20}
+              height={20}
+            />
+            <div className="ms-info-copy">
               <p className="ms-place-client-info-title">Как это увидит клиент</p>
               <p>
                 На вашей странице будет указано, что вы выезжаете к клиентам в

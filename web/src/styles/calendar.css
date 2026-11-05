@@ -1145,15 +1145,25 @@ input {
   box-shadow: none;
 }
 
+/* Figma Alert / Outline / Info — radius 16, border-soft, padding/gap 12 */
 .ms-info {
   display: flex;
   align-items: flex-start;
   gap: 12px;
   padding: 12px;
   background: var(--ms-soft);
-  border: 1px solid var(--ms-line);
-  border-radius: var(--ms-radius-full);
+  border: 1px solid var(--ms-line-soft);
+  border-radius: 16px;
+  box-sizing: border-box;
   color: var(--ms-ink);
+}
+
+.ms-info-copy {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .ms-info p {
@@ -1162,6 +1172,7 @@ input {
   font-weight: 400;
   letter-spacing: -0.14px;
   line-height: 20px;
+  color: var(--ms-muted);
 }
 
 .ms-info-icon {
@@ -1169,6 +1180,7 @@ input {
   width: 20px;
   height: 20px;
   display: block;
+  margin-top: 2px;
 }
 
 /* Figma: eyebrow lives inside the fill2 card (not above it) */
@@ -2931,12 +2943,17 @@ label.ms-sheet-item {
 }
 
 .ms-place-client-info {
-  margin-top: 4px;
+  margin-top: 8px;
+  width: 100%;
 }
 
 .ms-place-client-info-title {
-  margin: 0 0 4px !important;
-  font-weight: 600 !important;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  color: var(--ms-ink);
 }
 
 .ms-sr-only {

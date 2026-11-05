@@ -192,7 +192,9 @@ export function OnboardingScreen() {
                 alt=""
                 aria-hidden
               />
-              <p>Остальные услуги можно добавить позже</p>
+              <div className="ms-info-copy">
+                <p>Остальные услуги можно добавить позже</p>
+              </div>
             </div>
           </div>
         </div>
