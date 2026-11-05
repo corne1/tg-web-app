@@ -1,7 +1,4 @@
-import {
-  BOOKING_CLIENTS_DEMO,
-  type BookingClient,
-} from "./bookingClients";
+import { type BookingClient } from "./bookingClients";
 import {
   formatDuration,
   formatPrice,
@@ -14,52 +11,14 @@ import { weekdayIdFromDate, workDayRange } from "./scheduleUi";
 
 export type BookingDraft = {
   clientId: string | null;
+  /** Snapshot of selected client from API (no mock catalog). */
+  client: BookingClient | null;
   serviceIds: string[];
   dateISO: string | null;
   time: string | null;
 };
 
 const DRAFT_KEY = "pomni.bookingDraft.v1";
-
-/** Demo catalog matching Figma 21228:16502 «Выбор услуги». */
-const DEMO_SERVICES: MasterService[] = [
-  {
-    id: "demo-manicure",
-    title: "Маникюр с покрытием",
-    durationMin: 60,
-    price: 2000,
-    priceMode: "fixed",
-    breakAfterMin: 0,
-    description: "",
-  },
-  {
-    id: "demo-color",
-    title: "Окрашивание",
-    durationMin: 120,
-    price: 4000,
-    priceMode: "from",
-    breakAfterMin: 0,
-    description: "",
-  },
-  {
-    id: "demo-style",
-    title: "Укладка",
-    durationMin: 45,
-    price: 1500,
-    priceMode: "fixed",
-    breakAfterMin: 0,
-    description: "",
-  },
-  {
-    id: "demo-care",
-    title: "Уход для волос",
-    durationMin: 30,
-    price: 1200,
-    priceMode: "fixed",
-    breakAfterMin: 0,
-    description: "",
-  },
-];
 
 export function selectedServicesLabel(count: number): string {
   const mod10 = count % 10;
@@ -76,7 +35,32 @@ export function serviceLetter(title: string): string {
 }
 
 export function emptyBookingDraft(): BookingDraft {
-  return { clientId: null, serviceIds: [], dateISO: null, time: null };
+  return {
+    clientId: null,
+    client: null,
+    serviceIds: [],
+    dateISO: null,
+    time: null,
+  };
+}
+
+function parseClientSnapshot(raw: unknown): BookingClient | null {
+  if (!raw || typeof raw !== "object") return null;
+  const c = raw as Partial<BookingClient>;
+  if (!c.id || !c.name) return null;
+  return {
+    id: String(c.id),
+    name: String(c.name),
+    phone: String(c.phone ?? ""),
+    visits: Number(c.visits ?? 0),
+    lastVisitLabel: c.lastVisitLabel ?? null,
+    lastVisitAt: c.lastVisitAt ?? null,
+    avatarTone: c.avatarTone ?? "violet",
+    notes: Array.isArray(c.notes) ? c.notes : [],
+    clientSinceLabel: c.clientSinceLabel ?? null,
+    nextBooking: c.nextBooking ?? null,
+    history: Array.isArray(c.history) ? c.history : [],
+  };
 }
 
 export function readBookingDraft(): BookingDraft {
@@ -84,8 +68,10 @@ export function readBookingDraft(): BookingDraft {
     const raw = localStorage.getItem(DRAFT_KEY);
     if (!raw) return emptyBookingDraft();
     const parsed = JSON.parse(raw) as Partial<BookingDraft>;
+    const client = parseClientSnapshot(parsed.client);
     return {
-      clientId: parsed.clientId ?? null,
+      clientId: parsed.clientId ?? client?.id ?? null,
+      client,
       serviceIds: Array.isArray(parsed.serviceIds) ? parsed.serviceIds : [],
       dateISO: parsed.dateISO ?? null,
       time: parsed.time ?? null,
@@ -105,16 +91,18 @@ export function patchBookingDraft(patch: Partial<BookingDraft>): BookingDraft {
   return next;
 }
 
-export function resolveBookingClient(clientId: string | null): BookingClient | null {
+export function resolveBookingClient(
+  clientId: string | null,
+  draft = readBookingDraft(),
+): BookingClient | null {
   if (!clientId) return null;
-  return BOOKING_CLIENTS_DEMO.find((c) => c.id === clientId) ?? null;
+  if (draft.client && draft.client.id === clientId) return draft.client;
+  return null;
 }
 
+/** Services from master draft (synced from DB via /api/master). Empty if none. */
 export function bookingCatalogServices(): MasterService[] {
-  const fromDraft = loadMasterDraft().services;
-  // Figma empty state when master has no services; else draft list.
-  // Demo catalog only when draft empty so «Выбор услуги» remains testable.
-  return fromDraft.length > 0 ? fromDraft : DEMO_SERVICES;
+  return loadMasterDraft().services;
 }
 
 export function resolveBookingServices(ids: string[]): MasterService[] {

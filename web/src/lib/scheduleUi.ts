@@ -16,7 +16,7 @@ const MONTHS_NOM = [
   "Декабрь",
 ] as const;
 
-const MONTHS_GEN = [
+export const MONTHS_GEN = [
   "января",
   "февраля",
   "марта",

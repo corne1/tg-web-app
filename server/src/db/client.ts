@@ -112,8 +112,36 @@ export async function migrate(): Promise<void> {
         ON master_services(master_id, sort_order)`,
       `CREATE UNIQUE INDEX IF NOT EXISTS idx_master_profiles_slug
         ON master_profiles(slug)`,
+      `CREATE TABLE IF NOT EXISTS master_clients (
+        id TEXT PRIMARY KEY NOT NULL,
+        master_id INTEGER NOT NULL REFERENCES users(id),
+        telegram_user_id INTEGER REFERENCES users(id),
+        name TEXT NOT NULL,
+        phone TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      )`,
+      `CREATE INDEX IF NOT EXISTS idx_master_clients_master
+        ON master_clients(master_id, updated_at)`,
+      `CREATE TABLE IF NOT EXISTS client_notes (
+        id TEXT PRIMARY KEY NOT NULL,
+        master_id INTEGER NOT NULL REFERENCES users(id),
+        client_id TEXT NOT NULL REFERENCES master_clients(id),
+        title TEXT NOT NULL,
+        body TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      )`,
+      `CREATE INDEX IF NOT EXISTS idx_client_notes_client
+        ON client_notes(master_id, client_id, created_at)`,
     ],
     "write",
+  );
+
+  await tryExec(
+    db,
+    `CREATE UNIQUE INDEX IF NOT EXISTS idx_master_clients_tg
+      ON master_clients(master_id, telegram_user_id)
+      WHERE telegram_user_id IS NOT NULL`,
   );
 
   // Existing DBs: psychologist_id → master_id (no-op when already renamed / fresh schema).

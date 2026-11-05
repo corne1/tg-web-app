@@ -5,6 +5,22 @@ export type ClientNote = {
   addedLabel: string;
 };
 
+export type ClientNextBooking = {
+  dateLabel: string;
+  time: string;
+  serviceTitle: string;
+  priceLabel: string;
+  bookingId?: string;
+};
+
+export type ClientVisitHistoryItem = {
+  id: string;
+  dateLabel: string;
+  serviceTitle: string;
+  priceLabel: string;
+  statusLabel: string;
+};
+
 export type BookingClient = {
   id: string;
   name: string;
@@ -15,82 +31,31 @@ export type BookingClient = {
   lastVisitAt: string | null;
   avatarTone: "violet" | "sky" | "mint" | "amber";
   notes: ClientNote[];
+  /** Cabinet client card (Figma 21317:15642). */
+  clientSinceLabel?: string | null;
+  nextBooking?: ClientNextBooking | null;
+  history?: ClientVisitHistoryItem[];
 };
-
-/** Demo clients matching Figma 21213:141883 until cabinet clients API exists. */
-export const BOOKING_CLIENTS_DEMO: BookingClient[] = [
-  {
-    id: "c-anna",
-    name: "Анна Смирнова",
-    phone: "+7 999 — 12 34",
-    visits: 5,
-    lastVisitLabel: "24 окт",
-    lastVisitAt: "2026-10-24",
-    avatarTone: "violet",
-    notes: [
-      {
-        id: "n-anna-1",
-        title: "Не забыть",
-        body: "Перед окрашиванием провести тест-пробу. Кожа головы чувствительная — используем щадящий состав.",
-        addedLabel: "Добавлена после визита · 12 октября 2026",
-      },
-    ],
-  },
-  {
-    id: "c-maria",
-    name: "Мария Иванова",
-    phone: "+7 999 — 45 67",
-    visits: 3,
-    lastVisitLabel: "18 окт",
-    lastVisitAt: "2026-10-18",
-    avatarTone: "sky",
-    notes: [
-      {
-        id: "n1",
-        title: "Не забыть",
-        body: "Перед окрашиванием провести тест-пробу. Кожа головы чувствительная — используем щадящий состав.",
-        addedLabel: "Добавлена после визита · 12 октября 2026",
-      },
-      {
-        id: "n2",
-        title: "Не забыть",
-        body: "Еще какая-нибудь заметка для примера.",
-        addedLabel: "Добавлена после визита · 1 октября 2026",
-      },
-    ],
-  },
-  {
-    id: "c-elena",
-    name: "Елена Петрова",
-    phone: "+7 903 — 88 21",
-    visits: 1,
-    lastVisitLabel: "2 окт",
-    lastVisitAt: "2026-10-02",
-    avatarTone: "mint",
-    notes: [],
-  },
-  {
-    id: "c-katya",
-    name: "Екатерина Волкова",
-    phone: "+7 926 — 01 15",
-    visits: 0,
-    lastVisitLabel: null,
-    lastVisitAt: null,
-    avatarTone: "amber",
-    notes: [
-      {
-        id: "n-katya-1",
-        title: "Не забыть",
-        body: "Клиент предпочитает утренние слоты до 12:00.",
-        addedLabel: "Добавлена после визита · 5 октября 2026",
-      },
-    ],
-  },
-];
 
 export function clientInitial(name: string): string {
   const part = name.trim().split(/\s+/)[0];
   return (part?.[0] ?? "?").toUpperCase();
+}
+
+export function pluralVisits(n: number): string {
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return "визит";
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return "визита";
+  return "визитов";
+}
+
+export function pluralClients(n: number): string {
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return "клиент";
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return "клиента";
+  return "клиентов";
 }
 
 export function clientVisitsLabel(client: BookingClient): string {
@@ -101,12 +66,14 @@ export function clientVisitsLabel(client: BookingClient): string {
   return `${client.visits} ${pluralVisits(client.visits)}${last}`;
 }
 
-function pluralVisits(n: number): string {
-  const mod10 = n % 10;
-  const mod100 = n % 100;
-  if (mod10 === 1 && mod100 !== 11) return "визит";
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return "визита";
-  return "визитов";
+/** Primary subtitle under name in clients list (Figma 21317:15642). */
+export function clientListMeta(client: BookingClient): string {
+  if (client.nextBooking) {
+    return `Записана на ${client.nextBooking.dateLabel}`;
+  }
+  if (client.visits <= 0) return "Новый клиент";
+  if (client.lastVisitLabel) return `Последний визит ${client.lastVisitLabel}`;
+  return `${client.visits} ${pluralVisits(client.visits)}`;
 }
 
 export function filterBookingClients(

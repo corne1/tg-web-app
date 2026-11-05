@@ -23,7 +23,9 @@ import {
 import { parseEntryContext } from "./lib/startParam";
 import type { MasterProfile, MasterServiceDto } from "./types";
 import { BookingConfirmScreen } from "./screens/BookingConfirmScreen";
+import { BookingDetailScreen } from "./screens/BookingDetailScreen";
 import { CabinetProfileScreen } from "./screens/CabinetProfileScreen";
+import { ClientCardScreen } from "./screens/ClientCardScreen";
 import { ClientsScreen } from "./screens/ClientsScreen";
 import { EmptyStateScreen } from "./screens/EmptyStateScreen";
 import { MyBookingsScreen } from "./screens/MyBookingsScreen";
@@ -280,6 +282,10 @@ export function App() {
           />
           <Route path="/cabinet" element={<ScheduleScreen />} />
           <Route path="/cabinet/clients" element={<ClientsScreen />} />
+          <Route
+            path="/cabinet/clients/:clientId"
+            element={<ClientCardScreen />}
+          />
           <Route path="/cabinet/profile" element={<CabinetProfileScreen />} />
           <Route path="/cabinet/empty" element={<EmptyStateScreen />} />
           <Route
@@ -301,6 +307,10 @@ export function App() {
           <Route
             path="/cabinet/booking/new/:stepKey"
             element={<NewBookingStubScreen />}
+          />
+          <Route
+            path="/cabinet/booking/:bookingId"
+            element={<BookingDetailScreen />}
           />
           <Route path="/client/confirm" element={<BookingConfirmScreen />} />
           <Route path="/client/bookings" element={<MyBookingsScreen />} />

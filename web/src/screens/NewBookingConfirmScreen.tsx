@@ -21,7 +21,7 @@ import { cx } from "../ui";
 export function NewBookingConfirmScreen() {
   const navigate = useNavigate();
   const draft = useMemo(() => readBookingDraft(), []);
-  const client = resolveBookingClient(draft.clientId);
+  const client = resolveBookingClient(draft.clientId, draft);
   const services = resolveBookingServices(draft.serviceIds);
   const totals = bookingTotals(services);
   const [toast, setToast] = useState<string | null>(null);

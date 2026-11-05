@@ -8,8 +8,12 @@ export interface Session {
   time: string;
   dateLabel: string;
   clientName: string;
+  clientId?: string | null;
   status: SessionStatus;
   paid?: boolean;
+  durationMin?: number;
+  price?: number;
+  createdAt?: string;
 }
 
 /** Per-day hours synced from onboarding (server may omit when unset). */

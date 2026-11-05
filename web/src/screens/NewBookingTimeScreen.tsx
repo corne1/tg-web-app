@@ -40,7 +40,7 @@ function buildMonthCells(anchor: Date): Date[] {
 export function NewBookingTimeScreen() {
   const navigate = useNavigate();
   const draft = useMemo(() => readBookingDraft(), []);
-  const client = resolveBookingClient(draft.clientId);
+  const client = resolveBookingClient(draft.clientId, draft);
   const services = resolveBookingServices(draft.serviceIds);
   const totals = bookingTotals(services);
   const hours = loadMasterDraft().hours;

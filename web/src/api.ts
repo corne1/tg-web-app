@@ -1,3 +1,4 @@
+import type { BookingClient } from "./lib/bookingClients";
 import type {
   ClientBooking,
   MasterPlaceDto,
@@ -242,6 +243,47 @@ export async function fetchCabinetSessions(
   profile?: MasterProfile;
 }> {
   return request(`/api/cabinet/sessions?period=${period}`);
+}
+
+export async function fetchCabinetClients(): Promise<{
+  clients: BookingClient[];
+}> {
+  return request("/api/cabinet/clients");
+}
+
+export async function fetchCabinetClient(
+  clientId: string,
+): Promise<{ client: BookingClient }> {
+  return request(`/api/cabinet/clients/${encodeURIComponent(clientId)}`);
+}
+
+export async function createCabinetClient(input: {
+  name: string;
+  phone?: string;
+}): Promise<{ client: BookingClient }> {
+  return request("/api/cabinet/clients", {
+    method: "POST",
+    body: JSON.stringify({
+      name: input.name,
+      phone: input.phone ?? "",
+    }),
+  });
+}
+
+export async function createCabinetClientNote(
+  clientId: string,
+  input: { title?: string; body: string },
+): Promise<{ client: BookingClient }> {
+  return request(
+    `/api/cabinet/clients/${encodeURIComponent(clientId)}/notes`,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        title: input.title ?? "Заметка",
+        body: input.body,
+      }),
+    },
+  );
 }
 
 export async function createBooking(input: {

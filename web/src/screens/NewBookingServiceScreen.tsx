@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { fetchMe } from "../api";
 import { BookingClientSummary } from "../components/booking/BookingClientSummary";
 import { MasterSetupChrome } from "../components/master/MasterSetupChrome";
 import { MsArrowRight } from "../components/master/MsArrowRight";
@@ -9,18 +10,21 @@ import clockPurpleIcon from "../assets/cabinet/clock-purple.svg";
 import plusCircleIcon from "../assets/onboarding/plus-circle.svg";
 import servicesEmptyIllu from "../assets/onboarding/services-empty.svg";
 import {
-  bookingCatalogServices,
   bookingTotals,
   formatDuration,
   formatPrice,
   patchBookingDraft,
   readBookingDraft,
   resolveBookingClient,
-  resolveBookingServices,
   selectedServicesLabel,
   serviceLetter,
 } from "../lib/bookingDraft";
 import { clientInitial } from "../lib/bookingClients";
+import {
+  loadMasterDraft,
+  saveMasterDraft,
+  type MasterService,
+} from "../lib/masterDraft";
 import { cx } from "../ui";
 
 function NotePinIcon() {
@@ -40,20 +44,55 @@ function NotePinIcon() {
 export function NewBookingServiceScreen() {
   const navigate = useNavigate();
   const initial = useMemo(() => readBookingDraft(), []);
-  const client = resolveBookingClient(initial.clientId);
-  const catalog = useMemo(() => bookingCatalogServices(), []);
+  const client = resolveBookingClient(initial.clientId, initial);
+  const [catalog, setCatalog] = useState<MasterService[]>([]);
+  const [catalogLoading, setCatalogLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState<string[]>(
     () => initial.serviceIds,
   );
   const [notesOpen, setNotesOpen] = useState(false);
 
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      setCatalogLoading(true);
+      try {
+        const me = await fetchMe();
+        const services: MasterService[] = (me.services ?? []).map((s) => ({
+          id: s.id,
+          title: s.title,
+          durationMin: s.durationMin,
+          price: s.price,
+          priceMode: s.priceMode,
+          breakAfterMin: s.breakAfterMin,
+          description: s.description,
+        }));
+        if (!cancelled) {
+          setCatalog(services);
+          saveMasterDraft({ ...loadMasterDraft(), services });
+        }
+      } catch {
+        if (!cancelled) setCatalog([]);
+      } finally {
+        if (!cancelled) setCatalogLoading(false);
+      }
+    }
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const selected = useMemo(
-    () => resolveBookingServices(selectedIds),
-    [selectedIds],
+    () =>
+      selectedIds
+        .map((id) => catalog.find((s) => s.id === id))
+        .filter((s): s is MasterService => Boolean(s)),
+    [catalog, selectedIds],
   );
   const totals = useMemo(() => bookingTotals(selected), [selected]);
   const canContinue = selectedIds.length > 0 && catalog.length > 0;
-  const showEmpty = catalog.length === 0;
+  const showEmpty = !catalogLoading && catalog.length === 0;
 
   const goBack = useCallback(
     () => navigate("/cabinet/booking/new"),

@@ -9,6 +9,7 @@ import {
   markPaid,
   rescheduleBooking,
 } from "../db/bookings.js";
+import { ensureClientFromBooking } from "../db/clients.js";
 import { getProfile } from "../db/profiles.js";
 import { upsertUser } from "../db/users.js";
 import { requireSession, type AuthedRequest } from "../middleware.js";
@@ -61,6 +62,11 @@ bookingsRouter.post("/", requireSession, async (req: AuthedRequest, res) => {
       startsAt,
       durationMin: profile.duration,
       price: profile.price,
+    });
+    await ensureClientFromBooking({
+      masterId,
+      telegramUserId: tg.id,
+      name: clientName,
     });
 
     void notifyBookingCreated({

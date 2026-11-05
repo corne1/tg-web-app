@@ -351,14 +351,24 @@ export function ScheduleScreen() {
                     <div className="ms-cab-slot-time" aria-hidden>
                       <span>{session.time}</span>
                     </div>
-                    <div className="ms-cab-slot-card">
-                      <div className="ms-cab-slot-range">
-                        {session.time}–{end}
-                      </div>
-                      <div className="ms-cab-slot-name">{session.clientName}</div>
-                      <div className="ms-cab-slot-sub">
-                        {paid ? "Оплачена" : statusLabel(session.status)}
-                      </div>
+                    <div className="ms-cab-slot-card-wrap">
+                      <button
+                        type="button"
+                        className="ms-cab-slot-card"
+                        onClick={() =>
+                          navigate(`/cabinet/booking/${session.id}`)
+                        }
+                      >
+                        <div className="ms-cab-slot-range">
+                          {session.time}–{end}
+                        </div>
+                        <div className="ms-cab-slot-name">
+                          {session.clientName}
+                        </div>
+                        <div className="ms-cab-slot-sub">
+                          {paid ? "Оплачена" : statusLabel(session.status)}
+                        </div>
+                      </button>
                       {!cancelled && !paid && (
                         <button
                           type="button"

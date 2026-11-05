@@ -1,11 +1,18 @@
-import { useCallback, useMemo, useState, type KeyboardEvent, type MouseEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type KeyboardEvent,
+  type MouseEvent,
+} from "react";
 import { useNavigate } from "react-router-dom";
+import { createCabinetClient, fetchCabinetClients } from "../api";
 import { MasterSetupChrome } from "../components/master/MasterSetupChrome";
 import { MsArrowRight } from "../components/master/MsArrowRight";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
 import {
-  BOOKING_CLIENTS_DEMO,
   clientInitial,
   clientVisitsLabel,
   filterBookingClients,
@@ -111,15 +118,42 @@ export function NewBookingClientScreen() {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [recentOnly, setRecentOnly] = useState(true);
+  const [allClients, setAllClients] = useState<BookingClient[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(
     () => readBookingDraft().clientId,
   );
   const [notesClient, setNotesClient] = useState<BookingClient | null>(null);
 
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await fetchCabinetClients();
+        if (!cancelled) setAllClients(data.clients);
+      } catch (err) {
+        if (!cancelled) {
+          setAllClients([]);
+          setError(err instanceof Error ? err.message : "Ошибка загрузки");
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const clients = useMemo(() => {
-    const filtered = filterBookingClients(BOOKING_CLIENTS_DEMO, query);
+    const filtered = filterBookingClients(allClients, query);
     return recentOnly ? sortClientsRecent(filtered) : filtered;
-  }, [query, recentOnly]);
+  }, [allClients, query, recentOnly]);
 
   const canContinue = Boolean(selectedId);
 
@@ -129,7 +163,7 @@ export function NewBookingClientScreen() {
 
   const selectClient = useCallback((client: BookingClient) => {
     setSelectedId(client.id);
-    patchBookingDraft({ clientId: client.id });
+    patchBookingDraft({ clientId: client.id, client });
   }, []);
 
   const openNotes = useCallback((client: BookingClient, e: MouseEvent) => {
@@ -147,6 +181,27 @@ export function NewBookingClientScreen() {
     },
     [],
   );
+
+  async function onAddClient() {
+    if (creating) return;
+    const name = window.prompt("Имя клиента");
+    if (!name?.trim()) return;
+    const phone = window.prompt("Телефон (необязательно)") ?? "";
+    setCreating(true);
+    setError(null);
+    try {
+      const data = await createCabinetClient({
+        name: name.trim(),
+        phone: phone.trim(),
+      });
+      setAllClients((prev) => [data.client, ...prev]);
+      selectClient(data.client);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Не удалось создать");
+    } finally {
+      setCreating(false);
+    }
+  }
 
   return (
     <>
@@ -169,7 +224,13 @@ export function NewBookingClientScreen() {
               disabled={!canContinue}
               onClick={() => {
                 if (!selectedId) return;
-                patchBookingDraft({ clientId: selectedId });
+                const selected =
+                  allClients.find((c) => c.id === selectedId) ??
+                  readBookingDraft().client;
+                patchBookingDraft({
+                  clientId: selectedId,
+                  client: selected,
+                });
                 navigate("/cabinet/booking/new/service");
               }}
             >
@@ -205,7 +266,8 @@ export function NewBookingClientScreen() {
           <button
             type="button"
             className="ms-nb-add"
-            onClick={() => navigate("/cabinet/booking/new/client")}
+            disabled={creating}
+            onClick={() => void onAddClient()}
           >
             <span className="ms-nb-add-icon">
               <UserPlusIcon />
@@ -228,6 +290,21 @@ export function NewBookingClientScreen() {
               <span>Последние клиенты</span>
             </button>
           </div>
+
+          {loading ? (
+            <p className="ms-cab-loading">Загрузка…</p>
+          ) : error ? (
+            <p className="ms-footer-error">{error}</p>
+          ) : clients.length === 0 ? (
+            <div className="ms-cab-empty-card">
+              <div className="ms-cab-empty-copy">
+                <p className="ms-cab-empty-title">Пока нет клиентов</p>
+                <p className="ms-cab-empty-sub">
+                  Добавьте клиента или дождитесь первой записи
+                </p>
+              </div>
+            </div>
+          ) : null}
 
           <ul className="ms-nb-list">
             {clients.map((client) => {
