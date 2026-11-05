@@ -2146,7 +2146,7 @@ label.ms-sheet-item {
   font-weight: 500;
 }
 
-/* Figma Dropdown Group: 16px inset, 6px top, 48px rows, 44px alt row */
+/* Figma Dropdown Group: 16px inset, 6px top, 48px rows, 44px alt Button-Primary */
 .ms-sheet-picker-group {
   display: flex;
   flex-direction: column;
@@ -2156,6 +2156,7 @@ label.ms-sheet-item {
 
 .ms-sheet-picker-list {
   padding: 0;
+  overflow: visible;
 }
 
 .ms-sheet-picker-list .ms-sheet-item {
@@ -2191,6 +2192,7 @@ label.ms-sheet-item {
   pointer-events: none;
 }
 
+.ms-sheet-item-row .ms-radio,
 .ms-sheet-picker-list .ms-radio {
   pointer-events: none;
   z-index: 0;
@@ -2201,7 +2203,9 @@ label.ms-sheet-item {
   font-weight: 500;
 }
 
-.ms-sheet-picker-list li:last-child .ms-sheet-item {
+/* Keep divider under last preset (Figma Divider before alt Button-Primary).
+   Must beat `.ms-sheet-list li:last-child .ms-sheet-item { border-bottom: none }`. */
+.ms-sheet-picker-group .ms-sheet-picker-list li:last-child .ms-sheet-item {
   border-bottom: 1px solid var(--ms-line-soft);
 }
 
@@ -2212,8 +2216,9 @@ label.ms-sheet-item {
   justify-content: space-between;
   gap: 12px;
   width: 100%;
+  flex: 0 0 auto;
   min-height: 44px;
-  margin: 2px 0 0;
+  margin: 0;
   padding: 10px 12px;
   border-radius: var(--ms-radius-full);
   border: 1px solid var(--ms-line);
@@ -2253,6 +2258,7 @@ label.ms-sheet-item {
 
 .ms-sheet-custom-body {
   padding: 16px 16px 0;
+  flex: 1 1 auto;
 }
 
 .ms-sheet-custom-field {
@@ -2268,8 +2274,9 @@ label.ms-sheet-item {
 .ms-sheet-segment {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   margin: 0;
+  min-width: 0;
 }
 
 .ms-sheet-segment-label {
@@ -2280,22 +2287,36 @@ label.ms-sheet-item {
   color: var(--ms-muted);
 }
 
+.ms-sheet-segment-control-wrap {
+  position: relative;
+}
+
 .ms-sheet-segment-control {
   appearance: none;
   width: 100%;
   min-height: 44px;
-  padding: 10px 12px;
+  padding: 10px 36px 10px 12px;
   border-radius: var(--ms-radius-input);
   border: 1px solid var(--ms-line);
   background: #fff;
   color: var(--ms-ink);
+  font: inherit;
   font-size: 16px;
   font-weight: 500;
   letter-spacing: -0.16px;
   line-height: 24px;
   box-shadow: var(--ms-shadow-e1);
-  text-align: center;
+  text-align: left;
   cursor: pointer;
+}
+
+.ms-sheet-segment-control-wrap .ms-select-chevron {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ms-tertiary);
+  pointer-events: none;
 }
 
 .ms-sheet-segment-control:focus {
@@ -2798,6 +2819,11 @@ label.ms-sheet-item {
   cursor: pointer;
   color: inherit;
   font: inherit;
+  box-sizing: border-box;
+}
+
+.ms-place-card-form .ms-place-visibility-card {
+  background: #fff;
 }
 
 .ms-place-visibility-card.is-active {

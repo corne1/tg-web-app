@@ -55,9 +55,17 @@ assert(
   canContinuePlaceStage2(
     "both",
     { ...empty(), city: "Москва", address: "А" },
-    { ...empty(), city: "Казань" },
+    empty(),
   ) === true,
-  "both valid",
+  "both valid without separate visit city",
+);
+assert(
+  canContinuePlaceStage2(
+    "both",
+    { ...empty(), city: "Москва" },
+    empty(),
+  ) === false,
+  "both still needs studio address",
 );
 
 assert(

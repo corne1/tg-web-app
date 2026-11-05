@@ -401,6 +401,10 @@ export function isMasterPlaceDone(draft = loadMasterDraft()): boolean {
   ) {
     return false;
   }
+  if (draft.placeMode === "both") {
+    // Visit city inherits studio; areas optional in Figma both-mode frame.
+    return true;
+  }
   if (
     needsVisitPlace(draft.placeMode) &&
     !isPlaceDetailsValid(draft.visitPlace, false)

@@ -53,6 +53,8 @@ export function canContinuePlaceStage2(
   if (needsStudioPlace(placeMode) && !isPlaceDetailsValid(studioPlace, true)) {
     return false;
   }
+  // Figma 21126:6981 «Оба варианта»: visit block has areas only; city = studio city.
+  if (placeMode === "both") return true;
   if (needsVisitPlace(placeMode) && !isPlaceDetailsValid(visitPlace, false)) {
     return false;
   }
@@ -86,16 +88,21 @@ export function deriveDraftCity(
 
 export function draftToPlaceDto(draft: MasterDraft): MasterPlaceDto | null {
   if (!draft.placeMode) return null;
+  const studioCity = draft.studioPlace.city.trim();
+  const visitCity =
+    draft.placeMode === "both"
+      ? studioCity || draft.visitPlace.city.trim()
+      : draft.visitPlace.city.trim();
   return {
     mode: draft.placeMode,
     studio: {
-      city: draft.studioPlace.city.trim(),
+      city: studioCity,
       address: draft.studioPlace.address.trim(),
       comment: draft.studioPlace.comment.trim(),
       addressVisibility: draft.studioPlace.addressVisibility,
     },
     visit: {
-      city: draft.visitPlace.city.trim(),
+      city: visitCity,
       areas: draft.visitPlace.comment.trim(),
     },
   };

@@ -288,7 +288,16 @@ export function PlaceStepScreen() {
         setStudioPlace(next);
         setStudioCityQuery(hit.name);
         setStudioCityError(false);
-        persist(placeMode, next, visitPlace);
+        // Figma both-mode: visit has no city field — inherit studio city.
+        const nextVisit =
+          placeMode === "both"
+            ? { ...visitPlace, city: hit.name }
+            : visitPlace;
+        if (placeMode === "both") {
+          setVisitPlace(nextVisit);
+          setVisitCityQuery(hit.name);
+        }
+        persist(placeMode, next, nextVisit);
       } else {
         const next = { ...visitPlace, city: hit.name };
         setVisitPlace(next);
@@ -311,7 +320,13 @@ export function PlaceStepScreen() {
         if (studioPlace.city && value.trim() !== studioPlace.city) {
           const next = { ...studioPlace, city: "", address: "" };
           setStudioPlace(next);
-          persist(placeMode, next, visitPlace);
+          const nextVisit =
+            placeMode === "both" ? { ...visitPlace, city: "" } : visitPlace;
+          if (placeMode === "both") {
+            setVisitPlace(nextVisit);
+            setVisitCityQuery("");
+          }
+          persist(placeMode, next, nextVisit);
         }
       } else {
         setVisitCityQuery(value);
@@ -680,19 +695,28 @@ export function PlaceStepScreen() {
     const wrapInCard = placeMode === "both";
     const fields = (
       <>
-        {renderCityField(
-          "visit",
-          visitCityQuery,
-          visitPlace.city,
-          visitCityError,
-        )}
+        {/* Figma 21126:6981 both-mode: only areas; city comes from studio. */}
+        {placeMode !== "both" &&
+          renderCityField(
+            "visit",
+            visitCityQuery,
+            visitPlace.city,
+            visitCityError,
+          )}
         <Field label="Районы выезда" as="label">
           <Textarea
             rows={3}
             placeholder="Например, Хамовники, Арбат, Пресня"
             value={visitPlace.comment}
             onChange={(e) => {
-              const next = { ...visitPlace, comment: e.target.value };
+              const next = {
+                ...visitPlace,
+                comment: e.target.value,
+                city:
+                  placeMode === "both"
+                    ? studioPlace.city
+                    : visitPlace.city,
+              };
               setVisitPlace(next);
               persist(placeMode, studioPlace, next);
             }}

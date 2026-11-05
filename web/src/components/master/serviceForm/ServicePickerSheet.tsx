@@ -12,6 +12,7 @@ import {
 import {
   BottomSheet,
   Button,
+  ChevronDownIcon,
   ChevronRightIcon,
   Field,
   Input,
@@ -116,7 +117,10 @@ export function ServicePickerSheet({
       {panel === "list" ? (
         <>
           <SheetPickerGroup>
-            <SheetRadioList label={listLabel}>
+            <SheetRadioList
+              label={listLabel}
+              className="ms-sheet-picker-list"
+            >
               {kind === "duration" &&
                 DURATION_OPTIONS.filter((o) => o.value !== -1).map((opt) => (
                   <li key={opt.value}>
@@ -148,13 +152,19 @@ export function ServicePickerSheet({
               onClick={() => {
                 if (kind === "duration") {
                   const mins = form.useCustomDuration
-                    ? Number(form.customDuration) || 40
-                    : 40;
+                    ? Number(form.customDuration) || draftDuration || 40
+                    : draftDuration || 40;
                   const parts = splitDurationMinutes(mins);
                   setCustomHours(parts.hours);
                   setCustomMinutes(parts.minutes);
                 } else {
-                  setCustomBreak((v) => v || "20");
+                  const seed =
+                    form.useCustomBreak
+                      ? form.customBreak
+                      : draftBreak > 0
+                        ? String(draftBreak)
+                        : "20";
+                  setCustomBreak(seed);
                 }
                 setPanel("custom");
               }}
@@ -164,12 +174,27 @@ export function ServicePickerSheet({
             <Button
               onClick={() => {
                 if (kind === "duration") {
+                  const isPreset = DURATION_OPTIONS.some(
+                    (o) => o.value === draftDuration && o.value !== -1,
+                  );
+                  // Back from custom without picking a preset → keep custom.
+                  if (!isPreset && form.useCustomDuration) {
+                    onClose();
+                    return;
+                  }
                   onApplyDuration({
                     durationMin: draftDuration,
                     useCustomDuration: false,
                     customDuration: "",
                   });
                 } else {
+                  const isPreset = BREAK_OPTIONS.some(
+                    (o) => o.value === draftBreak && o.value !== -1,
+                  );
+                  if (!isPreset && form.useCustomBreak) {
+                    onClose();
+                    return;
+                  }
                   onApplyBreak({
                     breakAfterMin: draftBreak,
                     useCustomBreak: false,
@@ -190,31 +215,39 @@ export function ServicePickerSheet({
               <div className="ms-sheet-dual">
                 <label className="ms-sheet-segment">
                   <span className="ms-sheet-segment-label">Часы</span>
-                  <select
-                    className="ms-sheet-segment-control"
-                    value={customHours}
-                    onChange={(e) => setCustomHours(Number(e.target.value))}
-                  >
-                    {HOUR_OPTIONS.map((h) => (
-                      <option key={h} value={h}>
-                        {h}
-                      </option>
-                    ))}
-                  </select>
+                  <span className="ms-sheet-segment-control-wrap">
+                    <select
+                      className="ms-sheet-segment-control"
+                      value={customHours}
+                      onChange={(e) => setCustomHours(Number(e.target.value))}
+                    >
+                      {HOUR_OPTIONS.map((h) => (
+                        <option key={h} value={h}>
+                          {h}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDownIcon className="ms-select-chevron" />
+                  </span>
                 </label>
                 <label className="ms-sheet-segment">
                   <span className="ms-sheet-segment-label">Минуты</span>
-                  <select
-                    className="ms-sheet-segment-control"
-                    value={customMinutes}
-                    onChange={(e) => setCustomMinutes(Number(e.target.value))}
-                  >
-                    {MINUTE_OPTIONS.map((m) => (
-                      <option key={m} value={m}>
-                        {m}
-                      </option>
-                    ))}
-                  </select>
+                  <span className="ms-sheet-segment-control-wrap">
+                    <select
+                      className="ms-sheet-segment-control"
+                      value={customMinutes}
+                      onChange={(e) =>
+                        setCustomMinutes(Number(e.target.value))
+                      }
+                    >
+                      {MINUTE_OPTIONS.map((m) => (
+                        <option key={m} value={m}>
+                          {m}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDownIcon className="ms-select-chevron" />
+                  </span>
                 </label>
               </div>
             ) : (
