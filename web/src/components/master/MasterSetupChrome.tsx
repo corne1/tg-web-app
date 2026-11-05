@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { BackIcon, CloseIcon, IconButton } from "../../ui";
+import { MsToast } from "./MsToast";
 
 type Props = {
   step: 1 | 2 | 3 | 4;
@@ -15,36 +16,6 @@ type Props = {
   onToastDismiss?: () => void;
 };
 
-function ToastSuccessIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden>
-      <circle cx="10" cy="10" r="10" fill="#12B76A" />
-      <path
-        d="M6.25 10.25 8.75 12.75 13.75 7.75"
-        stroke="#fff"
-        strokeWidth="1.75"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function ToastDangerIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden>
-      <circle cx="10" cy="10" r="10" fill="#D92D20" />
-      <path
-        d="M10 6.25V10.75M10 13.75H10.0083"
-        stroke="#fff"
-        strokeWidth="1.75"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 export function MasterSetupChrome({
   step,
   progressFilled,
@@ -59,31 +30,13 @@ export function MasterSetupChrome({
 }: Props) {
   return (
     <div className="master-setup">
-      {toast && (
-        <div className={`ms-toast ms-toast-${toastTone}`} role="status">
-          <span className="ms-toast-icon" aria-hidden>
-            {toastTone === "danger" ? <ToastDangerIcon /> : <ToastSuccessIcon />}
-          </span>
-          <p className="ms-toast-text">{toast}</p>
-          {onToastDismiss && (
-            <button
-              type="button"
-              className="ms-toast-close"
-              aria-label="Закрыть"
-              onClick={onToastDismiss}
-            >
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden>
-                <path
-                  d="M5 5l10 10M15 5 5 15"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </button>
-          )}
-        </div>
-      )}
+      {toast ? (
+        <MsToast
+          message={toast}
+          tone={toastTone}
+          onDismiss={onToastDismiss}
+        />
+      ) : null}
 
       <div className="ms-toolbar">
         <div className="ms-toolbar-nav">

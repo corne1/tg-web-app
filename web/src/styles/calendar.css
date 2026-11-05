@@ -742,19 +742,6 @@ input {
   }
 }
 
-.toast {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  background: var(--ink);
-  color: #fff;
-  padding: 0.65rem 0.9rem;
-  border-radius: 10px;
-  font-size: 0.88rem;
-  font-weight: 500;
-  animation: rise 0.2s ease-out;
-}
-
 @media (max-width: 480px) {
   .app-frame {
     padding: 0;
@@ -1433,6 +1420,23 @@ input {
   line-height: 20px;
 }
 
+/* Toast host outside .master-setup (e.g. NotificationsScreen). */
+.ms-toast-host {
+  --ms-ink: #26282c;
+  --ms-muted: #5e636e;
+  --ms-tertiary: #9196a1;
+  --ms-line-soft: #e9eaec;
+  --ms-radius-textarea: 16px;
+  --ms-shadow-e1: 0px 1px 1px 0px rgba(25, 24, 27, 0.04);
+  position: relative;
+  min-height: 0;
+}
+
+.ms-toast-host .ms-toast {
+  position: sticky;
+  top: 8px;
+}
+
 .ms-toast {
   position: absolute;
   top: 8px;
@@ -1444,12 +1448,12 @@ input {
   display: flex;
   align-items: center;
   gap: 12px;
-  border-radius: var(--ms-radius-textarea);
+  border-radius: var(--ms-radius-textarea, 16px);
   background: #fff;
-  border: 1px solid var(--ms-line-soft);
+  border: 1px solid var(--ms-line-soft, #e9eaec);
   box-shadow:
     0 4px 16px rgba(25, 24, 27, 0.08),
-    var(--ms-shadow-e1);
+    var(--ms-shadow-e1, 0px 1px 1px 0px rgba(25, 24, 27, 0.04));
   text-align: left;
   animation: rise 0.2s ease-out;
 }
@@ -1471,7 +1475,7 @@ input {
   font-weight: 600;
   letter-spacing: -0.14px;
   line-height: 20px;
-  color: var(--ms-ink);
+  color: var(--ms-ink, #26282c);
 }
 
 .ms-toast-close {
@@ -1485,12 +1489,12 @@ input {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--ms-tertiary);
+  color: var(--ms-tertiary, #9196a1);
   cursor: pointer;
 }
 
 .ms-toast-close:active {
-  color: var(--ms-muted);
+  color: var(--ms-muted, #5e636e);
 }
 
 .ms-services {

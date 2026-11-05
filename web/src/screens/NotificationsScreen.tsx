@@ -4,14 +4,13 @@ import { fetchMe } from "../api";
 import { ScreenShell } from "../components/calendar/ScreenShell";
 import { SecondaryButton } from "../components/calendar/SecondaryButton";
 import { UiMainButton } from "../components/calendar/UiMainButton";
+import { MsToast } from "../components/master/MsToast";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
 
-type Toast = string | null;
-
 export function NotificationsScreen() {
   const navigate = useNavigate();
-  const [toast, setToast] = useState<Toast>(null);
+  const [toast, setToast] = useState<string | null>(null);
   const [name, setName] = useState("мастером");
 
   useEffect(() => {
@@ -24,7 +23,7 @@ export function NotificationsScreen() {
 
   function flash(msg: string) {
     setToast(msg);
-    setTimeout(() => setToast(null), 2000);
+    setTimeout(() => setToast(null), 2500);
   }
 
   const goHome = useCallback(() => navigate("/"), [navigate]);
@@ -32,8 +31,19 @@ export function NotificationsScreen() {
   useMainButton({ text: "", visible: false, onClick: () => undefined });
 
   return (
-    <ScreenShell title="Уведомления" subtitle="Превью сообщений бота (реальные приходят в чат)">
-      {toast && <div className="toast">{toast}</div>}
+    <ScreenShell
+      title="Уведомления"
+      subtitle="Превью сообщений бота (реальные приходят в чат)"
+    >
+      <div className="ms-toast-host">
+        {toast ? (
+          <MsToast
+            message={toast}
+            tone="success"
+            onDismiss={() => setToast(null)}
+          />
+        ) : null}
+      </div>
 
       <section className="notif-block">
         <h2 className="notif-role">Клиенту</h2>
