@@ -5,7 +5,7 @@ import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
 import { useTelegram } from "../hooks/useTelegram";
 
-/** Figma 21394:16640 «Добро пожаловать С ВИДОСОМ» — looping video background. */
+/** Figma 21394:16640 — logo top, looping video center, copy + CTA bottom. */
 export function WelcomeMasterScreen() {
   const navigate = useNavigate();
   const { webApp } = useTelegram();
@@ -21,29 +21,30 @@ export function WelcomeMasterScreen() {
 
   return (
     <div className="master-setup ms-welcome">
-      <video
-        className="ms-welcome-video"
-        src="/onboarding/welcome-bg.mp4"
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="auto"
-        aria-hidden
-      />
-      <div className="ms-welcome-scrim" aria-hidden />
+      <header className="ms-welcome-top">
+        <img
+          className="ms-welcome-logotype"
+          src={welcomeLogotype}
+          width={156}
+          height={128}
+          alt="ПОМНЮ"
+        />
+      </header>
 
-      <div className="ms-welcome-body">
-        <div className="ms-welcome-brand">
-          <img
-            className="ms-welcome-logotype"
-            src={welcomeLogotype}
-            width={156}
-            height={128}
-            alt="ПОМНЮ"
-          />
-        </div>
+      <div className="ms-welcome-stage">
+        <video
+          className="ms-welcome-video"
+          src="/onboarding/welcome-bg.mp4"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          aria-hidden
+        />
+      </div>
 
+      <div className="ms-welcome-bottom">
         <h1 className="ms-welcome-title">
           Ваша работа.
           <br />
@@ -51,13 +52,9 @@ export function WelcomeMasterScreen() {
           <br />
           Всё под контролем.
         </h1>
-
         <p className="ms-welcome-lead">
           Создайте страницу мастера и начните принимать онлайн-записи.
         </p>
-      </div>
-
-      <div className="ms-welcome-footer">
         <button type="button" className="ms-welcome-cta" onClick={goCreate}>
           Создать страницу мастера
         </button>
