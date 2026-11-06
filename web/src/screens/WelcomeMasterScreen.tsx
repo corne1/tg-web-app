@@ -5,7 +5,7 @@ import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
 import { useTelegram } from "../hooks/useTelegram";
 
-/** Figma 21201:36720 «Добро пожаловать» — entry before master onboarding step 1. */
+/** Figma 21394:16640 «Добро пожаловать С ВИДОСОМ» — looping video background. */
 export function WelcomeMasterScreen() {
   const navigate = useNavigate();
   const { webApp } = useTelegram();
@@ -21,6 +21,18 @@ export function WelcomeMasterScreen() {
 
   return (
     <div className="master-setup ms-welcome">
+      <video
+        className="ms-welcome-video"
+        src="/onboarding/welcome-bg.mp4"
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="auto"
+        aria-hidden
+      />
+      <div className="ms-welcome-scrim" aria-hidden />
+
       <div className="ms-welcome-body">
         <div className="ms-welcome-brand">
           <img
