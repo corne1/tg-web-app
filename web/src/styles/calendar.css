@@ -988,6 +988,7 @@ body:has(.ms-boot-splash),
   --ms-fill2: #eeeff1; /* background/bg-fill2 */
   --ms-fill3: #e9eaec; /* background/bg-fill3 */
   --ms-accent: #f4f1fd; /* primary/accent */
+  --ms-success: #1da54a; /* state/success/key */
   --ms-info: #067ff9; /* state/info/key */
   --ms-shadow-e1: 0px 1px 1px 0px rgba(25, 24, 27, 0.04);
   --ms-shadow-e2: 0px 4px 8px 0px rgba(25, 24, 27, 0.08);
@@ -3580,11 +3581,38 @@ label.ms-sheet-item {
   padding: 8px 8px 8px;
 }
 
+/* Figma 21205:40297 — 96 outer (primary/accent) + 67.2 white disc */
 .ms-success-badge {
+  box-sizing: border-box;
+  width: 96px;
+  height: 96px;
+  border-radius: var(--ms-radius-full);
+  background: var(--ms-accent);
+  border: 1.2px solid var(--ms-line-soft);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  filter: drop-shadow(0 8px 24px rgba(98, 61, 245, 0.12));
+  flex: 0 0 auto;
+}
+
+.ms-success-badge-inner {
+  box-sizing: border-box;
+  width: 67.2px;
+  height: 67.2px;
+  border-radius: var(--ms-radius-full);
+  background: #fff;
+  border: 1.2px solid var(--ms-line-soft);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--ms-shadow-e2);
+}
+
+.ms-success-badge-check {
+  display: block;
+  color: var(--ms-success);
+  width: 33.6px;
+  height: 33.6px;
 }
 
 .ms-success-title {

@@ -23,19 +23,27 @@ function displayLink(url: string): string {
   return url.replace(/^https?:\/\//i, "");
 }
 
+/** Figma 21205:40297 — outer accent ring + white disc + check 21205:40299. */
 function SuccessCheckIcon() {
   return (
-    <svg width="72" height="72" viewBox="0 0 72 72" fill="none" aria-hidden>
-      <circle cx="36" cy="36" r="35" stroke="#CBBFFF" strokeWidth="2" />
-      <circle cx="36" cy="36" r="26" fill="#E8F8EF" />
-      <path
-        d="M26 36.5 32.5 43 46 29.5"
-        stroke="#12B76A"
-        strokeWidth="3"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
+    <span className="ms-success-badge-inner">
+      <svg
+        className="ms-success-badge-check"
+        width="34"
+        height="34"
+        viewBox="0 0 34 34"
+        fill="none"
+        aria-hidden
+      >
+        <path
+          d="M7.5 17.2 13.8 23.5 26.5 10.5"
+          stroke="currentColor"
+          strokeWidth="2.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </span>
   );
 }
 
