@@ -1731,7 +1731,9 @@ input {
   position: relative;
   width: min(370px, 100%);
   background: #fff;
-  border-radius: 20px;
+  border-radius: 16px;
+  border: 1px solid var(--ms-line-soft);
+  box-shadow: var(--ms-shadow-e2);
   padding: 20px 16px 16px;
   display: flex;
   flex-direction: column;
@@ -1739,18 +1741,37 @@ input {
   gap: 12px;
   text-align: left;
   animation: rise 0.2s ease-out;
+  overflow: clip;
+}
+
+/* Figma Dialog variants 21052:128088 — icon left, copy right, footer below */
+.ms-modal-dialog {
+  padding: 0;
+  gap: 0;
+}
+
+.ms-modal-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  padding: 20px;
+  background: #fff;
 }
 
 .ms-modal-warn {
   width: 40px;
   height: 40px;
   margin: 0;
+  padding: 10px;
+  box-sizing: border-box;
   border-radius: var(--ms-radius-full);
-  background: #fee4e2;
+  background: #fdd8d8; /* state/error/focus */
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
+  align-self: center;
 }
 
 .ms-modal-warn-icon {
@@ -1759,16 +1780,27 @@ input {
   display: block;
 }
 
-.ms-modal h3 {
+.ms-modal-copy {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.ms-modal h3,
+.ms-modal-copy h3 {
   margin: 0;
   font-size: 18px;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: -0.18px;
-  line-height: 24px;
+  line-height: 28px;
   color: var(--ms-ink);
 }
 
-.ms-modal p {
+.ms-modal p,
+.ms-modal-copy p {
   margin: 0;
   color: var(--ms-muted);
   font-size: 14px;
@@ -1780,8 +1812,11 @@ input {
 .ms-modal-actions {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-top: 4px;
+  gap: 12px;
+  margin-top: 0;
+  padding: 16px 20px;
+  border-top: 1px solid var(--ms-line-soft);
+  background: #fff;
 }
 
 .ms-btn-danger {
@@ -1791,7 +1826,7 @@ input {
   border: none;
   border-radius: var(--ms-radius-full);
   padding: 10px 12px;
-  background: #d92d20;
+  background: #f53d3d; /* state/error/key */
   color: #fff;
   font-weight: 500;
   font-size: 16px;
@@ -1803,7 +1838,7 @@ input {
   appearance: none;
   width: 100%;
   min-height: 44px;
-  border: 1px solid var(--ms-line-soft);
+  border: 1px solid var(--ms-line);
   border-radius: var(--ms-radius-full);
   background: #fff;
   color: var(--ms-ink);
@@ -1812,6 +1847,7 @@ input {
   letter-spacing: -0.16px;
   line-height: 24px;
   padding: 10px 12px;
+  box-shadow: var(--ms-shadow-e1);
   cursor: pointer;
 }
 

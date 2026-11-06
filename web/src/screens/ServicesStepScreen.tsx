@@ -321,21 +321,26 @@ export function ServicesStepScreen() {
         open={Boolean(deleteId)}
         onClose={() => setDeleteId(null)}
         labelledBy="del-title"
+        className="ms-modal-dialog"
       >
-        <div className="ms-modal-warn" aria-hidden>
-          <img
-            className="ms-modal-warn-icon"
-            src={modalTrashIcon}
-            width={20}
-            height={20}
-            alt=""
-          />
+        <div className="ms-modal-header">
+          <div className="ms-modal-warn" aria-hidden>
+            <img
+              className="ms-modal-warn-icon"
+              src={modalTrashIcon}
+              width={20}
+              height={20}
+              alt=""
+            />
+          </div>
+          <div className="ms-modal-copy">
+            <h3 id="del-title">Удалить услугу?</h3>
+            <p>
+              «{deleteService?.title ?? "Услуга"}» перестанет быть доступна для
+              новых записей.
+            </p>
+          </div>
         </div>
-        <h3 id="del-title">Удалить услугу?</h3>
-        <p>
-          «{deleteService?.title ?? "Услуга"}» перестанет быть доступна для новых
-          записей.
-        </p>
         <div className="ms-modal-actions">
           <Button variant="danger" onClick={() => void confirmDelete()}>
             Удалить
