@@ -16,7 +16,6 @@ import { cacheProfile } from "../lib/profileStorage";
 import avatarPlaceholder from "../assets/onboarding/avatar-placeholder.svg";
 import infoIcon from "../assets/onboarding/info.svg";
 import {
-  BackIcon,
   Button,
   Chip,
   ChipGroup,
@@ -70,11 +69,6 @@ export function OnboardingScreen() {
     return profile;
   }, [city, draft.name, draft.specialty, persistLocal]);
 
-  const handleBack = useCallback(() => {
-    persistLocal();
-    navigate("/onboarding/welcome");
-  }, [navigate, persistLocal]);
-
   const handleClose = useCallback(() => {
     persistLocal();
     webApp?.close?.();
@@ -111,7 +105,7 @@ export function OnboardingScreen() {
     }
   }, [navigate, persistServer, saving, valid, webApp]);
 
-  useBackButton(handleBack);
+  useBackButton(null);
   useMainButton({ text: "", visible: false, onClick: () => undefined });
 
   return (
@@ -119,9 +113,7 @@ export function OnboardingScreen() {
       <div className="ms-toolbar">
         <div className="ms-toolbar-nav">
           <header className="ms-top">
-            <IconButton label="Назад" onClick={handleBack}>
-              <BackIcon />
-            </IconButton>
+            <span className="ms-top-spacer" aria-hidden />
             <div className="ms-top-titles">
               <h1 className="ms-top-title">Настройки записи</h1>
               <p className="ms-top-sub">Шаг 1 из 4</p>

@@ -9,6 +9,7 @@ import {
   type AppUser,
 } from "./api";
 import { BootSplash } from "./components/BootSplash";
+import { PageTransition } from "./components/PageTransition";
 import { useTelegram } from "./hooks/useTelegram";
 import {
   cacheProfile,
@@ -242,74 +243,81 @@ export function App() {
   return (
     <BrowserRouter>
       <div className="app-frame">
-        <Routes>
-          <Route
-            path="/"
-            element={<HomeRedirect startParam={startParam} profile={profile} />}
-          />
-          <Route
-            path="/onboarding/welcome"
-            element={<WelcomeMasterScreen />}
-          />
-          <Route path="/onboarding" element={<OnboardingScreen />} />
-          <Route path="/onboarding/services" element={<ServicesStepScreen />} />
-          <Route
-            path="/onboarding/services/new"
-            element={<ServiceFormScreen mode="new" />}
-          />
-          <Route
-            path="/onboarding/services/:serviceId/edit"
-            element={<ServiceFormScreen mode="edit" />}
-          />
-          <Route
-            path="/onboarding/services/:serviceId/duplicate"
-            element={<ServiceFormScreen mode="duplicate" />}
-          />
-          <Route path="/onboarding/hours" element={<HoursStepScreen />} />
-          <Route path="/onboarding/place" element={<PlaceStepScreen />} />
-          <Route
-            path="/onboarding/success"
-            element={<OnboardingSuccessScreen />}
-          />
-          <Route path="/cabinet" element={<ScheduleScreen />} />
-          <Route path="/cabinet/clients" element={<ClientsScreen />} />
-          <Route
-            path="/cabinet/clients/:clientId"
-            element={<ClientCardScreen />}
-          />
-          <Route path="/cabinet/profile" element={<CabinetProfileScreen />} />
-          <Route path="/cabinet/empty" element={<EmptyStateScreen />} />
-          <Route
-            path="/cabinet/booking/new"
-            element={<NewBookingClientScreen />}
-          />
-          <Route
-            path="/cabinet/booking/new/service"
-            element={<NewBookingServiceScreen />}
-          />
-          <Route
-            path="/cabinet/booking/new/time"
-            element={<NewBookingTimeScreen />}
-          />
-          <Route
-            path="/cabinet/booking/new/confirm"
-            element={<NewBookingConfirmScreen />}
-          />
-          <Route
-            path="/cabinet/booking/new/:stepKey"
-            element={<NewBookingStubScreen />}
-          />
-          <Route
-            path="/cabinet/booking/:bookingId"
-            element={<BookingDetailScreen />}
-          />
-          <Route path="/client/confirm" element={<BookingConfirmScreen />} />
-          <Route path="/client/bookings" element={<MyBookingsScreen />} />
-          <Route path="/client" element={<SlotSelectionScreen />} />
-          <Route path="/client/:masterId" element={<SlotSelectionScreen />} />
-          <Route path="/notifications" element={<NotificationsScreen />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <PageTransition>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <HomeRedirect startParam={startParam} profile={profile} />
+              }
+            />
+            <Route
+              path="/onboarding/welcome"
+              element={<WelcomeMasterScreen />}
+            />
+            <Route path="/onboarding" element={<OnboardingScreen />} />
+            <Route
+              path="/onboarding/services"
+              element={<ServicesStepScreen />}
+            />
+            <Route
+              path="/onboarding/services/new"
+              element={<ServiceFormScreen mode="new" />}
+            />
+            <Route
+              path="/onboarding/services/:serviceId/edit"
+              element={<ServiceFormScreen mode="edit" />}
+            />
+            <Route
+              path="/onboarding/services/:serviceId/duplicate"
+              element={<ServiceFormScreen mode="duplicate" />}
+            />
+            <Route path="/onboarding/hours" element={<HoursStepScreen />} />
+            <Route path="/onboarding/place" element={<PlaceStepScreen />} />
+            <Route
+              path="/onboarding/success"
+              element={<OnboardingSuccessScreen />}
+            />
+            <Route path="/cabinet" element={<ScheduleScreen />} />
+            <Route path="/cabinet/clients" element={<ClientsScreen />} />
+            <Route
+              path="/cabinet/clients/:clientId"
+              element={<ClientCardScreen />}
+            />
+            <Route path="/cabinet/profile" element={<CabinetProfileScreen />} />
+            <Route path="/cabinet/empty" element={<EmptyStateScreen />} />
+            <Route
+              path="/cabinet/booking/new"
+              element={<NewBookingClientScreen />}
+            />
+            <Route
+              path="/cabinet/booking/new/service"
+              element={<NewBookingServiceScreen />}
+            />
+            <Route
+              path="/cabinet/booking/new/time"
+              element={<NewBookingTimeScreen />}
+            />
+            <Route
+              path="/cabinet/booking/new/confirm"
+              element={<NewBookingConfirmScreen />}
+            />
+            <Route
+              path="/cabinet/booking/new/:stepKey"
+              element={<NewBookingStubScreen />}
+            />
+            <Route
+              path="/cabinet/booking/:bookingId"
+              element={<BookingDetailScreen />}
+            />
+            <Route path="/client/confirm" element={<BookingConfirmScreen />} />
+            <Route path="/client/bookings" element={<MyBookingsScreen />} />
+            <Route path="/client" element={<SlotSelectionScreen />} />
+            <Route path="/client/:masterId" element={<SlotSelectionScreen />} />
+            <Route path="/notifications" element={<NotificationsScreen />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </PageTransition>
       </div>
     </BrowserRouter>
   );
