@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { createCabinetClientNote, fetchCabinetClient } from "../api";
 import calendarIcon from "../assets/cabinet/calendar.svg";
+import { ClientCardSkeleton } from "../components/calendar/Skeleton";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
 import {
@@ -111,8 +112,8 @@ export function ClientCardScreen() {
           <h1 className="ms-bd-toolbar-title">Карточка клиента</h1>
           <span className="ms-cc-toolbar-spacer" aria-hidden />
         </header>
-        <div className="ms-body ms-cab-body">
-          <p className="ms-cab-loading">Загрузка…</p>
+        <div className="ms-body ms-cab-body ms-cc-body">
+          <ClientCardSkeleton />
         </div>
       </div>
     );

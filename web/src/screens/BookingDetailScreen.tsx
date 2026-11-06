@@ -19,6 +19,7 @@ import {
   sessionStartDate,
   weekdayIdFromDate,
 } from "../lib/scheduleUi";
+import { BookingDetailSkeleton } from "../components/calendar/Skeleton";
 import type { Session } from "../types";
 import { BackIcon, cx, IconButton } from "../ui";
 import { useBackButton } from "../hooks/useBackButton";
@@ -203,7 +204,7 @@ export function BookingDetailScreen() {
 
       <div className="ms-body ms-bd-body">
         {loading ? (
-          <p className="ms-cab-loading">Загрузка…</p>
+          <BookingDetailSkeleton />
         ) : !session ? (
           <p className="ms-footer-error">{error ?? "Запись не найдена"}</p>
         ) : (

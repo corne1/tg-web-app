@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { cancelBooking, fetchMyBookings } from "../api";
 import { ScreenShell } from "../components/calendar/ScreenShell";
+import { BookingsListSkeleton } from "../components/calendar/Skeleton";
 import { SecondaryButton } from "../components/calendar/SecondaryButton";
 import { UiMainButton } from "../components/calendar/UiMainButton";
 import { useBackButton } from "../hooks/useBackButton";
@@ -66,7 +67,7 @@ export function MyBookingsScreen() {
     >
       {error && <p className="error">{error}</p>}
       {loading ? (
-        <p className="screen-subtitle">Загрузка…</p>
+        <BookingsListSkeleton />
       ) : bookings.length === 0 ? (
         <div className="empty-inline">
           <p>Нет предстоящих записей</p>

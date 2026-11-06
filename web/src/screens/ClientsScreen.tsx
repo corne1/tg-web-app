@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchCabinetClients } from "../api";
 import plusWhiteIcon from "../assets/cabinet/plus-white.svg";
+import { ClientsListSkeleton, Skeleton } from "../components/calendar/Skeleton";
 import { MasterTabBar } from "../components/master/MasterTabBar";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
@@ -112,13 +113,17 @@ export function ClientsScreen() {
 
         <div className="ms-cl-list-head">
           <h2 className="ms-cl-list-title">Все клиенты</h2>
-          <p className="ms-cl-list-count">
-            {clients.length} {pluralClients(clients.length)}
-          </p>
+          {loading ? (
+            <Skeleton width="72px" height="14px" />
+          ) : (
+            <p className="ms-cl-list-count">
+              {clients.length} {pluralClients(clients.length)}
+            </p>
+          )}
         </div>
 
         {loading ? (
-          <p className="ms-cab-loading">Загрузка…</p>
+          <ClientsListSkeleton />
         ) : error ? (
           <p className="ms-footer-error">{error}</p>
         ) : clients.length === 0 ? (

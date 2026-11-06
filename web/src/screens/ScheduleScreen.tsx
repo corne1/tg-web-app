@@ -9,6 +9,7 @@ import plusBtnIcon from "../assets/cabinet/plus-btn.svg";
 import plusWhiteIcon from "../assets/cabinet/plus-white.svg";
 import timerIcon from "../assets/cabinet/timer.svg";
 import usersRoundIcon from "../assets/cabinet/users-round.svg";
+import { ScheduleListSkeleton } from "../components/calendar/Skeleton";
 import { MasterTabBar } from "../components/master/MasterTabBar";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
@@ -267,7 +268,7 @@ export function ScheduleScreen() {
           {error && <p className="ms-footer-error">{error}</p>}
 
           {loading ? (
-            <p className="ms-cab-loading">Загрузка…</p>
+            <ScheduleListSkeleton />
           ) : empty ? (
             <>
               {showFreeSlot && workRange ? (

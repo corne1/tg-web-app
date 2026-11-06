@@ -8,6 +8,7 @@ import {
 } from "react";
 import { useNavigate } from "react-router-dom";
 import { createCabinetClient, fetchCabinetClients } from "../api";
+import { ClientsListSkeleton } from "../components/calendar/Skeleton";
 import { MasterSetupChrome } from "../components/master/MasterSetupChrome";
 import { MsArrowRight } from "../components/master/MsArrowRight";
 import { useBackButton } from "../hooks/useBackButton";
@@ -292,7 +293,7 @@ export function NewBookingClientScreen() {
           </div>
 
           {loading ? (
-            <p className="ms-cab-loading">Загрузка…</p>
+            <ClientsListSkeleton rows={5} />
           ) : error ? (
             <p className="ms-footer-error">{error}</p>
           ) : clients.length === 0 ? (

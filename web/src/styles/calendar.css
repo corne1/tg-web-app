@@ -921,9 +921,22 @@ body:has(.ms-boot-splash),
 .skeleton {
   display: block;
   border-radius: 8px;
-  background: linear-gradient(90deg, #e4ebe7 25%, #f2f6f3 50%, #e4ebe7 75%);
+  background: linear-gradient(
+    90deg,
+    #eeeff1 0%,
+    #f7f7f8 40%,
+    #eeeff1 80%
+  );
   background-size: 200% 100%;
-  animation: shimmer 1.2s ease-in-out infinite;
+  animation: shimmer 1.35s linear infinite;
+}
+
+.skeleton.is-round {
+  border-radius: 9999px;
+}
+
+.skeleton.is-card {
+  border-radius: 16px;
 }
 
 .mt-2 {
@@ -936,11 +949,147 @@ body:has(.ms-boot-splash),
 
 @keyframes shimmer {
   0% {
-    background-position: 200% 0;
+    background-position: 100% 0;
   }
   100% {
-    background-position: -200% 0;
+    background-position: -100% 0;
   }
+}
+
+/* Cabinet list placeholders (schedule / clients) */
+.ms-cab-skel-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 16px;
+  margin: 0;
+  list-style: none;
+}
+
+.ms-cab-skel-slot {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.ms-cab-skel-slot-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  min-height: 72px;
+  box-sizing: border-box;
+  border-radius: 16px;
+  background: var(--ms-fill2);
+}
+
+.ms-cl-skel-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ms-cl-skel-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: var(--ms-fill2);
+}
+
+.ms-cl-skel-copy {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ms-bd-skel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 0 16px;
+}
+
+.ms-bd-skel-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ms-bd-skel-when {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.ms-bd-skel-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.ms-cc-skel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0 16px;
+}
+
+.ms-cc-skel-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 0 4px;
+}
+
+.ms-cc-skel-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-radius: 16px;
+  background: var(--ms-fill2);
+  overflow: hidden;
+}
+
+.ms-cc-skel-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 12px;
+}
+
+.ms-cc-skel-stat + .ms-cc-skel-stat {
+  box-shadow: inset 1px 0 0 var(--ms-line-soft);
+}
+
+.booking-skel-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.booking-skel-card {
+  display: flex;
+  flex-direction: column;
+  padding: 0.85rem 0.95rem;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.booking-skel-actions {
+  display: flex;
+  gap: 8px;
 }
 
 @media (max-width: 480px) {
