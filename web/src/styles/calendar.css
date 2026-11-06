@@ -120,26 +120,43 @@ body:has(.ms-boot-splash),
   overflow: hidden;
 }
 
+.ms-boot-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.ms-boot-mark {
+  display: block;
+  width: 86px;
+  height: 87px;
+}
+
+/* Figma 21397:14609 — SVG glyphs from logotype, staggered */
 .ms-boot-word {
   margin: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0;
-  font-size: 28px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  line-height: 1;
-  color: #fff;
+  height: 31px;
+  line-height: 0;
 }
 
 .ms-boot-letter {
-  display: inline-block;
+  display: inline-flex;
   opacity: 0;
   transform: translateX(-28px);
   animation: ms-boot-letter 2.6s ease-in-out infinite;
   animation-delay: calc(var(--i, 0) * 0.14s);
   will-change: transform, opacity;
+}
+
+.ms-boot-letter svg {
+  display: block;
+  width: auto;
+  height: 31px;
 }
 
 @keyframes ms-boot-letter {
@@ -952,21 +969,6 @@ body:has(.ms-boot-splash),
   object-fit: cover;
   object-position: center center;
   pointer-events: none;
-}
-
-.ms-welcome-top {
-  position: relative;
-  z-index: 1;
-  flex: 0 0 auto;
-  display: flex;
-  justify-content: center;
-  padding-top: 8px;
-}
-
-.ms-welcome-logotype {
-  display: block;
-  width: 156px;
-  height: 128px;
 }
 
 .ms-welcome-spacer {

@@ -1,13 +1,12 @@
 import { useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import welcomeLogotype from "../assets/onboarding/welcome-logotype.svg";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
 import { useTelegram } from "../hooks/useTelegram";
 
 const WELCOME_BG = "#623df5";
 
-/** Figma 21394:16640 — full-bleed looping video bg, logo top, copy+CTA bottom. */
+/** Figma 21394:16640 / 21397:14551 — video bg, no top logo; copy + CTA bottom. */
 export function WelcomeMasterScreen() {
   const navigate = useNavigate();
   const { webApp } = useTelegram();
@@ -54,16 +53,6 @@ export function WelcomeMasterScreen() {
         preload="auto"
         aria-hidden
       />
-
-      <header className="ms-welcome-top">
-        <img
-          className="ms-welcome-logotype"
-          src={welcomeLogotype}
-          width={156}
-          height={128}
-          alt="ПОМНЮ"
-        />
-      </header>
 
       <div className="ms-welcome-spacer" aria-hidden />
 
