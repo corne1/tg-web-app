@@ -8,6 +8,7 @@ import {
   getStoredToken,
   type AppUser,
 } from "./api";
+import { BootSplash } from "./components/BootSplash";
 import { useTelegram } from "./hooks/useTelegram";
 import {
   cacheProfile,
@@ -152,11 +153,7 @@ function HomeRedirect({
     };
   }, [navigate, profile, startParam]);
 
-  return (
-    <main className="screen">
-      <p className="screen-subtitle">{bootError ?? "Открываем…"}</p>
-    </main>
-  );
+  return <BootSplash label={bootError ?? "Открываем…"} />;
 }
 
 export function App() {
@@ -219,13 +216,7 @@ export function App() {
   }, [initData]);
 
   if (loading) {
-    return (
-      <div className="app-frame">
-        <main className="screen">
-          <p className="screen-subtitle">Подключение…</p>
-        </main>
-      </div>
-    );
+    return <BootSplash framed label="Подключение…" />;
   }
 
   if (error && !user) {

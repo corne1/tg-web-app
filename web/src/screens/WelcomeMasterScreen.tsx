@@ -1,9 +1,11 @@
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import welcomeLogotype from "../assets/onboarding/welcome-logotype.svg";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
 import { useTelegram } from "../hooks/useTelegram";
+
+const WELCOME_BG = "#623df5";
 
 /** Figma 21394:16640 — full-bleed looping video bg, logo top, copy+CTA bottom. */
 export function WelcomeMasterScreen() {
@@ -14,6 +16,27 @@ export function WelcomeMasterScreen() {
     webApp?.HapticFeedback?.impactOccurred("light");
     navigate("/onboarding");
   }, [navigate, webApp]);
+
+  // Match TG chrome to purple so white side strips don't show around the video.
+  useEffect(() => {
+    if (!webApp) return;
+    try {
+      webApp.setBackgroundColor(WELCOME_BG);
+      webApp.setHeaderColor(WELCOME_BG);
+    } catch {
+      // Older clients may reject custom colors.
+    }
+    return () => {
+      const bg = webApp.themeParams.bg_color ?? "#ffffff";
+      const header = webApp.themeParams.header_bg_color ?? bg;
+      try {
+        webApp.setBackgroundColor(bg);
+        webApp.setHeaderColor(header);
+      } catch {
+        // ignore
+      }
+    };
+  }, [webApp]);
 
   // Comment in Figma: «Убрал кнопку назад» — hide TG BackButton.
   useBackButton(null);

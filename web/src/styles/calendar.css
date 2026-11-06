@@ -74,6 +74,134 @@ input {
   overflow: hidden;
 }
 
+/* Welcome video: no white side gutters from 402px cap / frame bg */
+html:has(.ms-welcome),
+body:has(.ms-welcome),
+#root:has(.ms-welcome),
+.app-frame:has(.ms-welcome) {
+  background: #000;
+}
+
+.app-frame:has(.ms-welcome),
+.app-frame-splash {
+  width: 100%;
+  max-width: none;
+  justify-content: stretch;
+}
+
+html:has(.ms-boot-splash),
+body:has(.ms-boot-splash),
+#root:has(.ms-boot-splash),
+.app-frame:has(.ms-boot-splash),
+.app-frame-splash {
+  background: #623df5;
+}
+
+.app-frame:has(.ms-boot-splash) {
+  padding: 0;
+  width: 100%;
+  max-width: none;
+  justify-content: stretch;
+}
+
+/* Figma 21397:14582 — boot / splash */
+.ms-boot-splash {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #623df5; /* primary/key */
+  color: #fff;
+  overflow: hidden;
+}
+
+.ms-boot-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Logotype SVG includes wordmark — clip to calendar mark only */
+.ms-boot-mark-wrap {
+  width: 120px;
+  height: 88px;
+  overflow: hidden;
+}
+
+.ms-boot-mark {
+  display: block;
+  width: 156px;
+  height: 128px;
+  margin: -4px 0 0 -18px;
+  max-width: none;
+}
+
+.ms-boot-word {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  color: #fff;
+}
+
+.ms-boot-letter {
+  display: inline-block;
+  opacity: 0;
+  transform: translateX(-28px);
+  animation: ms-boot-letter 2.6s ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * 0.14s);
+  will-change: transform, opacity;
+}
+
+@keyframes ms-boot-letter {
+  /* enter from left */
+  0% {
+    opacity: 0;
+    transform: translateX(-28px);
+  }
+  12% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  /* hold in place */
+  48% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  /* exit to right */
+  62% {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+}
+
+.ms-boot-splash-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .screen,
 .home {
   width: min(440px, 100%);
@@ -826,6 +954,9 @@ input {
   isolation: isolate;
   display: flex;
   flex-direction: column;
+  width: 100%;
+  max-width: none;
+  margin: 0;
   overflow: hidden;
   background: transparent;
   color: #fff;
