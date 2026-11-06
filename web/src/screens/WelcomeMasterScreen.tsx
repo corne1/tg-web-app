@@ -5,7 +5,7 @@ import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
 import { useTelegram } from "../hooks/useTelegram";
 
-/** Figma 21394:16640 — logo top, looping video center, copy + CTA bottom. */
+/** Figma 21394:16640 — full-bleed looping video bg, logo top, copy+CTA bottom. */
 export function WelcomeMasterScreen() {
   const navigate = useNavigate();
   const { webApp } = useTelegram();
@@ -21,6 +21,17 @@ export function WelcomeMasterScreen() {
 
   return (
     <div className="master-setup ms-welcome">
+      <video
+        className="ms-welcome-video"
+        src="/onboarding/welcome-bg.mp4"
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="auto"
+        aria-hidden
+      />
+
       <header className="ms-welcome-top">
         <img
           className="ms-welcome-logotype"
@@ -31,18 +42,7 @@ export function WelcomeMasterScreen() {
         />
       </header>
 
-      <div className="ms-welcome-stage">
-        <video
-          className="ms-welcome-video"
-          src="/onboarding/welcome-bg.mp4"
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-          aria-hidden
-        />
-      </div>
+      <div className="ms-welcome-spacer" aria-hidden />
 
       <div className="ms-welcome-bottom">
         <h1 className="ms-welcome-title">

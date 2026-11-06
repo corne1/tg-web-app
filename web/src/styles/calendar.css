@@ -820,19 +820,34 @@ input {
   animation: rise 0.35s ease-out;
 }
 
-/* Figma 21394:16640 — logo top / video center / copy+CTA bottom */
+/* Figma 21394:16640 — full-bleed looping video bg */
 .master-setup.ms-welcome {
+  position: relative;
+  isolation: isolate;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: var(--ms-purple);
+  background: transparent;
   color: #fff;
   padding: calc(24px + env(safe-area-inset-top, 0px)) 24px
     calc(24px + env(safe-area-inset-bottom, 0px));
   box-sizing: border-box;
 }
 
+.ms-welcome-video {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  pointer-events: none;
+}
+
 .ms-welcome-top {
+  position: relative;
+  z-index: 1;
   flex: 0 0 auto;
   display: flex;
   justify-content: center;
@@ -845,28 +860,16 @@ input {
   height: 128px;
 }
 
-.ms-welcome-stage {
+.ms-welcome-spacer {
+  position: relative;
+  z-index: 1;
   flex: 1 1 auto;
   min-height: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  margin: 8px 0;
-}
-
-.ms-welcome-video {
-  display: block;
-  width: min(100%, 360px);
-  height: auto;
-  max-height: 100%;
-  aspect-ratio: 1;
-  object-fit: contain;
-  background: transparent;
-  pointer-events: none;
 }
 
 .ms-welcome-bottom {
+  position: relative;
+  z-index: 1;
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
