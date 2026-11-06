@@ -1,11 +1,10 @@
 import { useEffect } from "react";
-import welcomeLogotype from "../assets/onboarding/welcome-logotype.svg";
 import { useTelegram } from "../hooks/useTelegram";
 
 const SPLASH_BG = "#623df5";
 const WORD = "ПОМНЮ";
 
-/** Figma 21397:14582 — purple splash; ПОМНЮ letters cycle as loading cue. */
+/** Figma 21397:14551 — purple splash, animated ПОМНЮ word only (no mark). */
 export function BootSplash({
   label = "Подключение…",
   framed = false,
@@ -29,28 +28,17 @@ export function BootSplash({
 
   const content = (
     <main className="ms-boot-splash" aria-busy="true" aria-live="polite">
-      <div className="ms-boot-brand">
-        <div className="ms-boot-mark-wrap" aria-hidden>
-          <img
-            className="ms-boot-mark"
-            src={welcomeLogotype}
-            width={156}
-            height={128}
-            alt=""
-          />
-        </div>
-        <p className="ms-boot-word" aria-hidden>
-          {WORD.split("").map((letter, i) => (
-            <span
-              key={`${letter}-${i}`}
-              className="ms-boot-letter"
-              style={{ ["--i" as string]: i }}
-            >
-              {letter}
-            </span>
-          ))}
-        </p>
-      </div>
+      <p className="ms-boot-word" aria-hidden>
+        {WORD.split("").map((letter, i) => (
+          <span
+            key={`${letter}-${i}`}
+            className="ms-boot-letter"
+            style={{ ["--i" as string]: i }}
+          >
+            {letter}
+          </span>
+        ))}
+      </p>
       <span className="ms-boot-splash-label">{label}</span>
     </main>
   );

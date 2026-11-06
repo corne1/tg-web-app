@@ -120,28 +120,6 @@ body:has(.ms-boot-splash),
   overflow: hidden;
 }
 
-.ms-boot-brand {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-}
-
-/* Logotype SVG includes wordmark — clip to calendar mark only */
-.ms-boot-mark-wrap {
-  width: 120px;
-  height: 88px;
-  overflow: hidden;
-}
-
-.ms-boot-mark {
-  display: block;
-  width: 156px;
-  height: 128px;
-  margin: -4px 0 0 -18px;
-  max-width: none;
-}
-
 .ms-boot-word {
   margin: 0;
   display: flex;
