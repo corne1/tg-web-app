@@ -765,9 +765,13 @@ input {
   }
 }
 
-/* —— Master setup (booking settings) — tokens from Figma Project!! / Radian —— */
-.master-setup {
-  /* colors */
+/* —— Master setup tokens (Figma Project!! / Radian) ——
+   Also on overlay roots: sheets/modals render outside .master-setup
+   (e.g. ServicePickerSheet sibling), so without this radios/CTAs lose color. */
+.master-setup,
+.ms-sheet-root,
+.ms-modal-root,
+.ms-toast-host {
   --ms-purple: #623df5; /* primary/key */
   --ms-purple-soft: #e5dffb; /* utility/Violet Blue/focus */
   --ms-purple-border: #9981f8; /* primary/border */
@@ -787,13 +791,14 @@ input {
   --ms-shadow-e1: 0px 1px 1px 0px rgba(25, 24, 27, 0.04);
   --ms-shadow-e2: 0px 4px 8px 0px rgba(25, 24, 27, 0.08);
   --ms-shadow-e3: 0px 16px 24px -4px rgba(25, 24, 27, 0.12);
-  /* radii from Figma Base Input / Text Area / cards */
   --ms-radius-input: 9999px;
   --ms-radius-textarea: 16px;
   --ms-radius-input-search: 24px;
   --ms-radius-card: 20px;
   --ms-radius-full: 9999px;
+}
 
+.master-setup {
   position: relative;
   width: min(402px, 100%);
   /* Full viewport; app-frame padding is cleared via :has(.master-setup) */
@@ -1729,6 +1734,8 @@ input {
   align-items: center;
   justify-content: center;
   padding: 1.25rem;
+  color: var(--ms-ink);
+  font-family: "Geist Sans", var(--font-body), system-ui, sans-serif;
 }
 
 .ms-sheet-root {
@@ -2102,13 +2109,21 @@ input {
 }
 
 .ms-sheet-picker {
-  max-height: none;
+  max-height: min(92dvh, 640px);
   padding: 0 0 calc(env(safe-area-inset-bottom, 0px));
   gap: 0;
+  overflow: hidden;
 }
 
 .ms-sheet-picker.is-compact {
   max-height: min(70vh, 320px);
+}
+
+.ms-sheet-picker .ms-sheet-picker-group {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .ms-sheet-toolbar {
