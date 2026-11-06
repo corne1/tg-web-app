@@ -104,7 +104,10 @@ export function ServiceFormScreen({ mode }: { mode: Mode }) {
       });
       webApp?.HapticFeedback?.notificationOccurred("success");
       navigate("/onboarding/services", {
-        state: { toast: mode === "edit" ? "saved" : "added" },
+        state: {
+          toast: mode === "edit" ? "saved" : "added",
+          serviceTitle: saved.title,
+        },
       });
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Не удалось сохранить");

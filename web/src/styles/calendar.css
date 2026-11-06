@@ -1437,9 +1437,11 @@ input {
   --ms-ink: #26282c;
   --ms-muted: #5e636e;
   --ms-tertiary: #9196a1;
+  --ms-line: #dee0e3;
   --ms-line-soft: #e9eaec;
   --ms-radius-textarea: 16px;
   --ms-shadow-e1: 0px 1px 1px 0px rgba(25, 24, 27, 0.04);
+  --ms-shadow-e2: 0px 4px 8px 0px rgba(25, 24, 27, 0.08);
   position: relative;
   min-height: 0;
 }
@@ -1449,6 +1451,7 @@ input {
   top: 8px;
 }
 
+/* Figma Toast 21052:5347 — icon left, title + description, close */
 .ms-toast {
   position: absolute;
   top: 8px;
@@ -1462,10 +1465,8 @@ input {
   gap: 12px;
   border-radius: var(--ms-radius-textarea, 16px);
   background: #fff;
-  border: 1px solid var(--ms-line-soft, #e9eaec);
-  box-shadow:
-    0 4px 16px rgba(25, 24, 27, 0.08),
-    var(--ms-shadow-e1, 0px 1px 1px 0px rgba(25, 24, 27, 0.04));
+  border: 1px solid var(--ms-line, #dee0e3);
+  box-shadow: var(--ms-shadow-e2, 0px 4px 8px 0px rgba(25, 24, 27, 0.08));
   text-align: left;
   animation: rise 0.2s ease-out;
 }
@@ -1477,17 +1478,37 @@ input {
   justify-content: center;
   width: 20px;
   height: 20px;
+  align-self: center;
 }
 
-.ms-toast-text {
-  flex: 1;
+.ms-toast-copy {
+  flex: 1 1 auto;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.ms-toast-title,
+.ms-toast-text {
   margin: 0;
+  width: 100%;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: -0.14px;
   line-height: 20px;
   color: var(--ms-ink, #26282c);
+}
+
+.ms-toast-desc {
+  margin: 0;
+  width: 100%;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  color: var(--ms-muted, #5e636e);
 }
 
 .ms-toast-close {
@@ -1501,6 +1522,7 @@ input {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  align-self: center;
   color: var(--ms-tertiary, #9196a1);
   cursor: pointer;
 }

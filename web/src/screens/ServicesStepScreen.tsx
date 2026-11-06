@@ -37,7 +37,10 @@ function EmptyIllustration() {
   );
 }
 
-type LocState = { toast?: "added" | "deleted" | "saved" } | null;
+type LocState = {
+  toast?: "added" | "deleted" | "saved";
+  serviceTitle?: string;
+} | null;
 
 export function ServicesStepScreen() {
   const navigate = useNavigate();
@@ -49,11 +52,28 @@ export function ServicesStepScreen() {
   const [menuId, setMenuId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [toastDescription, setToastDescription] = useState<string | null>(null);
   const [toastTone, setToastTone] = useState<"success" | "danger">("success");
 
   const deleteService = deleteId
     ? services.find((s) => s.id === deleteId) ?? null
     : null;
+
+  const showToast = useCallback(
+    (
+      message: string,
+      opts?: { description?: string | null; tone?: "success" | "danger" },
+    ) => {
+      setToastTone(opts?.tone ?? "success");
+      setToastDescription(opts?.description ?? null);
+      setToast(message);
+      window.setTimeout(() => {
+        setToast(null);
+        setToastDescription(null);
+      }, 2500);
+    },
+    [],
+  );
 
   const refresh = useCallback(() => {
     setServices(loadMasterDraft().services);
@@ -71,12 +91,12 @@ export function ServicesStepScreen() {
       deleted: "Услуга удалена",
       saved: "Изменения сохранены",
     } as const;
-    setToastTone("success");
-    setToast(map[state.toast]);
+    showToast(map[state.toast], {
+      description: state.serviceTitle?.trim() || null,
+      tone: "success",
+    });
     navigate(location.pathname, { replace: true, state: null });
-    const t = setTimeout(() => setToast(null), 2500);
-    return () => clearTimeout(t);
-  }, [location.pathname, location.state, navigate]);
+  }, [location.pathname, location.state, navigate, showToast]);
 
   const goBack = useCallback(() => navigate("/onboarding"), [navigate]);
   const handleClose = useCallback(() => {
@@ -100,11 +120,11 @@ export function ServicesStepScreen() {
       webApp?.HapticFeedback?.impactOccurred("light");
       navigate("/onboarding/hours");
     } catch (err) {
-      setToastTone("danger");
-      setToast(err instanceof Error ? err.message : "Не удалось продолжить");
-      setTimeout(() => setToast(null), 2500);
+      showToast(err instanceof Error ? err.message : "Не удалось продолжить", {
+        tone: "danger",
+      });
     }
-  }, [navigate, services, webApp]);
+  }, [navigate, services, showToast, webApp]);
 
   const openForm = useCallback(
     (mode: "new" | "edit" | "duplicate", id?: string) => {
@@ -120,27 +140,32 @@ export function ServicesStepScreen() {
   const confirmDelete = useCallback(async () => {
     if (!deleteId) return;
     const id = deleteId;
+    const title =
+      services.find((s) => s.id === id)?.title.trim() ||
+      deleteService?.title.trim() ||
+      null;
     try {
       await deleteMasterService(id);
       removeService(id);
       setDeleteId(null);
       setMenuId(null);
       refresh();
-      setToastTone("success");
-      setToast("Услуга удалена");
+      showToast("Услуга удалена", { description: title, tone: "success" });
       webApp?.HapticFeedback?.notificationOccurred("success");
-      setTimeout(() => setToast(null), 2500);
     } catch (err) {
-      setToastTone("danger");
-      setToast(err instanceof Error ? err.message : "Не удалось удалить");
-      setTimeout(() => setToast(null), 2500);
+      showToast(err instanceof Error ? err.message : "Не удалось удалить", {
+        tone: "danger",
+      });
     }
-  }, [deleteId, refresh, webApp]);
+  }, [deleteId, deleteService, refresh, services, showToast, webApp]);
 
   useBackButton(goBack);
   useMainButton({ text: "", visible: false, onClick: () => undefined });
 
-  const dismissToast = useCallback(() => setToast(null), []);
+  const dismissToast = useCallback(() => {
+    setToast(null);
+    setToastDescription(null);
+  }, []);
   const hasServices = services.length > 0;
 
   return (
@@ -150,6 +175,7 @@ export function ServicesStepScreen() {
       onBack={goBack}
       onClose={handleClose}
       toast={toast}
+      toastDescription={toastDescription}
       toastTone={toastTone}
       onToastDismiss={dismissToast}
       footer={

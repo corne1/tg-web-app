@@ -12,6 +12,8 @@ type Props = {
   children: ReactNode;
   footer?: ReactNode;
   toast?: string | null;
+  /** Secondary toast line (e.g. service title under «Услуга добавлена»). */
+  toastDescription?: string | null;
   toastTone?: "success" | "danger";
   onToastDismiss?: () => void;
 };
@@ -25,6 +27,7 @@ export function MasterSetupChrome({
   children,
   footer,
   toast,
+  toastDescription,
   toastTone = "success",
   onToastDismiss,
 }: Props) {
@@ -33,6 +36,7 @@ export function MasterSetupChrome({
       {toast ? (
         <MsToast
           message={toast}
+          description={toastDescription}
           tone={toastTone}
           onDismiss={onToastDismiss}
         />
