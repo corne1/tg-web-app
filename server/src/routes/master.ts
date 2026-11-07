@@ -3,6 +3,7 @@ import {
   ensureMasterProfile,
   getProfile,
   markOnboardingComplete,
+  setMasterAvatarUrl,
   setOnboardingStep,
   upsertProfile,
 } from "../db/profiles.js";
@@ -99,6 +100,41 @@ masterRouter.put("/profile", requireSession, async (req: AuthedRequest, res) => 
   } catch (err) {
     console.error("[master.profile]", err);
     res.status(500).json({ error: "Failed to save master profile" });
+  }
+});
+
+/** Persist master avatar (TG URL or gallery data-URL). Blur #16. */
+masterRouter.put("/avatar", requireSession, async (req: AuthedRequest, res) => {
+  const tg = req.telegramUser!;
+  const body = req.body ?? {};
+  const raw = body.avatarUrl;
+  const avatarUrl =
+    raw === null || raw === undefined
+      ? null
+      : typeof raw === "string"
+        ? raw.trim() || null
+        : null;
+
+  try {
+    await upsertUser(tg);
+    await ensureMasterProfile(
+      tg.id,
+      [tg.first_name, tg.last_name].filter(Boolean).join(" "),
+    );
+    const next = await setMasterAvatarUrl(tg.id, avatarUrl);
+    if (!next) {
+      res.status(404).json({ error: "Profile not found" });
+      return;
+    }
+    res.json({ profile: serializeProfile(next) });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (message.includes("too large")) {
+      res.status(413).json({ error: "Avatar too large" });
+      return;
+    }
+    console.error("[master.avatar]", err);
+    res.status(500).json({ error: "Failed to save avatar" });
   }
 });
 

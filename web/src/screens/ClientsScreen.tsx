@@ -90,7 +90,7 @@ export function ClientsScreen() {
           type="button"
           className="ms-cab-add"
           aria-label="Добавить клиента"
-          onClick={() => navigate("/cabinet/booking/new/client")}
+          onClick={() => navigate("/cabinet/clients/new")}
         >
           <img src={plusWhiteIcon} width={20} height={20} alt="" />
         </button>

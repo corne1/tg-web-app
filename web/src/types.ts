@@ -42,6 +42,7 @@ export interface MasterProfile {
   workingHours?: WorkingHoursDto | null;
   dayBreakMin?: number | null;
   place?: MasterPlaceDto | null;
+  avatarUrl?: string | null;
 }
 
 export type AddressVisibilityDto = "public" | "after_booking";

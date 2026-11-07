@@ -1,6 +1,6 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { saveMasterProfile } from "../api";
+import { saveMasterAvatar, saveMasterProfile } from "../api";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
 import { useTelegram } from "../hooks/useTelegram";
@@ -15,8 +15,13 @@ import { MsArrowRight } from "../components/master/MsArrowRight";
 import { cacheProfile } from "../lib/profileStorage";
 import avatarPlaceholder from "../assets/onboarding/avatar-placeholder.svg";
 import infoIcon from "../assets/onboarding/info.svg";
-import { loadMasterAvatarDataUrl } from "../lib/masterAvatar";
 import {
+  loadMasterAvatarDataUrl,
+  readFileAsDataUrl,
+  saveMasterAvatarDataUrl,
+} from "../lib/masterAvatar";
+import {
+  BottomSheet,
   Button,
   Chip,
   ChipGroup,
@@ -24,6 +29,7 @@ import {
   Field,
   IconButton,
   Input,
+  SheetSimpleHeader,
 } from "../ui";
 
 export function OnboardingScreen() {
@@ -36,6 +42,9 @@ export function OnboardingScreen() {
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [photoSheet, setPhotoSheet] = useState(false);
+  const [avatarTick, setAvatarTick] = useState(0);
+  const fileRef = useRef<HTMLInputElement>(null);
   const city = initial.city || "Москва";
 
   const draft = useMemo(
@@ -47,10 +56,22 @@ export function OnboardingScreen() {
   const previewName = draft.name || "Анна";
   const previewTitle = meta?.title ?? "мастер маникюра";
   const previewChip = meta?.label ?? "Маникюр";
+  void avatarTick;
   const previewAvatar =
     loadMasterAvatarDataUrl() ||
     webApp?.initDataUnsafe?.user?.photo_url ||
     avatarPlaceholder;
+
+  const persistAvatar = useCallback(async (url: string) => {
+    saveMasterAvatarDataUrl(url);
+    setAvatarTick((n) => n + 1);
+    try {
+      const profile = await saveMasterAvatar(url);
+      cacheProfile(profile);
+    } catch {
+      // keep local preview
+    }
+  }, []);
 
   const persistLocal = useCallback(() => {
     const prev = loadMasterDraft();
@@ -199,14 +220,20 @@ export function OnboardingScreen() {
         <section className="ms-preview" aria-label="Превью страницы записи">
           <p className="ms-preview-eyebrow">Так увидят клиенты</p>
           <div className="ms-preview-head">
-            <img
-              className="ms-avatar"
-              src={previewAvatar}
-              width={48}
-              height={48}
-              alt=""
-              aria-hidden
-            />
+            <button
+              type="button"
+              className="ms-avatar-btn"
+              aria-label="Изменить фото"
+              onClick={() => setPhotoSheet(true)}
+            >
+              <img
+                className="ms-avatar"
+                src={previewAvatar}
+                width={48}
+                height={48}
+                alt=""
+              />
+            </button>
             <div className="ms-preview-meta">
               <p className="ms-preview-name">
                 {previewName} — {previewTitle}
@@ -247,6 +274,50 @@ export function OnboardingScreen() {
           </Button>
         </div>
       </footer>
+
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        className="ms-visually-hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          e.target.value = "";
+          if (!file) return;
+          void readFileAsDataUrl(file)
+            .then(async (url) => {
+              await persistAvatar(url);
+              setPhotoSheet(false);
+            })
+            .catch(() => setError("Не удалось загрузить фото"));
+        }}
+      />
+
+      <BottomSheet open={photoSheet} onClose={() => setPhotoSheet(false)}>
+        <SheetSimpleHeader
+          title="Фото мастера"
+          lead="Загрузите из галереи или возьмите из Telegram"
+        />
+        <div className="ms-edit-photo-sheet">
+          <Button
+            variant="secondary"
+            disabled={!webApp?.initDataUnsafe?.user?.photo_url}
+            onClick={() => {
+              const url = webApp?.initDataUnsafe?.user?.photo_url;
+              if (!url) {
+                setError("В Telegram нет фото профиля");
+                return;
+              }
+              void persistAvatar(url).then(() => setPhotoSheet(false));
+            }}
+          >
+            Из профиля Telegram
+          </Button>
+          <Button variant="primary" onClick={() => fileRef.current?.click()}>
+            Выбрать из галереи
+          </Button>
+        </div>
+      </BottomSheet>
     </div>
   );
 }

@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { createCabinetBooking } from "../api";
 import { BookingClientSummary } from "../components/booking/BookingClientSummary";
 import { MasterSetupChrome } from "../components/master/MasterSetupChrome";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
+import { useTelegram } from "../hooks/useTelegram";
 import {
   bookingTotals,
   emptyBookingDraft,
@@ -22,11 +24,14 @@ import { bookingNeedsPlaceStep } from "./NewBookingPlaceScreen";
 
 export function NewBookingConfirmScreen() {
   const navigate = useNavigate();
+  const { webApp } = useTelegram();
   const draft = useMemo(() => readBookingDraft(), []);
   const client = resolveBookingClient(draft.clientId, draft);
   const services = resolveBookingServices(draft.serviceIds);
   const totals = bookingTotals(services);
   const [toast, setToast] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const goBack = useCallback(() => {
     if (bookingNeedsPlaceStep(loadMasterDraft().placeMode)) {
@@ -49,6 +54,29 @@ export function NewBookingConfirmScreen() {
     if (!ready) navigate("/cabinet/booking/new", { replace: true });
   }, [ready, navigate]);
 
+  const onCreate = useCallback(async () => {
+    if (!client || !draft.dateISO || !draft.time || saving) return;
+    setSaving(true);
+    setError(null);
+    try {
+      await createCabinetBooking({
+        masterClientId: client.id,
+        dateISO: draft.dateISO,
+        time: draft.time,
+        serviceIds: draft.serviceIds,
+      });
+      writeBookingDraft(emptyBookingDraft());
+      webApp?.HapticFeedback?.notificationOccurred("success");
+      setToast("Запись создана");
+      window.setTimeout(() => navigate("/cabinet"), 900);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Не удалось создать");
+      webApp?.HapticFeedback?.notificationOccurred("error");
+    } finally {
+      setSaving(false);
+    }
+  }, [client, draft.dateISO, draft.serviceIds, draft.time, navigate, saving, webApp]);
+
   if (!ready || !client || !draft.dateISO || !draft.time) return null;
 
   const day = isoToDate(draft.dateISO);
@@ -66,16 +94,14 @@ export function NewBookingConfirmScreen() {
       onToastDismiss={() => setToast(null)}
       footer={
         <div className="ms-nb-footer">
+          {error ? <p className="ms-footer-error">{error}</p> : null}
           <button
             type="button"
             className={cx("ms-btn", "ms-btn-primary", "ms-nb-continue")}
-            onClick={() => {
-              writeBookingDraft(emptyBookingDraft());
-              setToast("Запись создана");
-              window.setTimeout(() => navigate("/cabinet"), 900);
-            }}
+            disabled={saving}
+            onClick={() => void onCreate()}
           >
-            Создать запись
+            {saving ? "Создание…" : "Создать запись"}
           </button>
         </div>
       }

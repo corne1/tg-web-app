@@ -7,7 +7,7 @@ import {
   type MouseEvent,
 } from "react";
 import { useNavigate } from "react-router-dom";
-import { createCabinetClient, fetchCabinetClients } from "../api";
+import { fetchCabinetClients } from "../api";
 import { ClientsListSkeleton } from "../components/calendar/Skeleton";
 import { MasterSetupChrome } from "../components/master/MasterSetupChrome";
 import { MsArrowRight } from "../components/master/MsArrowRight";
@@ -122,7 +122,6 @@ export function NewBookingClientScreen() {
   const [allClients, setAllClients] = useState<BookingClient[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [creating, setCreating] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(
     () => readBookingDraft().clientId,
   );
@@ -183,25 +182,8 @@ export function NewBookingClientScreen() {
     [],
   );
 
-  async function onAddClient() {
-    if (creating) return;
-    const name = window.prompt("Имя клиента");
-    if (!name?.trim()) return;
-    const phone = window.prompt("Телефон (необязательно)") ?? "";
-    setCreating(true);
-    setError(null);
-    try {
-      const data = await createCabinetClient({
-        name: name.trim(),
-        phone: phone.trim(),
-      });
-      setAllClients((prev) => [data.client, ...prev]);
-      selectClient(data.client);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Не удалось создать");
-    } finally {
-      setCreating(false);
-    }
+  function onAddClient() {
+    navigate("/cabinet/booking/new/client?from=booking");
   }
 
   return (
@@ -267,8 +249,7 @@ export function NewBookingClientScreen() {
           <button
             type="button"
             className="ms-nb-add"
-            disabled={creating}
-            onClick={() => void onAddClient()}
+            onClick={onAddClient}
           >
             <span className="ms-nb-add-icon">
               <UserPlusIcon />

@@ -8,6 +8,7 @@ import {
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
 import { useTelegram } from "../hooks/useTelegram";
+import modalTrashIcon from "../assets/onboarding/modal-trash.svg";
 import {
   BackIcon,
   Button,
@@ -15,6 +16,7 @@ import {
   Field,
   IconButton,
   Input,
+  Modal,
   Textarea,
 } from "../ui";
 
@@ -31,6 +33,7 @@ export function EditClientNoteScreen() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const goBack = useCallback(() => {
@@ -96,10 +99,8 @@ export function EditClientNoteScreen() {
     }
   }, [body, clientId, navigate, noteId, saving, title, webApp]);
 
-  const onDelete = useCallback(async () => {
+  const confirmDelete = useCallback(async () => {
     if (!clientId || !noteId || deleting) return;
-    const ok = window.confirm("Удалить заметку?");
-    if (!ok) return;
     setDeleting(true);
     setError(null);
     try {
@@ -112,6 +113,7 @@ export function EditClientNoteScreen() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Не удалось удалить");
       webApp?.HapticFeedback?.notificationOccurred("error");
+      setDeleteOpen(false);
     } finally {
       setDeleting(false);
     }
@@ -182,12 +184,53 @@ export function EditClientNoteScreen() {
             variant="secondary"
             className="ms-cn-delete"
             disabled={busy || loading}
-            onClick={() => void onDelete()}
+            onClick={() => setDeleteOpen(true)}
           >
-            {deleting ? "Удаление…" : "Удалить заметку"}
+            Удалить заметку
           </Button>
         </div>
       </footer>
+
+      <Modal
+        open={deleteOpen}
+        onClose={() => {
+          if (!deleting) setDeleteOpen(false);
+        }}
+        labelledBy="del-note-title"
+        className="ms-modal-dialog"
+      >
+        <div className="ms-modal-header">
+          <div className="ms-modal-warn" aria-hidden>
+            <img
+              className="ms-modal-warn-icon"
+              src={modalTrashIcon}
+              width={20}
+              height={20}
+              alt=""
+            />
+          </div>
+          <div className="ms-modal-copy">
+            <h3 id="del-note-title">Удалить заметку?</h3>
+            <p>Заметка исчезнет из карточки клиента без возможности восстановления.</p>
+          </div>
+        </div>
+        <div className="ms-modal-actions">
+          <Button
+            variant="danger"
+            disabled={deleting}
+            onClick={() => void confirmDelete()}
+          >
+            {deleting ? "Удаление…" : "Удалить"}
+          </Button>
+          <Button
+            variant="ghost"
+            disabled={deleting}
+            onClick={() => setDeleteOpen(false)}
+          >
+            Отмена
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 }

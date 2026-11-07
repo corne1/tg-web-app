@@ -7,6 +7,7 @@ import avatarDemo from "../assets/cabinet/profile/avatar-demo.jpg";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
 import { useTelegram } from "../hooks/useTelegram";
+import { loadMasterAvatarDataUrl } from "../lib/masterAvatar";
 import { specialtyMeta } from "../lib/masterDraft";
 import { cacheProfile } from "../lib/profileStorage";
 import type { MasterProfile } from "../types";
@@ -85,6 +86,10 @@ export function PublicProfileScreen() {
   }, [profile?.specialty]);
   const published =
     profile?.status === "active" || Boolean(profile?.onboardingComplete);
+  const avatarSrc =
+    loadMasterAvatarDataUrl() ||
+    profile?.avatarUrl ||
+    avatarDemo;
 
   const goBack = useCallback(
     () => navigate("/cabinet/profile"),
@@ -161,7 +166,7 @@ export function PublicProfileScreen() {
         <div className="ms-pub-hero">
           <img
             className="ms-pub-avatar"
-            src={avatarDemo}
+            src={avatarSrc}
             width={88}
             height={88}
             alt=""

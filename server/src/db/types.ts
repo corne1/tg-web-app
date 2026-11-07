@@ -38,6 +38,8 @@ export type MasterProfileRow = {
   status: MasterProfileStatus;
   onboarding_step: number;
   onboarding_completed_at: string | null;
+  /** Public avatar URL or data-URL (Blur #16). */
+  avatar_url: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -72,4 +74,8 @@ export type BookingRow = {
   reminded_1h: boolean;
   created_at: string;
   updated_at: string;
+  /** JSON array of service titles selected at booking time. */
+  services_json: string | null;
+  /** Master CRM client id when booking was created from cabinet. */
+  master_client_id: string | null;
 };

@@ -109,6 +109,40 @@ export async function saveMasterProfile(input: {
   return data.profile;
 }
 
+export async function saveMasterAvatar(
+  avatarUrl: string | null,
+): Promise<MasterProfile> {
+  const data = await request<{ profile: MasterProfile }>("/api/master/avatar", {
+    method: "PUT",
+    body: JSON.stringify({ avatarUrl }),
+  });
+  return data.profile;
+}
+
+export async function createCabinetBooking(input: {
+  masterClientId: string;
+  dateISO: string;
+  time: string;
+  serviceIds: string[];
+}): Promise<{
+  booking: {
+    id: string;
+    startsAt: string;
+    time: string;
+    date: string;
+    clientName: string;
+    duration: number;
+    price: number;
+    status: string;
+    serviceTitles: string[];
+  };
+}> {
+  return request("/api/cabinet/bookings", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
 export async function saveMasterHours(input: {
   hours: WorkingHoursDto;
   dayBreakMin?: number | null;

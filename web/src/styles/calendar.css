@@ -1593,6 +1593,16 @@ body:has(.ms-boot-splash),
   object-fit: cover;
 }
 
+.ms-avatar-btn {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  border-radius: var(--ms-radius-full);
+  flex: 0 0 auto;
+  line-height: 0;
+  cursor: pointer;
+}
+
 .ms-preview-meta {
   min-width: 0;
   display: flex;

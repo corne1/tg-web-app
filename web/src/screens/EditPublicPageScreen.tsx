@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchMe, saveMasterProfile } from "../api";
+import { fetchMe, saveMasterAvatar, saveMasterProfile } from "../api";
 import avatarDemo from "../assets/cabinet/profile/avatar-demo.jpg";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
@@ -80,12 +80,28 @@ export function EditPublicPageScreen() {
           (me.profile.specialty as MasterSpecialty | null) ?? draft.specialty,
         );
         setCity(me.profile.city || draft.city || "Москва");
+        const remote = me.profile.avatarUrl;
+        if (remote) {
+          saveMasterAvatarDataUrl(remote);
+          setAvatarSrc(remote);
+        }
       })
       .catch(() => undefined);
     return () => {
       cancelled = true;
     };
   }, [draft.city, draft.name, draft.specialty]);
+
+  const persistAvatar = useCallback(async (url: string) => {
+    saveMasterAvatarDataUrl(url);
+    setAvatarSrc(url);
+    try {
+      const profile = await saveMasterAvatar(url);
+      cacheProfile(profile);
+    } catch {
+      // local preview kept; server sync can retry later
+    }
+  }, []);
 
   const goBack = useCallback(
     () => navigate("/cabinet/profile/public"),
@@ -134,10 +150,8 @@ export function EditPublicPageScreen() {
       setError("В Telegram нет фото профиля");
       return;
     }
-    saveMasterAvatarDataUrl(url);
-    setAvatarSrc(url);
-    setPhotoSheet(false);
-  }, [webApp]);
+    void persistAvatar(url).then(() => setPhotoSheet(false));
+  }, [persistAvatar, webApp]);
 
   return (
     <>
@@ -183,9 +197,8 @@ export function EditPublicPageScreen() {
               e.target.value = "";
               if (!file) return;
               void readFileAsDataUrl(file)
-                .then((url) => {
-                  saveMasterAvatarDataUrl(url);
-                  setAvatarSrc(url);
+                .then(async (url) => {
+                  await persistAvatar(url);
                   setPhotoSheet(false);
                 })
                 .catch(() => setError("Не удалось загрузить фото"));

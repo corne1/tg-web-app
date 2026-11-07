@@ -24,6 +24,7 @@ export function serializeProfile(profile: MasterProfileRow) {
     workingHours: profile.working_hours,
     dayBreakMin: profile.day_break_min,
     place: profile.place,
+    avatarUrl: profile.avatar_url,
     bookingLink:
       bookingDeepLink(profile.slug) ?? masterDeepLink(profile.user_id),
   };
@@ -56,5 +57,6 @@ export function serializePublicMaster(profile: MasterProfileRow) {
     specialty: profile.specialty,
     city: profile.city,
     workingHours: profile.working_hours as WorkingHours | null,
+    avatarUrl: profile.avatar_url,
   };
 }

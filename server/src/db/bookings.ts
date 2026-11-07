@@ -21,6 +21,10 @@ function mapBooking(row: Record<string, unknown>): BookingRow {
     reminded_1h: Boolean(row.reminded_1h),
     created_at: String(row.created_at),
     updated_at: String(row.updated_at),
+    services_json:
+      row.services_json != null ? String(row.services_json) : null,
+    master_client_id:
+      row.master_client_id != null ? String(row.master_client_id) : null,
   };
 }
 
@@ -31,6 +35,8 @@ export type CreateBookingInput = {
   startsAt: string;
   durationMin: number;
   price: number;
+  serviceTitles?: string[];
+  masterClientId?: string | null;
 };
 
 export async function createBooking(
@@ -40,13 +46,19 @@ export async function createBooking(
     const now = new Date().toISOString();
     const id = randomUUID();
     const status: BookingStatus = "confirmed";
+    const servicesJson =
+      input.serviceTitles && input.serviceTitles.length > 0
+        ? JSON.stringify(input.serviceTitles)
+        : null;
+    const masterClientId = input.masterClientId ?? null;
 
     try {
       await db.execute({
         sql: `INSERT INTO bookings (
           id, master_id, client_id, starts_at, duration_min, price,
-          status, paid, client_name, reminded_24h, reminded_1h, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, 0, 0, ?, ?)`,
+          status, paid, client_name, reminded_24h, reminded_1h, created_at, updated_at,
+          services_json, master_client_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, 0, 0, ?, ?, ?, ?)`,
         args: [
           id,
           input.masterId,
@@ -58,6 +70,8 @@ export async function createBooking(
           input.clientName,
           now,
           now,
+          servicesJson,
+          masterClientId,
         ],
       });
     } catch (err) {
@@ -82,6 +96,8 @@ export async function createBooking(
       reminded_1h: false,
       created_at: now,
       updated_at: now,
+      services_json: servicesJson,
+      master_client_id: masterClientId,
     };
   });
 }

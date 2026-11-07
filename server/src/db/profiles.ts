@@ -51,6 +51,7 @@ function mapProfile(row: Record<string, unknown>): MasterProfileRow {
       row.onboarding_completed_at != null
         ? String(row.onboarding_completed_at)
         : null,
+    avatar_url: row.avatar_url != null ? String(row.avatar_url) : null,
     created_at: String(row.created_at),
     updated_at: String(row.updated_at),
   };
@@ -229,9 +230,38 @@ export async function upsertProfile(
       status,
       onboarding_step: onboardingStep,
       onboarding_completed_at: onboardingCompletedAt,
+      avatar_url: prev?.avatar_url ?? null,
       created_at: createdAt,
       updated_at: now,
     };
+  });
+}
+
+const MAX_AVATAR_URL_LEN = 400_000;
+
+export async function setMasterAvatarUrl(
+  userId: number,
+  avatarUrl: string | null,
+): Promise<MasterProfileRow | null> {
+  return withDb(async (db) => {
+    const existing = await db.execute({
+      sql: "SELECT * FROM master_profiles WHERE user_id = ?",
+      args: [userId],
+    });
+    const row = existing.rows[0];
+    if (!row) return null;
+    const prev = mapProfile(row as unknown as Record<string, unknown>);
+    if (avatarUrl != null && avatarUrl.length > MAX_AVATAR_URL_LEN) {
+      throw new Error("Avatar too large");
+    }
+    const now = new Date().toISOString();
+    await db.execute({
+      sql: `UPDATE master_profiles
+        SET avatar_url = ?, updated_at = ?
+        WHERE user_id = ?`,
+      args: [avatarUrl, now, userId],
+    });
+    return { ...prev, avatar_url: avatarUrl, updated_at: now };
   });
 }
 

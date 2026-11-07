@@ -11,6 +11,7 @@ import {
 } from "../db/bookings.js";
 import { ensureClientFromBooking } from "../db/clients.js";
 import { getProfile } from "../db/profiles.js";
+import { listServices } from "../db/services.js";
 import { upsertUser } from "../db/users.js";
 import { requireSession, type AuthedRequest } from "../middleware.js";
 import {
@@ -55,18 +56,22 @@ bookingsRouter.post("/", requireSession, async (req: AuthedRequest, res) => {
 
   try {
     await upsertUser(tg);
+    const masterClient = await ensureClientFromBooking({
+      masterId,
+      telegramUserId: tg.id,
+      name: clientName,
+    });
+    const services = await listServices(masterId);
+    const primary = services[0];
     const booking = await createBooking({
       masterId,
       clientId: tg.id,
       clientName,
       startsAt,
-      durationMin: profile.duration,
-      price: profile.price,
-    });
-    await ensureClientFromBooking({
-      masterId,
-      telegramUserId: tg.id,
-      name: clientName,
+      durationMin: primary?.duration_min ?? profile.duration,
+      price: primary?.price ?? profile.price,
+      serviceTitles: primary ? [primary.title] : undefined,
+      masterClientId: masterClient.id,
     });
 
     void notifyBookingCreated({

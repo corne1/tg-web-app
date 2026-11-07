@@ -43,6 +43,7 @@ export type ClientVisitHistoryItemDto = {
   serviceTitle: string;
   priceLabel: string;
   statusLabel: string;
+  multiService: boolean;
 };
 
 export type ClientNoteDto = {
@@ -410,29 +411,75 @@ type BookingStatRow = {
   paid: number | boolean;
   client_name: string;
   id: string;
+  services_json: string | null;
 };
 
-async function listBookingsForTelegramClient(
+function parseServiceTitles(raw: string | null): string[] {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map((t) => String(t).trim()).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+function serviceLineFromTitles(titles: string[]): {
+  serviceTitle: string;
+  multiService: boolean;
+} {
+  if (titles.length === 0) {
+    return { serviceTitle: "Запись", multiService: false };
+  }
+  return {
+    serviceTitle: titles[0]!,
+    multiService: titles.length > 1,
+  };
+}
+
+function mapBookingStatRow(r: Record<string, unknown>): BookingStatRow {
+  return {
+    id: String(r.id),
+    starts_at: String(r.starts_at),
+    duration_min: Number(r.duration_min),
+    price: Number(r.price),
+    status: String(r.status),
+    paid: r.paid as number | boolean,
+    client_name: String(r.client_name),
+    services_json: r.services_json != null ? String(r.services_json) : null,
+  };
+}
+
+async function listBookingsForClient(
   masterId: number,
-  telegramUserId: number,
+  masterClientId: string,
+  telegramUserId: number | null,
 ): Promise<BookingStatRow[]> {
   return withDb(async (db) => {
+    if (telegramUserId != null) {
+      const result = await db.execute({
+        sql: `SELECT id, starts_at, duration_min, price, status, paid, client_name, services_json
+          FROM bookings
+          WHERE master_id = ?
+            AND (client_id = ? OR master_client_id = ?)
+          ORDER BY starts_at DESC`,
+        args: [masterId, telegramUserId, masterClientId],
+      });
+      return result.rows.map((r) =>
+        mapBookingStatRow(r as unknown as Record<string, unknown>),
+      );
+    }
     const result = await db.execute({
-      sql: `SELECT id, starts_at, duration_min, price, status, paid, client_name
+      sql: `SELECT id, starts_at, duration_min, price, status, paid, client_name, services_json
         FROM bookings
-        WHERE master_id = ? AND client_id = ?
+        WHERE master_id = ? AND master_client_id = ?
         ORDER BY starts_at DESC`,
-      args: [masterId, telegramUserId],
+      args: [masterId, masterClientId],
     });
-    return result.rows.map((r) => ({
-      id: String(r.id),
-      starts_at: String(r.starts_at),
-      duration_min: Number(r.duration_min),
-      price: Number(r.price),
-      status: String(r.status),
-      paid: r.paid as number | boolean,
-      client_name: String(r.client_name),
-    }));
+    return result.rows.map((r) =>
+      mapBookingStatRow(r as unknown as Record<string, unknown>),
+    );
   });
 }
 
@@ -465,21 +512,26 @@ function buildClientDto(
         : null,
   }));
 
-  const history: ClientVisitHistoryItemDto[] = past.map((b) => ({
-    id: b.id,
-    dateLabel: formatHistoryDate(b.starts_at, timeZone),
-    serviceTitle: "Запись",
-    priceLabel: formatRub(b.price),
-    statusLabel: statusLabel(b.status, Boolean(b.paid)),
-  }));
+  const history: ClientVisitHistoryItemDto[] = past.map((b) => {
+    const line = serviceLineFromTitles(parseServiceTitles(b.services_json));
+    return {
+      id: b.id,
+      dateLabel: formatHistoryDate(b.starts_at, timeZone),
+      serviceTitle: line.serviceTitle,
+      priceLabel: formatRub(b.price),
+      statusLabel: statusLabel(b.status, Boolean(b.paid)),
+      multiService: line.multiService,
+    };
+  });
 
   let nextBooking: ClientNextBookingDto | null = null;
   if (next) {
     const p = zonedParts(new Date(next.starts_at), timeZone);
+    const line = serviceLineFromTitles(parseServiceTitles(next.services_json));
     nextBooking = {
       dateLabel: `${p.day} ${MONTH_LONG[p.month - 1]}`,
       time: formatTime(next.starts_at, timeZone),
-      serviceTitle: "Запись",
+      serviceTitle: line.serviceTitle,
       priceLabel: formatRub(next.price),
       bookingId: next.id,
     };
@@ -541,10 +593,11 @@ export async function listMasterClients(
 
     const out: MasterClientDto[] = [];
     for (const row of rows) {
-      const bookings =
-        row.telegram_user_id != null
-          ? await listBookingsForTelegramClient(masterId, row.telegram_user_id)
-          : [];
+      const bookings = await listBookingsForClient(
+        masterId,
+        row.id,
+        row.telegram_user_id,
+      );
       const notes = await listNotesForClient(masterId, row.id);
       const telegramUsername = await lookupTelegramUsername(
         row.telegram_user_id,
@@ -565,10 +618,11 @@ export async function getMasterClientDto(
   await syncClientsFromBookings(masterId);
   const row = await getMasterClientRow(masterId, clientId);
   if (!row) return null;
-  const bookings =
-    row.telegram_user_id != null
-      ? await listBookingsForTelegramClient(masterId, row.telegram_user_id)
-      : [];
+  const bookings = await listBookingsForClient(
+    masterId,
+    row.id,
+    row.telegram_user_id,
+  );
   const notes = await listNotesForClient(masterId, row.id);
   const telegramUsername = await lookupTelegramUsername(row.telegram_user_id);
   return buildClientDto(row, bookings, notes, timeZone, telegramUsername);
