@@ -6511,14 +6511,15 @@ label.ms-sheet-item {
 }
 
 .ms-edit-body {
-  gap: 16px;
-  padding: 8px 16px 24px;
+  gap: 20px;
+  padding: 16px 16px 24px;
+  overflow-y: auto;
 }
 
 .ms-edit-photo {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
 }
 
 .ms-edit-avatar-btn {
@@ -6534,10 +6535,14 @@ label.ms-sheet-item {
 
 .ms-edit-avatar {
   display: block;
-  width: 72px;
-  height: 72px;
+  width: 80px;
+  height: 80px;
   border-radius: var(--ms-radius-full);
   object-fit: cover;
+}
+
+.ms-edit-footer {
+  padding-top: 8px;
 }
 
 .ms-edit-cam {

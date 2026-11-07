@@ -24,6 +24,9 @@ import {
   Textarea,
 } from "../ui";
 
+const ABOUT_PLACEHOLDER =
+  "Создаю аккуратный маникюр с вниманием к деталям и комфорту каждого клиента.";
+
 function CameraBadge() {
   return (
     <span className="ms-edit-cam" aria-hidden>
@@ -123,21 +126,27 @@ export function EditPublicPageScreen() {
         <span className="ms-cc-toolbar-spacer" aria-hidden />
       </header>
 
-      <div className="ms-body ms-cab-body ms-edit-body">
+      <div className="ms-body ms-edit-body">
         <div className="ms-edit-photo">
-          <button type="button" className="ms-edit-avatar-btn" aria-label="Фото">
+          <button
+            type="button"
+            className="ms-edit-avatar-btn"
+            aria-label="Изменить фото"
+          >
             <img
               className="ms-edit-avatar"
               src={avatarDemo}
-              width={72}
-              height={72}
+              width={80}
+              height={80}
               alt=""
             />
             <CameraBadge />
           </button>
           <div className="ms-edit-photo-copy">
             <p className="ms-edit-photo-title">Фото мастера</p>
-            <p className="ms-edit-photo-sub">Отображается на вашей странице</p>
+            <p className="ms-edit-photo-sub">
+              Отображается на публичной странице
+            </p>
           </div>
         </div>
 
@@ -156,9 +165,7 @@ export function EditPublicPageScreen() {
           className="ms-field-chips"
         >
           <ChipGroup label="Основное направление">
-            {SPECIALTIES.filter((s) =>
-              ["manicure", "brows", "hair", "makeup"].includes(s.id),
-            ).map((s) => (
+            {SPECIALTIES.map((s) => (
               <Chip
                 key={s.id}
                 active={specialty === s.id}
@@ -175,14 +182,14 @@ export function EditPublicPageScreen() {
             rows={4}
             value={about}
             onChange={(e) => setAbout(e.target.value)}
-            placeholder="Расскажите о себе клиентам"
+            placeholder={ABOUT_PLACEHOLDER}
           />
         </Field>
 
         {error ? <p className="ms-footer-error">{error}</p> : null}
       </div>
 
-      <footer className="ms-footer">
+      <footer className="ms-footer ms-edit-footer">
         <div className="ms-footer-actions">
           <Button
             variant="primary"
