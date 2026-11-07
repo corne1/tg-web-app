@@ -27,6 +27,9 @@ import type { MasterProfile, MasterServiceDto } from "./types";
 import { BookingConfirmScreen } from "./screens/BookingConfirmScreen";
 import { BookingDetailScreen } from "./screens/BookingDetailScreen";
 import { CabinetProfileScreen } from "./screens/CabinetProfileScreen";
+import { EditPublicPageScreen } from "./screens/EditPublicPageScreen";
+import { ProfileStubScreen } from "./screens/ProfileStubScreen";
+import { PublicProfileScreen } from "./screens/PublicProfileScreen";
 import { ClientCardScreen } from "./screens/ClientCardScreen";
 import { ClientsScreen } from "./screens/ClientsScreen";
 import { EmptyStateScreen } from "./screens/EmptyStateScreen";
@@ -285,6 +288,18 @@ export function App() {
               element={<ClientCardScreen />}
             />
             <Route path="/cabinet/profile" element={<CabinetProfileScreen />} />
+            <Route
+              path="/cabinet/profile/public"
+              element={<PublicProfileScreen />}
+            />
+            <Route
+              path="/cabinet/profile/edit"
+              element={<EditPublicPageScreen />}
+            />
+            <Route
+              path="/cabinet/profile/:stubKey"
+              element={<ProfileStubScreen />}
+            />
             <Route path="/cabinet/empty" element={<EmptyStateScreen />} />
             <Route
               path="/cabinet/booking/new"
