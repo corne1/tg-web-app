@@ -6511,9 +6511,21 @@ label.ms-sheet-item {
 }
 
 .ms-edit-body {
-  gap: 20px;
-  padding: 16px 16px 24px;
+  gap: 12px;
+  padding: 12px 16px 24px;
   overflow-y: auto;
+}
+
+/* Figma 21416:129251 — form block on bg-fill2 */
+.ms-edit-card {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  padding: 16px;
+  border-radius: 20px;
+  background: var(--ms-fill2);
+  box-sizing: border-box;
 }
 
 .ms-edit-photo {

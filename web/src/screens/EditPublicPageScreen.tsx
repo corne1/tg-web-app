@@ -150,41 +150,43 @@ export function EditPublicPageScreen() {
           </div>
         </div>
 
-        <Field label="Имя" as="label">
-          <Input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            autoComplete="given-name"
-          />
-        </Field>
+        <div className="ms-edit-card">
+          <Field label="Имя" as="label">
+            <Input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              autoComplete="given-name"
+            />
+          </Field>
 
-        <Field
-          label="Основное направление"
-          as="fieldset"
-          className="ms-field-chips"
-        >
-          <ChipGroup label="Основное направление">
-            {SPECIALTIES.map((s) => (
-              <Chip
-                key={s.id}
-                active={specialty === s.id}
-                onClick={() => setSpecialty(s.id)}
-              >
-                {s.label}
-              </Chip>
-            ))}
-          </ChipGroup>
-        </Field>
+          <Field
+            label="Основное направление"
+            as="fieldset"
+            className="ms-field-chips"
+          >
+            <ChipGroup label="Основное направление">
+              {SPECIALTIES.map((s) => (
+                <Chip
+                  key={s.id}
+                  active={specialty === s.id}
+                  onClick={() => setSpecialty(s.id)}
+                >
+                  {s.label}
+                </Chip>
+              ))}
+            </ChipGroup>
+          </Field>
 
-        <Field label="О мастере" as="label">
-          <Textarea
-            rows={4}
-            value={about}
-            onChange={(e) => setAbout(e.target.value)}
-            placeholder={ABOUT_PLACEHOLDER}
-          />
-        </Field>
+          <Field label="О мастере" as="label">
+            <Textarea
+              rows={4}
+              value={about}
+              onChange={(e) => setAbout(e.target.value)}
+              placeholder={ABOUT_PLACEHOLDER}
+            />
+          </Field>
+        </div>
 
         {error ? <p className="ms-footer-error">{error}</p> : null}
       </div>
