@@ -1,10 +1,15 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchMe, saveMasterProfile } from "../api";
 import avatarDemo from "../assets/cabinet/profile/avatar-demo.jpg";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
 import { useTelegram } from "../hooks/useTelegram";
+import {
+  loadMasterAvatarDataUrl,
+  readFileAsDataUrl,
+  saveMasterAvatarDataUrl,
+} from "../lib/masterAvatar";
 import {
   loadMasterDraft,
   saveMasterDraft,
@@ -15,12 +20,14 @@ import { cacheProfile } from "../lib/profileStorage";
 import { loadPublicAbout, savePublicAbout } from "../lib/publicProfile";
 import {
   BackIcon,
+  BottomSheet,
   Button,
   Chip,
   ChipGroup,
   Field,
   IconButton,
   Input,
+  SheetSimpleHeader,
   Textarea,
 } from "../ui";
 
@@ -56,6 +63,11 @@ export function EditPublicPageScreen() {
   const [city, setCity] = useState(draft.city || "Москва");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [avatarSrc, setAvatarSrc] = useState(
+    () => loadMasterAvatarDataUrl() ?? avatarDemo,
+  );
+  const [photoSheet, setPhotoSheet] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -116,7 +128,19 @@ export function EditPublicPageScreen() {
 
   const valid = Boolean(name.trim() && specialty);
 
+  const applyTgPhoto = useCallback(() => {
+    const url = webApp?.initDataUnsafe?.user?.photo_url;
+    if (!url) {
+      setError("В Telegram нет фото профиля");
+      return;
+    }
+    saveMasterAvatarDataUrl(url);
+    setAvatarSrc(url);
+    setPhotoSheet(false);
+  }, [webApp]);
+
   return (
+    <>
     <div className="master-setup ms-cabinet ms-edit">
       <header className="ms-bd-toolbar">
         <IconButton label="Назад" onClick={goBack}>
@@ -132,10 +156,11 @@ export function EditPublicPageScreen() {
             type="button"
             className="ms-edit-avatar-btn"
             aria-label="Изменить фото"
+            onClick={() => setPhotoSheet(true)}
           >
             <img
               className="ms-edit-avatar"
-              src={avatarDemo}
+              src={avatarSrc}
               width={80}
               height={80}
               alt=""
@@ -148,6 +173,24 @@ export function EditPublicPageScreen() {
               Отображается на публичной странице
             </p>
           </div>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            className="ms-visually-hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              e.target.value = "";
+              if (!file) return;
+              void readFileAsDataUrl(file)
+                .then((url) => {
+                  saveMasterAvatarDataUrl(url);
+                  setAvatarSrc(url);
+                  setPhotoSheet(false);
+                })
+                .catch(() => setError("Не удалось загрузить фото"));
+            }}
+          />
         </div>
 
         <div className="ms-edit-card">
@@ -206,5 +249,25 @@ export function EditPublicPageScreen() {
         </div>
       </footer>
     </div>
+
+    <BottomSheet open={photoSheet} onClose={() => setPhotoSheet(false)}>
+      <SheetSimpleHeader
+        title="Фото мастера"
+        lead="Загрузите из галереи или возьмите из Telegram"
+      />
+      <div className="ms-edit-photo-sheet">
+        <Button
+          variant="secondary"
+          onClick={applyTgPhoto}
+          disabled={!webApp?.initDataUnsafe?.user?.photo_url}
+        >
+          Из профиля Telegram
+        </Button>
+        <Button variant="primary" onClick={() => fileRef.current?.click()}>
+          Выбрать из галереи
+        </Button>
+      </div>
+    </BottomSheet>
+    </>
   );
 }

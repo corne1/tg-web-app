@@ -5271,6 +5271,7 @@ label.ms-sheet-item {
 
 .ms-nb-cal-day {
   appearance: none;
+  position: relative;
   aspect-ratio: 1;
   border: none;
   border-radius: 12px;
@@ -5280,6 +5281,22 @@ label.ms-sheet-item {
   font-weight: 500;
   letter-spacing: -0.14px;
   cursor: pointer;
+}
+
+/* Blur #19 — day has a slot that fits selected service duration */
+.ms-nb-cal-day-dot {
+  position: absolute;
+  left: 50%;
+  bottom: 4px;
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  border-radius: 50%;
+  background: var(--ms-purple);
+}
+
+.ms-nb-cal-day.is-on .ms-nb-cal-day-dot {
+  background: #fff;
 }
 
 .ms-nb-cal-day.is-out {
@@ -5693,6 +5710,10 @@ label.ms-sheet-item {
   letter-spacing: -0.14px;
   line-height: 20px;
   color: var(--ms-ink);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
 }
 
 .ms-bd-note-meta {
@@ -6062,13 +6083,35 @@ label.ms-sheet-item {
   gap: 8px;
 }
 
+/* Blur #25 — single note full width; 2+ horizontal slider */
+.ms-cc-notes.is-carousel {
+  flex-direction: row;
+  gap: 10px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 4px;
+  margin: 0 -16px;
+  padding-left: 16px;
+  padding-right: 16px;
+  -webkit-overflow-scrolling: touch;
+}
+
 .ms-cc-note {
+  position: relative;
   display: flex;
   align-items: flex-start;
   gap: 12px;
   padding: 14px;
   border-radius: 16px;
   background: var(--ms-fill2);
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.ms-cc-note.is-slide {
+  flex: 0 0 min(292px, 78vw);
+  width: min(292px, 78vw);
+  scroll-snap-align: start;
 }
 
 .ms-cc-note-icon {
@@ -6077,19 +6120,40 @@ label.ms-sheet-item {
 }
 
 .ms-cc-note-copy {
+  position: relative;
   min-width: 0;
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
+.ms-cc-note-title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
 .ms-cc-note-title {
   margin: 0;
+  flex: 1;
+  min-width: 0;
   font-size: 14px;
   font-weight: 600;
   letter-spacing: -0.14px;
   line-height: 20px;
   color: var(--ms-ink);
+}
+
+.ms-cc-note-more {
+  appearance: none;
+  flex-shrink: 0;
+  margin: -4px -6px 0 0;
+  padding: 4px 6px;
+  border: none;
+  background: transparent;
+  color: var(--ms-tertiary);
+  cursor: pointer;
 }
 
 .ms-cc-note-text {
@@ -6099,6 +6163,25 @@ label.ms-sheet-item {
   letter-spacing: -0.14px;
   line-height: 20px;
   color: var(--ms-ink);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  overflow: hidden;
+}
+
+.ms-cc-note-expand {
+  appearance: none;
+  align-self: flex-start;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--ms-purple);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.13px;
+  line-height: 18px;
+  cursor: pointer;
 }
 
 .ms-cc-note-meta {
@@ -6110,14 +6193,111 @@ label.ms-sheet-item {
   color: var(--ms-tertiary);
 }
 
+.ms-cc-note-menu {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  min-width: 160px;
+  padding: 6px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid var(--ms-line-soft);
+  box-shadow: var(--ms-shadow-e2);
+}
+
+.ms-cc-note-menu button {
+  appearance: none;
+  margin: 0;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ms-ink);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ms-cc-note-menu button:active {
+  background: var(--ms-soft);
+}
+
+.ms-cc-note-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 16px 24px;
+}
+
+.ms-cc-note-sheet-text {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: -0.15px;
+  line-height: 22px;
+  color: var(--ms-ink);
+  white-space: pre-wrap;
+}
+
+.ms-cc-tg-btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 10px 14px;
+  border-radius: var(--ms-radius-full);
+  border: 1px solid var(--ms-line);
+  background: #fff;
+  box-shadow: var(--ms-shadow-e1);
+  color: var(--ms-ink);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  cursor: pointer;
+}
+
+.ms-cc-tg-btn:active {
+  background: var(--ms-soft);
+}
+
 .ms-cc-history-item {
+  appearance: none;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
+  width: 100%;
+  margin: 0;
   padding: 14px 16px;
+  border: none;
   border-radius: 16px;
   background: var(--ms-fill2);
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+
+.ms-cc-history-item:active {
+  filter: brightness(0.98);
+}
+
+.ms-cc-history-service {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+
+.ms-cn-delete {
+  color: #f53d3d !important;
 }
 
 .ms-cc-history-copy {
@@ -6587,4 +6767,61 @@ label.ms-sheet-item {
   letter-spacing: -0.14px;
   line-height: 20px;
   color: var(--ms-muted);
+}
+
+/* —— Create client note (Figma 21370:23881) —— */
+.ms-cn-body {
+  gap: 20px;
+  padding: 8px 16px 16px;
+  overflow-y: auto;
+}
+
+.ms-cn-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.24px;
+  line-height: 32px;
+  color: var(--ms-ink);
+}
+
+.ms-cn-footer {
+  padding-top: 8px;
+}
+
+.ms-nb-place-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ms-nb-place-studio {
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: var(--ms-fill2);
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  color: var(--ms-muted);
+}
+
+.ms-edit-photo-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 8px 16px 24px;
+}
+
+.ms-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space:nowrap;
+  border: 0;
 }

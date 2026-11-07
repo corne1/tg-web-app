@@ -4,10 +4,12 @@ import { listMasterBookings } from "../db/bookings.js";
 import {
   createClientNote,
   createMasterClient,
+  deleteClientNote,
   ensureClientFromBooking,
   findMasterClientByTelegram,
   getMasterClientDto,
   listMasterClients,
+  updateClientNote,
 } from "../db/clients.js";
 import { ensureMasterProfile } from "../db/profiles.js";
 import { upsertUser } from "../db/users.js";
@@ -207,5 +209,66 @@ cabinetRouter.post(
     });
     const client = await getMasterClientDto(tg.id, clientId, profile.timezone);
     res.status(201).json({ client });
+  },
+);
+
+cabinetRouter.patch(
+  "/clients/:clientId/notes/:noteId",
+  requireSession,
+  async (req: AuthedRequest, res) => {
+    const tg = req.telegramUser!;
+    await upsertUser(tg);
+    const profile = await ensureMasterProfile(
+      tg.id,
+      [tg.first_name, tg.last_name].filter(Boolean).join(" "),
+    );
+    const clientId = String(req.params.clientId ?? "");
+    const noteId = String(req.params.noteId ?? "");
+    const body = req.body ?? {};
+    const title = String(body.title ?? "").trim();
+    const noteBody = String(body.body ?? "").trim();
+    if (!noteBody) {
+      res.status(400).json({ error: "body required" });
+      return;
+    }
+    const updated = await updateClientNote({
+      masterId: tg.id,
+      clientId,
+      noteId,
+      title: title || "Заметка",
+      body: noteBody,
+    });
+    if (!updated) {
+      res.status(404).json({ error: "Note not found" });
+      return;
+    }
+    const client = await getMasterClientDto(tg.id, clientId, profile.timezone);
+    res.json({ client });
+  },
+);
+
+cabinetRouter.delete(
+  "/clients/:clientId/notes/:noteId",
+  requireSession,
+  async (req: AuthedRequest, res) => {
+    const tg = req.telegramUser!;
+    await upsertUser(tg);
+    const profile = await ensureMasterProfile(
+      tg.id,
+      [tg.first_name, tg.last_name].filter(Boolean).join(" "),
+    );
+    const clientId = String(req.params.clientId ?? "");
+    const noteId = String(req.params.noteId ?? "");
+    const ok = await deleteClientNote({
+      masterId: tg.id,
+      clientId,
+      noteId,
+    });
+    if (!ok) {
+      res.status(404).json({ error: "Note not found" });
+      return;
+    }
+    const client = await getMasterClientDto(tg.id, clientId, profile.timezone);
+    res.json({ client });
   },
 );

@@ -15,6 +15,7 @@ import { MsArrowRight } from "../components/master/MsArrowRight";
 import { cacheProfile } from "../lib/profileStorage";
 import avatarPlaceholder from "../assets/onboarding/avatar-placeholder.svg";
 import infoIcon from "../assets/onboarding/info.svg";
+import { loadMasterAvatarDataUrl } from "../lib/masterAvatar";
 import {
   Button,
   Chip,
@@ -46,6 +47,10 @@ export function OnboardingScreen() {
   const previewName = draft.name || "Анна";
   const previewTitle = meta?.title ?? "мастер маникюра";
   const previewChip = meta?.label ?? "Маникюр";
+  const previewAvatar =
+    loadMasterAvatarDataUrl() ||
+    webApp?.initDataUnsafe?.user?.photo_url ||
+    avatarPlaceholder;
 
   const persistLocal = useCallback(() => {
     const prev = loadMasterDraft();
@@ -196,7 +201,7 @@ export function OnboardingScreen() {
           <div className="ms-preview-head">
             <img
               className="ms-avatar"
-              src={avatarPlaceholder}
+              src={previewAvatar}
               width={48}
               height={48}
               alt=""

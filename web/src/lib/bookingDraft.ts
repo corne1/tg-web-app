@@ -16,6 +16,11 @@ export type BookingDraft = {
   serviceIds: string[];
   dateISO: string | null;
   time: string | null;
+  /** Blur #50–54 — visit place for outing bookings. */
+  placeChoice: "studio" | "visit" | null;
+  visitCity: string;
+  visitArea: string;
+  visitAddress: string;
 };
 
 const DRAFT_KEY = "pomni.bookingDraft.v1";
@@ -41,6 +46,10 @@ export function emptyBookingDraft(): BookingDraft {
     serviceIds: [],
     dateISO: null,
     time: null,
+    placeChoice: null,
+    visitCity: "",
+    visitArea: "",
+    visitAddress: "",
   };
 }
 
@@ -60,6 +69,8 @@ function parseClientSnapshot(raw: unknown): BookingClient | null {
     clientSinceLabel: c.clientSinceLabel ?? null,
     nextBooking: c.nextBooking ?? null,
     history: Array.isArray(c.history) ? c.history : [],
+    telegramUsername: c.telegramUsername ?? null,
+    telegramUserId: c.telegramUserId ?? null,
   };
 }
 
@@ -75,6 +86,13 @@ export function readBookingDraft(): BookingDraft {
       serviceIds: Array.isArray(parsed.serviceIds) ? parsed.serviceIds : [],
       dateISO: parsed.dateISO ?? null,
       time: parsed.time ?? null,
+      placeChoice:
+        parsed.placeChoice === "studio" || parsed.placeChoice === "visit"
+          ? parsed.placeChoice
+          : null,
+      visitCity: String(parsed.visitCity ?? ""),
+      visitArea: String(parsed.visitArea ?? ""),
+      visitAddress: String(parsed.visitAddress ?? ""),
     };
   } catch {
     return emptyBookingDraft();

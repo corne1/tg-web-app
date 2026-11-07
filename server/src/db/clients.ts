@@ -26,6 +26,7 @@ export type ClientNoteRow = {
   title: string;
   body: string;
   created_at: string;
+  updated_at: string | null;
 };
 
 export type ClientNextBookingDto = {
@@ -49,6 +50,7 @@ export type ClientNoteDto = {
   title: string;
   body: string;
   addedLabel: string;
+  editedLabel: string | null;
 };
 
 export type MasterClientDto = {
@@ -64,6 +66,7 @@ export type MasterClientDto = {
   nextBooking: ClientNextBookingDto | null;
   history: ClientVisitHistoryItemDto[];
   telegramUserId: number | null;
+  telegramUsername: string | null;
 };
 
 const MONTH_LONG = [
@@ -102,6 +105,7 @@ function mapNote(row: Record<string, unknown>): ClientNoteRow {
     title: String(row.title),
     body: String(row.body),
     created_at: String(row.created_at),
+    updated_at: row.updated_at != null ? String(row.updated_at) : null,
   };
 }
 
@@ -125,6 +129,11 @@ function formatSinceLabel(iso: string, timeZone: string): string {
 function formatNoteAddedLabel(iso: string, timeZone: string): string {
   const p = zonedParts(new Date(iso), timeZone);
   return `Добавлено · ${p.day} ${MONTH_LONG[p.month - 1]} ${p.year}`;
+}
+
+function formatNoteEditedLabel(iso: string, timeZone: string): string {
+  const p = zonedParts(new Date(iso), timeZone);
+  return `Изменено · ${p.day} ${MONTH_LONG[p.month - 1]} ${p.year}`;
 }
 
 function formatHistoryDate(iso: string, timeZone: string): string {
@@ -319,8 +328,8 @@ export async function createClientNote(input: {
     const id = randomUUID();
     await db.execute({
       sql: `INSERT INTO client_notes (
-        id, master_id, client_id, title, body, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?)`,
+        id, master_id, client_id, title, body, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, NULL)`,
       args: [
         id,
         input.masterId,
@@ -337,7 +346,59 @@ export async function createClientNote(input: {
       title: input.title.trim() || "Заметка",
       body: input.body.trim(),
       created_at: now,
+      updated_at: null,
     };
+  });
+}
+
+export async function updateClientNote(input: {
+  masterId: number;
+  clientId: string;
+  noteId: string;
+  title: string;
+  body: string;
+}): Promise<ClientNoteRow | null> {
+  return withDb(async (db) => {
+    const existing = await db.execute({
+      sql: `SELECT * FROM client_notes
+        WHERE id = ? AND master_id = ? AND client_id = ?`,
+      args: [input.noteId, input.masterId, input.clientId],
+    });
+    if (!existing.rows[0]) return null;
+    const now = new Date().toISOString();
+    const title = input.title.trim() || "Заметка";
+    const body = input.body.trim();
+    await db.execute({
+      sql: `UPDATE client_notes
+        SET title = ?, body = ?, updated_at = ?
+        WHERE id = ? AND master_id = ? AND client_id = ?`,
+      args: [title, body, now, input.noteId, input.masterId, input.clientId],
+    });
+    const row = existing.rows[0] as unknown as Record<string, unknown>;
+    return {
+      id: input.noteId,
+      master_id: input.masterId,
+      client_id: input.clientId,
+      title,
+      body,
+      created_at: String(row.created_at),
+      updated_at: now,
+    };
+  });
+}
+
+export async function deleteClientNote(input: {
+  masterId: number;
+  clientId: string;
+  noteId: string;
+}): Promise<boolean> {
+  return withDb(async (db) => {
+    const result = await db.execute({
+      sql: `DELETE FROM client_notes
+        WHERE id = ? AND master_id = ? AND client_id = ?`,
+      args: [input.noteId, input.masterId, input.clientId],
+    });
+    return Number(result.rowsAffected ?? 0) > 0;
   });
 }
 
@@ -380,6 +441,7 @@ function buildClientDto(
   bookings: BookingStatRow[],
   notes: ClientNoteRow[],
   timeZone: string,
+  telegramUsername: string | null = null,
 ): MasterClientDto {
   const now = Date.now();
   const active = bookings.filter((b) => b.status !== "cancelled");
@@ -397,6 +459,10 @@ function buildClientDto(
     title: n.title,
     body: n.body,
     addedLabel: formatNoteAddedLabel(n.created_at, timeZone),
+    editedLabel:
+      n.updated_at && n.updated_at !== n.created_at
+        ? formatNoteEditedLabel(n.updated_at, timeZone)
+        : null,
   }));
 
   const history: ClientVisitHistoryItemDto[] = past.map((b) => ({
@@ -437,7 +503,24 @@ function buildClientDto(
     nextBooking,
     history,
     telegramUserId: row.telegram_user_id,
+    telegramUsername,
   };
+}
+
+async function lookupTelegramUsername(
+  telegramUserId: number | null,
+): Promise<string | null> {
+  if (telegramUserId == null) return null;
+  return withDb(async (db) => {
+    const result = await db.execute({
+      sql: `SELECT username FROM users WHERE id = ?`,
+      args: [telegramUserId],
+    });
+    const raw = result.rows[0]?.username;
+    if (raw == null) return null;
+    const username = String(raw).trim().replace(/^@/, "");
+    return username || null;
+  });
 }
 
 export async function listMasterClients(
@@ -463,7 +546,12 @@ export async function listMasterClients(
           ? await listBookingsForTelegramClient(masterId, row.telegram_user_id)
           : [];
       const notes = await listNotesForClient(masterId, row.id);
-      out.push(buildClientDto(row, bookings, notes, timeZone));
+      const telegramUsername = await lookupTelegramUsername(
+        row.telegram_user_id,
+      );
+      out.push(
+        buildClientDto(row, bookings, notes, timeZone, telegramUsername),
+      );
     }
     return out;
   });
@@ -482,5 +570,6 @@ export async function getMasterClientDto(
       ? await listBookingsForTelegramClient(masterId, row.telegram_user_id)
       : [];
   const notes = await listNotesForClient(masterId, row.id);
-  return buildClientDto(row, bookings, notes, timeZone);
+  const telegramUsername = await lookupTelegramUsername(row.telegram_user_id);
+  return buildClientDto(row, bookings, notes, timeZone, telegramUsername);
 }

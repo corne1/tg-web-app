@@ -31,6 +31,8 @@ import { EditPublicPageScreen } from "./screens/EditPublicPageScreen";
 import { ProfileStubScreen } from "./screens/ProfileStubScreen";
 import { PublicProfileScreen } from "./screens/PublicProfileScreen";
 import { ClientCardScreen } from "./screens/ClientCardScreen";
+import { CreateClientNoteScreen } from "./screens/CreateClientNoteScreen";
+import { EditClientNoteScreen } from "./screens/EditClientNoteScreen";
 import { ClientsScreen } from "./screens/ClientsScreen";
 import { EmptyStateScreen } from "./screens/EmptyStateScreen";
 import { MyBookingsScreen } from "./screens/MyBookingsScreen";
@@ -42,6 +44,7 @@ import { ScheduleScreen } from "./screens/ScheduleScreen";
 import { HoursStepScreen } from "./screens/HoursStepScreen";
 import { NewBookingClientScreen } from "./screens/NewBookingClientScreen";
 import { NewBookingConfirmScreen } from "./screens/NewBookingConfirmScreen";
+import { NewBookingPlaceScreen } from "./screens/NewBookingPlaceScreen";
 import { NewBookingServiceScreen } from "./screens/NewBookingServiceScreen";
 import { NewBookingStubScreen } from "./screens/NewBookingStubScreen";
 import { NewBookingTimeScreen } from "./screens/NewBookingTimeScreen";
@@ -287,6 +290,14 @@ export function App() {
               path="/cabinet/clients/:clientId"
               element={<ClientCardScreen />}
             />
+            <Route
+              path="/cabinet/clients/:clientId/notes/new"
+              element={<CreateClientNoteScreen />}
+            />
+            <Route
+              path="/cabinet/clients/:clientId/notes/:noteId"
+              element={<EditClientNoteScreen />}
+            />
             <Route path="/cabinet/profile" element={<CabinetProfileScreen />} />
             <Route
               path="/cabinet/profile/public"
@@ -312,6 +323,10 @@ export function App() {
             <Route
               path="/cabinet/booking/new/time"
               element={<NewBookingTimeScreen />}
+            />
+            <Route
+              path="/cabinet/booking/new/place"
+              element={<NewBookingPlaceScreen />}
             />
             <Route
               path="/cabinet/booking/new/confirm"

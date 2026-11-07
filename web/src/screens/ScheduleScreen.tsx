@@ -13,6 +13,7 @@ import { ScheduleListSkeleton } from "../components/calendar/Skeleton";
 import { MasterTabBar } from "../components/master/MasterTabBar";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
+import { dateToISO, emptyBookingDraft, writeBookingDraft } from "../lib/bookingDraft";
 import { WEEKDAYS } from "../lib/masterDraft";
 import { cacheProfile, masterResumePath } from "../lib/profileStorage";
 import {
@@ -145,9 +146,18 @@ export function ScheduleScreen() {
     setWeekCursor(startOfWeek(today));
   }, []);
 
-  const goAdd = useCallback(() => {
-    navigate("/cabinet/booking/new");
-  }, [navigate]);
+  const goAdd = useCallback(
+    (opts?: { prefillTime?: string | null; fromFreeSlot?: boolean }) => {
+      // Blur #21 / #23: prefill date/time only; never mutate workingHours.
+      writeBookingDraft({
+        ...emptyBookingDraft(),
+        dateISO: dateToISO(selectedDate),
+        time: opts?.prefillTime ?? null,
+      });
+      navigate("/cabinet/booking/new");
+    },
+    [navigate, selectedDate],
+  );
 
   async function markPaid(id: string) {
     try {
@@ -179,7 +189,7 @@ export function ScheduleScreen() {
           type="button"
           className="ms-cab-add"
           aria-label="Добавить запись"
-          onClick={goAdd}
+          onClick={() => goAdd()}
         >
           <img src={plusWhiteIcon} width={20} height={20} alt="" />
         </button>
@@ -277,7 +287,12 @@ export function ScheduleScreen() {
                   <button
                     type="button"
                     className="ms-cab-free-pill"
-                    onClick={goAdd}
+                    onClick={() =>
+                      goAdd({
+                        prefillTime: workRange.start,
+                        fromFreeSlot: true,
+                      })
+                    }
                   >
                     <img src={clockIcon} width={20} height={20} alt="" />
                     <span className="ms-cab-free-label">
@@ -321,7 +336,7 @@ export function ScheduleScreen() {
                 <button
                   type="button"
                   className="ms-cab-empty-cta"
-                  onClick={goAdd}
+                  onClick={() => goAdd()}
                 >
                   <img src={plusBtnIcon} width={20} height={20} alt="" />
                   <span>Добавить запись</span>

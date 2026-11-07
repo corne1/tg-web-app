@@ -3,6 +3,8 @@ export type ClientNote = {
   title: string;
   body: string;
   addedLabel: string;
+  /** Present when note was edited after create. */
+  editedLabel?: string | null;
 };
 
 export type ClientNextBooking = {
@@ -19,6 +21,8 @@ export type ClientVisitHistoryItem = {
   serviceTitle: string;
   priceLabel: string;
   statusLabel: string;
+  /** True when booking had more than one service. */
+  multiService?: boolean;
 };
 
 export type BookingClient = {
@@ -35,6 +39,9 @@ export type BookingClient = {
   clientSinceLabel?: string | null;
   nextBooking?: ClientNextBooking | null;
   history?: ClientVisitHistoryItem[];
+  /** Telegram @username — required for «Написать в Telegram». */
+  telegramUsername?: string | null;
+  telegramUserId?: number | null;
 };
 
 export function clientInitial(name: string): string {
@@ -96,6 +103,15 @@ export function sortClientsRecent(clients: BookingClient[]): BookingClient[] {
     const tb = b.lastVisitAt ? Date.parse(b.lastVisitAt) : 0;
     return tb - ta;
   });
+}
+
+/** Figma Blur #28 — client cards alphabetical. */
+export function sortClientsAlphabetical(
+  clients: BookingClient[],
+): BookingClient[] {
+  return [...clients].sort((a, b) =>
+    a.name.localeCompare(b.name, "ru", { sensitivity: "base" }),
+  );
 }
 
 export {

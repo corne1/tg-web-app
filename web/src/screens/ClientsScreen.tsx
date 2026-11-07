@@ -12,7 +12,7 @@ import {
   filterBookingClients,
   pluralClients,
   pluralVisits,
-  sortClientsRecent,
+  sortClientsAlphabetical,
   type BookingClient,
 } from "../lib/bookingClients";
 import { ChevronRightIcon, cx } from "../ui";
@@ -64,7 +64,7 @@ export function ClientsScreen() {
 
   const clients = useMemo(() => {
     const filtered = filterBookingClients(allClients, query);
-    return sortClientsRecent(filtered);
+    return sortClientsAlphabetical(filtered);
   }, [allClients, query]);
 
   const goHome = useCallback(() => navigate("/"), [navigate]);

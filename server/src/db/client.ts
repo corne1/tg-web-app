@@ -129,7 +129,8 @@ export async function migrate(): Promise<void> {
         client_id TEXT NOT NULL REFERENCES master_clients(id),
         title TEXT NOT NULL,
         body TEXT NOT NULL,
-        created_at TEXT NOT NULL
+        created_at TEXT NOT NULL,
+        updated_at TEXT
       )`,
       `CREATE INDEX IF NOT EXISTS idx_client_notes_client
         ON client_notes(master_id, client_id, created_at)`,
@@ -176,6 +177,10 @@ export async function migrate(): Promise<void> {
   await tryExec(
     db,
     `ALTER TABLE master_profiles ADD COLUMN place_json TEXT`,
+  );
+  await tryExec(
+    db,
+    `ALTER TABLE client_notes ADD COLUMN updated_at TEXT`,
   );
 
   // One-time: copy psychologist_profiles → master_profiles, then drop.

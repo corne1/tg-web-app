@@ -16,7 +16,9 @@ import {
   resolveBookingServices,
   writeBookingDraft,
 } from "../lib/bookingDraft";
+import { loadMasterDraft } from "../lib/masterDraft";
 import { cx } from "../ui";
+import { bookingNeedsPlaceStep } from "./NewBookingPlaceScreen";
 
 export function NewBookingConfirmScreen() {
   const navigate = useNavigate();
@@ -26,10 +28,13 @@ export function NewBookingConfirmScreen() {
   const totals = bookingTotals(services);
   const [toast, setToast] = useState<string | null>(null);
 
-  const goBack = useCallback(
-    () => navigate("/cabinet/booking/new/time"),
-    [navigate],
-  );
+  const goBack = useCallback(() => {
+    if (bookingNeedsPlaceStep(loadMasterDraft().placeMode)) {
+      navigate("/cabinet/booking/new/place");
+      return;
+    }
+    navigate("/cabinet/booking/new/time");
+  }, [navigate]);
   const goCabinet = useCallback(() => navigate("/cabinet"), [navigate]);
   useBackButton(goBack);
   useMainButton({ text: "", visible: false, onClick: () => undefined });
@@ -102,6 +107,16 @@ export function NewBookingConfirmScreen() {
             <span className="ms-nb-review-label">Стоимость</span>
             <span className="ms-nb-review-value">{totals.priceLabel}</span>
           </div>
+          {draft.placeChoice === "visit" || draft.visitArea ? (
+            <div className="ms-nb-review-row">
+              <span className="ms-nb-review-label">Место</span>
+              <span className="ms-nb-review-value">
+                {[draft.visitCity, draft.visitArea, draft.visitAddress]
+                  .filter(Boolean)
+                  .join(", ") || "Выезд к клиенту"}
+              </span>
+            </div>
+          ) : null}
         </div>
 
         <ul className="ms-nb-review-svcs">

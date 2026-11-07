@@ -21,6 +21,7 @@ import {
 import { loadMasterDraft } from "../lib/masterDraft";
 import { monthTitle, sameDay } from "../lib/scheduleUi";
 import { cx } from "../ui";
+import { bookingNeedsPlaceStep } from "./NewBookingPlaceScreen";
 
 const DOW = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
@@ -116,7 +117,12 @@ export function NewBookingTimeScreen() {
                 dateISO: dateToISO(selectedDate),
                 time: selectedTime,
               });
-              navigate("/cabinet/booking/new/confirm");
+              const mode = loadMasterDraft().placeMode;
+              navigate(
+                bookingNeedsPlaceStep(mode)
+                  ? "/cabinet/booking/new/place"
+                  : "/cabinet/booking/new/confirm",
+              );
             }}
           >
             <span>Продолжить</span>
@@ -175,7 +181,9 @@ export function NewBookingTimeScreen() {
               const inMonth = day.getMonth() === monthAnchor.getMonth();
               const past = day < today;
               const selected = selectedDate ? sameDay(day, selectedDate) : false;
-              const working = Boolean(generateDaySlots(day, hours, 30).length);
+              const durationMin = totals.totalMin || 30;
+              const daySlots = generateDaySlots(day, hours, durationMin);
+              const working = daySlots.length > 0;
               return (
                 <button
                   key={day.toISOString()}
@@ -186,6 +194,7 @@ export function NewBookingTimeScreen() {
                     !inMonth && "is-out",
                     selected && "is-on",
                     sameDay(day, today) && "is-today",
+                    working && inMonth && !past && "has-slots",
                   )}
                   onClick={() => {
                     setSelectedDate(day);
@@ -193,6 +202,9 @@ export function NewBookingTimeScreen() {
                   }}
                 >
                   {day.getDate()}
+                  {working && inMonth && !past ? (
+                    <span className="ms-nb-cal-day-dot" aria-hidden />
+                  ) : null}
                 </button>
               );
             })}

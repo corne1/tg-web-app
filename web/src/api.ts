@@ -286,6 +286,33 @@ export async function createCabinetClientNote(
   );
 }
 
+export async function updateCabinetClientNote(
+  clientId: string,
+  noteId: string,
+  input: { title?: string; body: string },
+): Promise<{ client: BookingClient }> {
+  return request(
+    `/api/cabinet/clients/${encodeURIComponent(clientId)}/notes/${encodeURIComponent(noteId)}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({
+        title: input.title ?? "Заметка",
+        body: input.body,
+      }),
+    },
+  );
+}
+
+export async function deleteCabinetClientNote(
+  clientId: string,
+  noteId: string,
+): Promise<{ client: BookingClient }> {
+  return request(
+    `/api/cabinet/clients/${encodeURIComponent(clientId)}/notes/${encodeURIComponent(noteId)}`,
+    { method: "DELETE" },
+  );
+}
+
 export async function createBooking(input: {
   masterId: number;
   startsAt: string;
