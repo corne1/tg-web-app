@@ -33,19 +33,19 @@ const MENU_PRIMARY: MenuItem[] = [
     id: "services",
     label: "Мои услуги",
     icon: scissorsIcon,
-    to: "/onboarding/services",
+    to: "/cabinet/profile/services",
   },
   {
     id: "hours",
     label: "Рабочее время",
     icon: calendarClockIcon,
-    to: "/onboarding/hours",
+    to: "/cabinet/profile/hours",
   },
   {
     id: "place",
     label: "Место приёма",
     icon: mapPinIcon,
-    to: "/onboarding/place",
+    to: "/cabinet/profile/place",
   },
 ];
 

@@ -7,6 +7,7 @@ import {
   ServicePickerSheet,
   type PickerKind,
 } from "../components/master/serviceForm";
+import { SettingsPageShell } from "../components/settings/SettingsPageShell";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
 import { useTelegram } from "../hooks/useTelegram";
@@ -25,10 +26,17 @@ import { Button } from "../ui";
 
 type Mode = "new" | "edit" | "duplicate";
 
-export function ServiceFormScreen({ mode }: { mode: Mode }) {
+export function ServiceFormScreen({
+  mode,
+  listPath = "/onboarding/services",
+}: {
+  mode: Mode;
+  listPath?: string;
+}) {
   const navigate = useNavigate();
   const { serviceId } = useParams();
   const { webApp } = useTelegram();
+  const isSettings = listPath.startsWith("/cabinet/profile");
 
   const source = serviceId ? getService(serviceId) : null;
   const [form, setForm] = useState<ServiceFormState>(() => {
@@ -53,15 +61,16 @@ export function ServiceFormScreen({ mode }: { mode: Mode }) {
     return { title: "Новая услуга", cta: "Создать услугу" };
   }, [mode]);
 
-  const goBack = useCallback(
-    () => navigate("/onboarding/services"),
-    [navigate],
-  );
+  const goBack = useCallback(() => navigate(listPath), [listPath, navigate]);
 
   const handleClose = useCallback(() => {
+    if (isSettings) {
+      navigate("/cabinet/profile");
+      return;
+    }
     webApp?.close?.();
     navigate("/");
-  }, [navigate, webApp]);
+  }, [isSettings, navigate, webApp]);
 
   const patchForm = useCallback((patch: Partial<ServiceFormState>) => {
     setForm((f) => ({ ...f, ...patch }));
@@ -103,7 +112,7 @@ export function ServiceFormScreen({ mode }: { mode: Mode }) {
         description: saved.description,
       });
       webApp?.HapticFeedback?.notificationOccurred("success");
-      navigate("/onboarding/services", {
+      navigate(listPath, {
         state: {
           toast: mode === "edit" ? "saved" : "added",
           serviceTitle: saved.title,
@@ -115,7 +124,7 @@ export function ServiceFormScreen({ mode }: { mode: Mode }) {
     } finally {
       setSaving(false);
     }
-  }, [form, mode, navigate, saving, source, validate, webApp]);
+  }, [form, listPath, mode, navigate, saving, source, validate, webApp]);
 
   useBackButton(goBack);
   useMainButton({ text: "", visible: false, onClick: () => undefined });
@@ -136,36 +145,53 @@ export function ServiceFormScreen({ mode }: { mode: Mode }) {
   const showError = (key: keyof ServiceFormErrors) =>
     tried ? errors[key] : undefined;
 
+  const footer = (
+    <div className="ms-footer-actions">
+      {submitError ? (
+        <p className="ms-field-error ms-footer-error">{submitError}</p>
+      ) : null}
+      <Button disabled={saving} onClick={() => void submit()}>
+        {saving ? "Сохранение…" : headings.cta}
+      </Button>
+      <Button variant="secondary" disabled={saving} onClick={goBack}>
+        Отмена
+      </Button>
+    </div>
+  );
+
+  const fields = (
+    <ServiceFormFields
+      form={form}
+      showError={showError}
+      onChange={patchForm}
+      onOpenDuration={() => setSheet("duration")}
+      onOpenBreak={() => setSheet("break")}
+    />
+  );
+
   return (
     <>
-      <MasterSetupChrome
-        step={2}
-        progressFilled={2}
-        topTitle={headings.title}
-        onBack={goBack}
-        onClose={handleClose}
-        footer={
-          <div className="ms-footer-actions">
-            {submitError ? (
-              <p className="ms-field-error ms-footer-error">{submitError}</p>
-            ) : null}
-            <Button disabled={saving} onClick={() => void submit()}>
-              {saving ? "Сохранение…" : headings.cta}
-            </Button>
-            <Button variant="secondary" disabled={saving} onClick={goBack}>
-              Отмена
-            </Button>
-          </div>
-        }
-      >
-        <ServiceFormFields
-          form={form}
-          showError={showError}
-          onChange={patchForm}
-          onOpenDuration={() => setSheet("duration")}
-          onOpenBreak={() => setSheet("break")}
-        />
-      </MasterSetupChrome>
+      {isSettings ? (
+        <SettingsPageShell
+          title={headings.title}
+          onBack={goBack}
+          onClose={handleClose}
+          footer={footer}
+        >
+          {fields}
+        </SettingsPageShell>
+      ) : (
+        <MasterSetupChrome
+          step={2}
+          progressFilled={2}
+          topTitle={headings.title}
+          onBack={goBack}
+          onClose={handleClose}
+          footer={footer}
+        >
+          {fields}
+        </MasterSetupChrome>
+      )}
 
       <ServicePickerSheet
         kind={sheet}

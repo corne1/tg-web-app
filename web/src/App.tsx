@@ -41,7 +41,10 @@ import { OnboardingScreen } from "./screens/OnboardingScreen";
 import { OnboardingSuccessScreen } from "./screens/OnboardingSuccessScreen";
 import { WelcomeMasterScreen } from "./screens/WelcomeMasterScreen";
 import { ScheduleScreen } from "./screens/ScheduleScreen";
+import { HoursSettingsScreen } from "./screens/HoursSettingsScreen";
 import { HoursStepScreen } from "./screens/HoursStepScreen";
+import { PlaceSettingsScreen } from "./screens/PlaceSettingsScreen";
+import { ServicesSettingsScreen } from "./screens/ServicesSettingsScreen";
 import { NewBookingClientScreen } from "./screens/NewBookingClientScreen";
 import { NewBookingConfirmScreen } from "./screens/NewBookingConfirmScreen";
 import { NewBookingPlaceScreen } from "./screens/NewBookingPlaceScreen";
@@ -306,6 +309,45 @@ export function App() {
             <Route
               path="/cabinet/profile/edit"
               element={<EditPublicPageScreen />}
+            />
+            <Route
+              path="/cabinet/profile/services"
+              element={<ServicesSettingsScreen />}
+            />
+            <Route
+              path="/cabinet/profile/services/new"
+              element={
+                <ServiceFormScreen
+                  mode="new"
+                  listPath="/cabinet/profile/services"
+                />
+              }
+            />
+            <Route
+              path="/cabinet/profile/services/:serviceId/edit"
+              element={
+                <ServiceFormScreen
+                  mode="edit"
+                  listPath="/cabinet/profile/services"
+                />
+              }
+            />
+            <Route
+              path="/cabinet/profile/services/:serviceId/duplicate"
+              element={
+                <ServiceFormScreen
+                  mode="duplicate"
+                  listPath="/cabinet/profile/services"
+                />
+              }
+            />
+            <Route
+              path="/cabinet/profile/hours"
+              element={<HoursSettingsScreen />}
+            />
+            <Route
+              path="/cabinet/profile/place"
+              element={<PlaceSettingsScreen />}
             />
             <Route
               path="/cabinet/profile/:stubKey"
