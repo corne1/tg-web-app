@@ -923,9 +923,9 @@ body:has(.ms-boot-splash),
   border-radius: 8px;
   background: linear-gradient(
     90deg,
-    #eeeff1 0%,
-    #f7f7f8 40%,
-    #eeeff1 80%
+    #f7f7f8 0%,
+    #ffffff 40%,
+    #f7f7f8 80%
   );
   background-size: 200% 100%;
   animation: shimmer 1.35s linear infinite;
@@ -1134,7 +1134,7 @@ body:has(.ms-boot-splash),
   --ms-line: #dee0e3; /* border/border */
   --ms-line-soft: #e9eaec; /* border/border-soft */
   --ms-soft: #f7f7f8; /* background/bg-fill1 */
-  --ms-fill2: #eeeff1; /* background/bg-fill2 */
+  --ms-fill2: #f7f7f8; /* background/bg-fill2 → Cool Gray/L 97% */
   --ms-fill3: #e9eaec; /* background/bg-fill3 */
   --ms-accent: #f4f1fd; /* primary/accent */
   --ms-success: #1da54a; /* state/success/key */
