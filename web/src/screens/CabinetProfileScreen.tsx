@@ -12,6 +12,10 @@ import settingsIcon from "../assets/cabinet/profile/settings.svg";
 import { MasterTabBar } from "../components/master/MasterTabBar";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
+import {
+  loadMasterAvatarDataUrl,
+  saveMasterAvatarDataUrl,
+} from "../lib/masterAvatar";
 import { specialtyMeta } from "../lib/masterDraft";
 import { cacheProfile } from "../lib/profileStorage";
 import type { MasterProfile } from "../types";
@@ -92,6 +96,9 @@ function MenuGroup({ items }: { items: MenuItem[] }) {
 export function CabinetProfileScreen() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<MasterProfile | null>(null);
+  const [avatarSrc, setAvatarSrc] = useState(
+    () => loadMasterAvatarDataUrl() ?? avatarDemo,
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -100,6 +107,14 @@ export function CabinetProfileScreen() {
         if (cancelled || !me.profile) return;
         cacheProfile(me.profile);
         setProfile(me.profile);
+        const remote = me.profile.avatarUrl;
+        const local = loadMasterAvatarDataUrl();
+        if (remote) {
+          saveMasterAvatarDataUrl(remote);
+          setAvatarSrc(remote);
+        } else if (local) {
+          setAvatarSrc(local);
+        }
       })
       .catch(() => undefined);
     return () => {
@@ -132,7 +147,7 @@ export function CabinetProfileScreen() {
             <div className="ms-prof-avatar-wrap">
               <img
                 className="ms-prof-avatar"
-                src={avatarDemo}
+                src={avatarSrc}
                 width={100}
                 height={100}
                 alt=""
