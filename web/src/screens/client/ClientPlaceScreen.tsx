@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import mapPinIcon from "../../assets/cabinet/profile/map-pin.svg";
+import carIcon from "../../assets/client/car.svg";
+import houseIcon from "../../assets/client/house.svg";
 import { ClientFlowShell } from "../../components/client/ClientFlowShell";
 import { MsArrowRight } from "../../components/master/MsArrowRight";
 import { useBackButton } from "../../hooks/useBackButton";
@@ -15,26 +16,6 @@ import {
 } from "../../lib/clientBookingDraft";
 import { loadClientMaster } from "../../lib/clientMaster";
 import { cx } from "../../ui";
-
-function CarIcon() {
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path
-        d="M5 16h14v2.5a1.5 1.5 0 0 1-1.5 1.5h-1a1.5 1.5 0 0 1-1.5-1.5V16H9v2.5A1.5 1.5 0 0 1 7.5 20h-1A1.5 1.5 0 0 1 5 18.5V16Z"
-        stroke="#623DF5"
-        strokeWidth="1.5"
-      />
-      <path
-        d="M5 16 6.2 10.5A2 2 0 0 1 8.15 9h7.7a2 2 0 0 1 1.95 1.5L19 16"
-        stroke="#623DF5"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-      <circle cx="8" cy="16" r="1.25" fill="#623DF5" />
-      <circle cx="16" cy="16" r="1.25" fill="#623DF5" />
-    </svg>
-  );
-}
 
 export function ClientPlaceScreen() {
   const { masterId: masterKey = "" } = useParams();
@@ -64,14 +45,6 @@ export function ClientPlaceScreen() {
     () => studioAddressLine(draft.place),
     [draft.place],
   );
-  const visitSub = useMemo(() => {
-    const v = draft.place?.visit;
-    if (!v) return "Мастер приедет по указанному вами адресу";
-    return (
-      [v.city, v.areas].filter(Boolean).join(" · ") ||
-      "Мастер приедет по указанному вами адресу"
-    );
-  }, [draft.place]);
 
   const goBack = useCallback(
     () => navigate(`/client/${encodeURIComponent(masterKey)}/services`),
@@ -95,6 +68,7 @@ export function ClientPlaceScreen() {
     <ClientFlowShell
       title="Место приёма"
       onBack={goBack}
+      progressFilled={2}
       footer={
         <button
           type="button"
@@ -110,7 +84,7 @@ export function ClientPlaceScreen() {
       <div className="ms-nb">
         <div className="ms-nb-intro">
           <h2 className="ms-nb-title">Где вам удобно?</h2>
-          <p className="ms-nb-lead">Выберите, где встретиться с мастером</p>
+          <p className="ms-nb-lead">Выберите, где встретиться</p>
         </div>
         <div className="ms-client-place-options" role="radiogroup">
           {draft.place?.studio ? (
@@ -124,15 +98,20 @@ export function ClientPlaceScreen() {
               )}
               onClick={() => setChoice("studio")}
             >
-              <img src={mapPinIcon} width={24} height={24} alt="" aria-hidden />
+              <img src={houseIcon} width={24} height={24} alt="" aria-hidden />
               <span className="ms-client-place-option-copy">
-                <span className="ms-client-place-option-title">
-                  В кабинете у мастера
-                </span>
+                <span className="ms-client-place-option-title">В кабинете</span>
                 {studioLine ? (
                   <span className="ms-client-place-option-sub">{studioLine}</span>
                 ) : null}
               </span>
+              <span
+                className={cx(
+                  "ms-preset-radio",
+                  choice === "studio" && "is-checked",
+                )}
+                aria-hidden
+              />
             </button>
           ) : null}
           {draft.place?.visit ? (
@@ -146,13 +125,22 @@ export function ClientPlaceScreen() {
               )}
               onClick={() => setChoice("visit")}
             >
-              <CarIcon />
+              <img src={carIcon} width={24} height={24} alt="" aria-hidden />
               <span className="ms-client-place-option-copy">
                 <span className="ms-client-place-option-title">
                   С выездом к вам
                 </span>
-                <span className="ms-client-place-option-sub">{visitSub}</span>
+                <span className="ms-client-place-option-sub">
+                  Мастер приедет по вашему адресу
+                </span>
               </span>
+              <span
+                className={cx(
+                  "ms-preset-radio",
+                  choice === "visit" && "is-checked",
+                )}
+                aria-hidden
+              />
             </button>
           ) : null}
         </div>

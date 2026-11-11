@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { fetchSlots, rescheduleBooking } from "../../api";
+import {
+  fetchClientBooking,
+  fetchSlots,
+  rescheduleBooking,
+} from "../../api";
 import { ClientFlowShell } from "../../components/client/ClientFlowShell";
 import { MsArrowRight } from "../../components/master/MsArrowRight";
 import { useBackButton } from "../../hooks/useBackButton";
@@ -14,8 +18,8 @@ import {
   resolveClientServices,
 } from "../../lib/clientBookingDraft";
 import { monthTitle, sameDay } from "../../lib/scheduleUi";
-import type { TimeSlot } from "../../types";
-import { BottomSheet, SheetSimpleHeader, cx } from "../../ui";
+import type { ClientBooking, TimeSlot } from "../../types";
+import { BottomSheet, Button, SheetSimpleHeader, cx } from "../../ui";
 
 type DayGroup = {
   key: string;
@@ -28,7 +32,6 @@ type DayGroup = {
 const DOW = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
 function parseSlotDate(slot: TimeSlot): Date | null {
-  // Prefer startsAt; fall back to dayLabel/date strings.
   const d = new Date(slot.startsAt);
   if (!Number.isNaN(d.getTime())) {
     return new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -75,6 +78,10 @@ export function ClientDateTimeScreen() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [calOpen, setCalOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [currentBooking, setCurrentBooking] = useState<ClientBooking | null>(
+    null,
+  );
 
   const today = useMemo(() => {
     const d = new Date();
@@ -92,6 +99,24 @@ export function ClientDateTimeScreen() {
       });
     }
   }, [masterKey, navigate, rescheduleId, services.length]);
+
+  useEffect(() => {
+    if (!rescheduleId) {
+      setCurrentBooking(null);
+      return;
+    }
+    let cancelled = false;
+    void fetchClientBooking(rescheduleId)
+      .then((data) => {
+        if (!cancelled) setCurrentBooking(data.booking);
+      })
+      .catch(() => {
+        if (!cancelled) setCurrentBooking(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [rescheduleId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -180,21 +205,10 @@ export function ClientDateTimeScreen() {
     navigate(`/client/${encodeURIComponent(masterKey)}/services`);
   }, [draft.place, draft.placeChoice, masterKey, navigate, rescheduleId]);
 
-  const continueNext = useCallback(async () => {
+  const continueNext = useCallback(() => {
     if (!selected || submitting) return;
     if (rescheduleId) {
-      setSubmitting(true);
-      setError(null);
-      try {
-        await rescheduleBooking(rescheduleId, selected.startsAt);
-        navigate(`/client/bookings/${encodeURIComponent(rescheduleId)}`, {
-          replace: true,
-        });
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Не удалось перенести");
-      } finally {
-        setSubmitting(false);
-      }
+      setConfirmOpen(true);
       return;
     }
     patchClientDraft({
@@ -205,6 +219,23 @@ export function ClientDateTimeScreen() {
     navigate(`/client/${encodeURIComponent(masterKey)}/data`);
   }, [masterKey, navigate, rescheduleId, selected, submitting]);
 
+  const confirmReschedule = useCallback(async () => {
+    if (!selected || !rescheduleId || submitting) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      await rescheduleBooking(rescheduleId, selected.startsAt);
+      setConfirmOpen(false);
+      navigate(`/client/bookings/${encodeURIComponent(rescheduleId)}`, {
+        replace: true,
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Не удалось перенести");
+    } finally {
+      setSubmitting(false);
+    }
+  }, [navigate, rescheduleId, selected, submitting]);
+
   useBackButton(goBack);
   useMainButton({ text: "", visible: false, onClick: () => undefined });
 
@@ -213,6 +244,7 @@ export function ClientDateTimeScreen() {
       <ClientFlowShell
         title="Дата и время"
         onBack={goBack}
+        progressFilled={rescheduleId ? undefined : 3}
         footer={
           <div className="ms-nb-footer">
             {!selected && !loading ? (
@@ -223,9 +255,9 @@ export function ClientDateTimeScreen() {
               type="button"
               className={cx("ms-btn", "ms-btn-primary", "ms-nb-continue")}
               disabled={!selected || submitting}
-              onClick={() => void continueNext()}
+              onClick={continueNext}
             >
-              <span>{rescheduleId ? "Перенести" : "Продолжить"}</span>
+              <span>{rescheduleId ? "Продолжить" : "Продолжить"}</span>
               <MsArrowRight />
             </button>
           </div>
@@ -234,12 +266,14 @@ export function ClientDateTimeScreen() {
         <div className="ms-nb">
           <div className="ms-nb-intro">
             <h2 className="ms-nb-title">Когда вам удобно?</h2>
-            <p className="ms-nb-lead">
-              Ближайшие свободные слоты
-              {totals.totalMin ? ` · ${totals.totalMin} мин` : ""}
-              {isVisit ? " · с учётом дороги" : ""}
-            </p>
+            <p className="ms-nb-lead">Ближайшие свободные слоты</p>
           </div>
+
+          {rescheduleId && currentBooking ? (
+            <p className="ms-client-reschedule-hint">
+              Сейчас: {currentBooking.date} · {currentBooking.time}
+            </p>
+          ) : null}
 
           {loading ? (
             <p className="ms-client-muted">Загрузка слотов…</p>
@@ -363,7 +397,7 @@ export function ClientDateTimeScreen() {
               const past = day < today;
               const iso = dateKey(day);
               const working = daysWithSlots.has(iso);
-              const selected = dayKey === iso;
+              const isSelected = dayKey === iso;
               return (
                 <button
                   key={iso}
@@ -372,7 +406,7 @@ export function ClientDateTimeScreen() {
                   className={cx(
                     "ms-nb-cal-day",
                     !inMonth && "is-out",
-                    selected && "is-on",
+                    isSelected && "is-on",
                     sameDay(day, today) && "is-today",
                     working && inMonth && !past && "has-slots",
                   )}
@@ -389,6 +423,40 @@ export function ClientDateTimeScreen() {
                 </button>
               );
             })}
+          </div>
+        </div>
+      </BottomSheet>
+
+      <BottomSheet open={confirmOpen} onClose={() => setConfirmOpen(false)}>
+        <SheetSimpleHeader title="Подтвердить перенос" />
+        <div className="ms-client-reschedule-sheet">
+          {currentBooking ? (
+            <p className="ms-client-muted">
+              Было: {currentBooking.date} · {currentBooking.time}
+            </p>
+          ) : null}
+          {selected ? (
+            <p className="ms-client-reschedule-new">
+              Станет: {selected.date} · {selected.time}
+            </p>
+          ) : null}
+          {error ? <p className="ms-client-error">{error}</p> : null}
+          <div className="ms-client-cancel-actions">
+            <Button
+              className="ms-btn"
+              variant="primary"
+              disabled={submitting || !selected}
+              onClick={() => void confirmReschedule()}
+            >
+              {submitting ? "Переносим…" : "Подтвердить перенос"}
+            </Button>
+            <Button
+              className="ms-btn"
+              variant="ghost"
+              onClick={() => setConfirmOpen(false)}
+            >
+              Отмена
+            </Button>
           </div>
         </div>
       </BottomSheet>

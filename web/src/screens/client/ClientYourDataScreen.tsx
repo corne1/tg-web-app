@@ -54,6 +54,7 @@ export function ClientYourDataScreen() {
     <ClientFlowShell
       title="Ваши данные"
       onBack={goBack}
+      progressFilled={4}
       footer={
         <button
           type="button"

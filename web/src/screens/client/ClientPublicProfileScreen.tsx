@@ -2,7 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import coverDemo from "../../assets/cabinet/profile/cover.jpg";
 import avatarDemo from "../../assets/cabinet/profile/avatar-demo.jpg";
-import mapPinIcon from "../../assets/cabinet/profile/map-pin.svg";
+import clockPurpleIcon from "../../assets/cabinet/clock-purple.svg";
+import houseIcon from "../../assets/client/house.svg";
+import serviceSparkIcon from "../../assets/client/service-spark.svg";
 import { ClientFlowShell } from "../../components/client/ClientFlowShell";
 import { useBackButton } from "../../hooks/useBackButton";
 import { useMainButton } from "../../hooks/useMainButton";
@@ -62,7 +64,7 @@ export function ClientPublicProfileScreen() {
     ? services
     : services.slice(0, SERVICES_PREVIEW);
   const placeLine = studioAddressLine(master?.place ?? null);
-  const canBook = Boolean(master?.bookingEnabled);
+  const canBook = Boolean(master?.bookingEnabled) && services.length > 0;
 
   const goBook = useCallback(() => {
     if (!master || !canBook) return;
@@ -97,6 +99,12 @@ export function ClientPublicProfileScreen() {
     );
   }
 
+  const bookLabel = !master.bookingEnabled
+    ? "Онлайн-запись недоступна"
+    : services.length === 0
+      ? "Нет доступных услуг"
+      : "Записаться";
+
   return (
     <ClientFlowShell
       hideHeader
@@ -107,7 +115,7 @@ export function ClientPublicProfileScreen() {
           disabled={!canBook}
           onClick={goBook}
         >
-          {canBook ? "Записаться" : "Онлайн-запись недоступна"}
+          {bookLabel}
         </button>
       }
     >
@@ -146,22 +154,41 @@ export function ClientPublicProfileScreen() {
             <ul className="ms-client-svc-preview">
               {visibleServices.map((s) => (
                 <li key={s.id} className="ms-client-svc-row">
-                  <span className="ms-client-svc-name">{s.title}</span>
-                  <span className="ms-client-svc-meta">
-                    {formatDuration(s.durationMin)}
-                    <span aria-hidden> · </span>
-                    {formatPrice(s)}
-                  </span>
+                  <img
+                    className="ms-client-svc-icon"
+                    src={serviceSparkIcon}
+                    width={48}
+                    height={48}
+                    alt=""
+                    aria-hidden
+                  />
+                  <div className="ms-client-svc-copy">
+                    <span className="ms-client-svc-name">{s.title}</span>
+                    <span className="ms-client-svc-meta">
+                      <img
+                        src={clockPurpleIcon}
+                        width={16}
+                        height={16}
+                        alt=""
+                        aria-hidden
+                      />
+                      <span>
+                        {formatDuration(s.durationMin)}
+                        <span aria-hidden> • </span>
+                        {formatPrice(s)}
+                      </span>
+                    </span>
+                  </div>
                 </li>
               ))}
             </ul>
             {services.length > SERVICES_PREVIEW ? (
               <button
                 type="button"
-                className="ms-client-link-btn"
+                className="ms-review-show-all"
                 onClick={() => setShowAllServices((v) => !v)}
               >
-                {showAllServices ? "Свернуть" : "Показать все"}
+                <span>{showAllServices ? "Свернуть" : "Показать все"}</span>
               </button>
             ) : null}
           </section>
@@ -172,7 +199,7 @@ export function ClientPublicProfileScreen() {
             <h2 className="ms-client-section-title">Место приёма</h2>
             {master.place.studio ? (
               <div className="ms-client-place-card">
-                <img src={mapPinIcon} width={20} height={20} alt="" aria-hidden />
+                <img src={houseIcon} width={24} height={24} alt="" aria-hidden />
                 <div>
                   <p className="ms-client-place-title">В кабинете у мастера</p>
                   {placeLine ? (
@@ -183,13 +210,13 @@ export function ClientPublicProfileScreen() {
             ) : null}
             {master.place.visit && !master.place.studio ? (
               <div className="ms-client-place-card">
-                <img src={mapPinIcon} width={20} height={20} alt="" aria-hidden />
+                <img src={houseIcon} width={24} height={24} alt="" aria-hidden />
                 <div>
                   <p className="ms-client-place-title">С выездом к вам</p>
                   <p className="ms-client-place-sub">
                     {[master.place.visit.city, master.place.visit.areas]
                       .filter(Boolean)
-                      .join(" · ") || "Мастер приедет по указанному адресу"}
+                      .join(" · ") || "Мастер приедет по вашему адресу"}
                   </p>
                 </div>
               </div>

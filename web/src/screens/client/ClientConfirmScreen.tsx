@@ -42,12 +42,14 @@ export function ClientConfirmScreen() {
         .filter(Boolean)
         .join(", ");
     }
-    return studioAddressLine(draft.place) || "В кабинете у мастера";
+    return studioAddressLine(draft.place) || "В кабинете";
   }, [draft]);
 
+  const base = `/client/${encodeURIComponent(masterKey)}`;
+
   const goBack = useCallback(
-    () => navigate(`/client/${encodeURIComponent(masterKey)}/data`),
-    [masterKey, navigate],
+    () => navigate(`${base}/data`),
+    [base, navigate],
   );
 
   const confirm = useCallback(async () => {
@@ -72,7 +74,7 @@ export function ClientConfirmScreen() {
         comment: draft.comment,
       });
       patchClientDraft({ bookingId: res.booking.id });
-      navigate(`/client/${encodeURIComponent(masterKey)}/success`, {
+      navigate(`${base}/success`, {
         state: { booking: res.booking },
         replace: true,
       });
@@ -80,14 +82,12 @@ export function ClientConfirmScreen() {
       const msg = err instanceof Error ? err.message : "Не удалось создать запись";
       setError(msg);
       if (/slot|занят|unavailable/i.test(msg)) {
-        navigate(`/client/${encodeURIComponent(masterKey)}/time`, {
-          replace: true,
-        });
+        navigate(`${base}/time`, { replace: true });
       }
     } finally {
       setSubmitting(false);
     }
-  }, [draft, masterKey, navigate, submitting]);
+  }, [base, draft, navigate, submitting]);
 
   useBackButton(goBack);
   useMainButton({ text: "", visible: false, onClick: () => undefined });
@@ -98,6 +98,7 @@ export function ClientConfirmScreen() {
     <ClientFlowShell
       title="Проверка записи"
       onBack={goBack}
+      progressFilled={5}
       footer={
         <div className="ms-nb-footer">
           {error ? <p className="ms-client-error">{error}</p> : null}
@@ -123,7 +124,16 @@ export function ClientConfirmScreen() {
             <dd>{draft.masterName}</dd>
           </div>
           <div className="ms-client-summary-row">
-            <dt>Услуги</dt>
+            <dt>
+              Услуги
+              <button
+                type="button"
+                className="ms-client-edit-link"
+                onClick={() => navigate(`${base}/services`)}
+              >
+                Изменить
+              </button>
+            </dt>
             <dd>{totals.titles}</dd>
           </div>
           <div className="ms-client-summary-row">
@@ -135,20 +145,53 @@ export function ClientConfirmScreen() {
             <dd>{totals.priceLabel}</dd>
           </div>
           <div className="ms-client-summary-row">
-            <dt>Дата и время</dt>
+            <dt>
+              Дата и время
+              <button
+                type="button"
+                className="ms-client-edit-link"
+                onClick={() => navigate(`${base}/time`)}
+              >
+                Изменить
+              </button>
+            </dt>
             <dd>
               {draft.dateLabel} · {draft.timeLabel}
             </dd>
           </div>
           <div className="ms-client-summary-row">
-            <dt>Место</dt>
+            <dt>
+              Место
+              <button
+                type="button"
+                className="ms-client-edit-link"
+                onClick={() =>
+                  navigate(
+                    draft.placeChoice === "visit"
+                      ? `${base}/address`
+                      : `${base}/place`,
+                  )
+                }
+              >
+                Изменить
+              </button>
+            </dt>
             <dd>
               {draft.placeChoice === "visit" ? "С выездом к вам" : "В кабинете"}
               {placeLine ? ` · ${placeLine}` : ""}
             </dd>
           </div>
           <div className="ms-client-summary-row">
-            <dt>Имя</dt>
+            <dt>
+              Имя
+              <button
+                type="button"
+                className="ms-client-edit-link"
+                onClick={() => navigate(`${base}/data`)}
+              >
+                Изменить
+              </button>
+            </dt>
             <dd>{draft.clientName}</dd>
           </div>
           {draft.comment ? (

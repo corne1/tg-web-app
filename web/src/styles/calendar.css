@@ -5132,6 +5132,10 @@ label.ms-sheet-item {
   letter-spacing: -0.15px;
 }
 
+.ms-nb-svc-icon {
+  border-radius: 14px;
+}
+
 .ms-nb-check {
   flex-shrink: 0;
   width: 22px;
@@ -5167,6 +5171,9 @@ label.ms-sheet-item {
 }
 
 .ms-nb-svc-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 13px;
   font-weight: 400;
   letter-spacing: -0.13px;
@@ -6895,12 +6902,28 @@ label.ms-sheet-item {
 
 .ms-client-svc-row {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
   padding: 12px 14px;
   border: 1px solid var(--ms-line);
   border-radius: var(--ms-radius-md, 14px);
   background: var(--ms-fill-soft, #fff);
+}
+
+.ms-client-svc-icon,
+.ms-nb-svc-icon {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  display: block;
+}
+
+.ms-client-svc-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 
 .ms-client-svc-name {
@@ -6909,7 +6932,11 @@ label.ms-sheet-item {
   color: var(--ms-ink);
 }
 
-.ms-client-svc-meta {
+.ms-client-svc-meta,
+.ms-nb-svc-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 13px;
   color: var(--ms-muted);
 }
@@ -6923,6 +6950,10 @@ label.ms-sheet-item {
   font-size: 14px;
   font-weight: 560;
   cursor: pointer;
+}
+
+.ms-client-section .ms-review-show-all {
+  margin-top: 10px;
 }
 
 .ms-client-place-card {
@@ -6973,8 +7004,28 @@ label.ms-sheet-item {
   background: color-mix(in srgb, var(--ms-purple, #623df5) 6%, #fff);
 }
 
+.ms-client-place-option .ms-preset-radio {
+  margin-left: auto;
+  margin-top: 2px;
+}
+
+.ms-client-place-option.is-on .ms-preset-radio,
+.ms-client-place-option .ms-preset-radio.is-checked {
+  border-color: var(--ms-purple);
+}
+
+.ms-client-place-option.is-on .ms-preset-radio::after,
+.ms-client-place-option .ms-preset-radio.is-checked::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: 999px;
+  background: var(--ms-purple);
+}
+
 .ms-client-place-option-copy {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 4px;
   min-width: 0;
@@ -7095,6 +7146,48 @@ label.ms-sheet-item {
   font-size: 14px;
   color: #16a34a;
   font-weight: 560;
+}
+
+.ms-client-progress {
+  padding: 0 16px 8px;
+}
+
+.ms-client-toolbar + .ms-client-progress {
+  margin-top: -4px;
+}
+
+.ms-client-edit-link {
+  margin-left: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ms-purple, #623df5);
+  font-size: 13px;
+  font-weight: 560;
+  cursor: pointer;
+}
+
+.ms-client-reschedule-hint {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--ms-fill2, #f4f5f7);
+  font-size: 14px;
+  color: var(--ms-ink);
+}
+
+.ms-client-reschedule-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 16px 16px;
+}
+
+.ms-client-reschedule-new {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ms-ink);
 }
 
 .ms-client-success .ms-client-summary {

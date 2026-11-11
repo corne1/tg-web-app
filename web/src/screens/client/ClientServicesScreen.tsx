@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import clockPurpleIcon from "../../assets/cabinet/clock-purple.svg";
+import serviceSparkIcon from "../../assets/client/service-spark.svg";
 import { ClientFlowShell } from "../../components/client/ClientFlowShell";
 import { MsArrowRight } from "../../components/master/MsArrowRight";
 import { useBackButton } from "../../hooks/useBackButton";
@@ -17,7 +18,6 @@ import {
   type ClientBookingDraft,
 } from "../../lib/clientBookingDraft";
 import { loadClientMaster } from "../../lib/clientMaster";
-import { serviceLetter } from "../../lib/bookingDraft";
 import { cx } from "../../ui";
 
 export function ClientServicesScreen() {
@@ -95,7 +95,7 @@ export function ClientServicesScreen() {
 
   if (loading) {
     return (
-      <ClientFlowShell title="Выбор услуг" onBack={goBack}>
+      <ClientFlowShell title="Выбор услуг" onBack={goBack} progressFilled={1}>
         <p className="ms-client-muted">Загрузка…</p>
       </ClientFlowShell>
     );
@@ -105,6 +105,7 @@ export function ClientServicesScreen() {
     <ClientFlowShell
       title="Выбор услуг"
       onBack={goBack}
+      progressFilled={1}
       footer={
         <div className="ms-nb-footer">
           {canContinue ? (
@@ -150,15 +151,29 @@ export function ClientServicesScreen() {
                 className={cx("ms-nb-svc", on && "is-on")}
                 onClick={() => toggle(svc.id)}
               >
-                <span className="ms-nb-svc-avatar" aria-hidden>
-                  {serviceLetter(svc.title)}
-                </span>
+                <img
+                  className="ms-nb-svc-icon"
+                  src={serviceSparkIcon}
+                  width={48}
+                  height={48}
+                  alt=""
+                  aria-hidden
+                />
                 <span className="ms-nb-svc-copy">
                   <span className="ms-nb-svc-title">{svc.title}</span>
                   <span className="ms-nb-svc-meta">
-                    {formatDuration(svc.durationMin)}
-                    <span aria-hidden> · </span>
-                    {formatPrice(svc)}
+                    <img
+                      src={clockPurpleIcon}
+                      width={16}
+                      height={16}
+                      alt=""
+                      aria-hidden
+                    />
+                    <span>
+                      {formatDuration(svc.durationMin)}
+                      <span aria-hidden> • </span>
+                      {formatPrice(svc)}
+                    </span>
                   </span>
                 </span>
                 <span className={cx("ms-nb-check", on && "is-on")} aria-hidden>

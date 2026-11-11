@@ -125,10 +125,13 @@ export interface ClientBooking {
   masterAvatarUrl?: string | null;
   duration?: number;
   price?: number;
+  priceLabel?: string;
   status?: SessionStatus;
   cancelHours?: number;
   serviceTitles?: string[];
   clientName?: string;
+  placeChoice?: "studio" | "visit" | null;
+  placeAddress?: string | null;
   canCancel?: boolean;
   canReschedule?: boolean;
   cancelBlockedReason?: string | null;
