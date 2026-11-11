@@ -44,7 +44,39 @@ export function serializeService(
   };
 }
 
-export function serializePublicMaster(profile: MasterProfileRow) {
+/** Public place payload — studio address redacted when visibility is after_booking. */
+export function serializePublicPlace(profile: MasterProfileRow) {
+  const place = profile.place;
+  if (!place) return null;
+  const studioVisible = place.studio.addressVisibility === "public";
+  const showStudio =
+    place.mode === "studio" || place.mode === "both";
+  const showVisit = place.mode === "visit" || place.mode === "both";
+  return {
+    mode: place.mode,
+    studio: showStudio
+      ? {
+          city: place.studio.city,
+          address: studioVisible ? place.studio.address : "",
+          addressVisible: studioVisible,
+          addressHint: studioVisible
+            ? null
+            : "Точный адрес появится после оформления записи",
+        }
+      : null,
+    visit: showVisit
+      ? {
+          city: place.visit.city,
+          areas: place.visit.areas,
+        }
+      : null,
+  };
+}
+
+export function serializePublicMaster(
+  profile: MasterProfileRow,
+  services: Awaited<ReturnType<typeof listServices>> = [],
+) {
   return {
     id: profile.user_id,
     slug: profile.slug,
@@ -58,5 +90,8 @@ export function serializePublicMaster(profile: MasterProfileRow) {
     city: profile.city,
     workingHours: profile.working_hours as WorkingHours | null,
     avatarUrl: profile.avatar_url,
+    place: serializePublicPlace(profile),
+    services: services.map(serializeService),
+    bookingEnabled: profile.status === "active" && services.length > 0,
   };
 }

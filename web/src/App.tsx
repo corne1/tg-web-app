@@ -24,8 +24,15 @@ import {
 } from "./lib/masterDraft";
 import { parseEntryContext } from "./lib/startParam";
 import type { MasterProfile, MasterServiceDto } from "./types";
-import { BookingConfirmScreen } from "./screens/BookingConfirmScreen";
 import { BookingDetailScreen } from "./screens/BookingDetailScreen";
+import { ClientAddressScreen } from "./screens/client/ClientAddressScreen";
+import { ClientConfirmScreen } from "./screens/client/ClientConfirmScreen";
+import { ClientDateTimeScreen } from "./screens/client/ClientDateTimeScreen";
+import { ClientPlaceScreen } from "./screens/client/ClientPlaceScreen";
+import { ClientPublicProfileScreen } from "./screens/client/ClientPublicProfileScreen";
+import { ClientServicesScreen } from "./screens/client/ClientServicesScreen";
+import { ClientSuccessScreen } from "./screens/client/ClientSuccessScreen";
+import { ClientYourDataScreen } from "./screens/client/ClientYourDataScreen";
 import { CabinetProfileScreen } from "./screens/CabinetProfileScreen";
 import { EditPublicPageScreen } from "./screens/EditPublicPageScreen";
 import { ProfileStubScreen } from "./screens/ProfileStubScreen";
@@ -54,7 +61,6 @@ import { NewBookingTimeScreen } from "./screens/NewBookingTimeScreen";
 import { PlaceStepScreen } from "./screens/PlaceStepScreen";
 import { ServiceFormScreen } from "./screens/ServiceFormScreen";
 import { ServicesStepScreen } from "./screens/ServicesStepScreen";
-import { SlotSelectionScreen } from "./screens/SlotSelectionScreen";
 
 function syncDraftFromServer(
   profile: MasterProfile | null,
@@ -386,10 +392,43 @@ export function App() {
               path="/cabinet/booking/:bookingId"
               element={<BookingDetailScreen />}
             />
-            <Route path="/client/confirm" element={<BookingConfirmScreen />} />
             <Route path="/client/bookings" element={<MyBookingsScreen />} />
-            <Route path="/client" element={<SlotSelectionScreen />} />
-            <Route path="/client/:masterId" element={<SlotSelectionScreen />} />
+            <Route
+              path="/client/:masterId/services"
+              element={<ClientServicesScreen />}
+            />
+            <Route
+              path="/client/:masterId/place"
+              element={<ClientPlaceScreen />}
+            />
+            <Route
+              path="/client/:masterId/address"
+              element={<ClientAddressScreen />}
+            />
+            <Route
+              path="/client/:masterId/time"
+              element={<ClientDateTimeScreen />}
+            />
+            <Route
+              path="/client/:masterId/data"
+              element={<ClientYourDataScreen />}
+            />
+            <Route
+              path="/client/:masterId/confirm"
+              element={<ClientConfirmScreen />}
+            />
+            <Route
+              path="/client/:masterId/success"
+              element={<ClientSuccessScreen />}
+            />
+            <Route
+              path="/client/:masterId"
+              element={<ClientPublicProfileScreen />}
+            />
+            <Route
+              path="/client"
+              element={<Navigate to="/client/bookings" replace />}
+            />
             <Route path="/notifications" element={<NotificationsScreen />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

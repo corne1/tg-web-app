@@ -12,6 +12,7 @@ import {
 import { ensureClientFromBooking } from "../db/clients.js";
 import { getProfile } from "../db/profiles.js";
 import { listServices } from "../db/services.js";
+import type { MasterServiceRow } from "../db/types.js";
 import { upsertUser } from "../db/users.js";
 import { requireSession, type AuthedRequest } from "../middleware.js";
 import {
@@ -28,6 +29,27 @@ bookingsRouter.post("/", requireSession, async (req: AuthedRequest, res) => {
   const body = req.body ?? {};
   const masterId = Number(body.masterId);
   const startsAt = String(body.startsAt ?? "");
+  const serviceIds: string[] = Array.isArray(body.serviceIds)
+    ? body.serviceIds
+        .map((id: unknown) => String(id))
+        .filter((id: string) => id.length > 0)
+    : [];
+  const placeChoice =
+    body.placeChoice === "studio" || body.placeChoice === "visit"
+      ? body.placeChoice
+      : null;
+  const visitAddress = {
+    city: String(body.visitCity ?? "").trim(),
+    area: String(body.visitArea ?? "").trim(),
+    address: String(body.visitAddress ?? "").trim(),
+    apt: String(body.visitApt ?? "").trim(),
+    entrance: String(body.visitEntrance ?? "").trim(),
+    floor: String(body.visitFloor ?? "").trim(),
+    intercom: String(body.visitIntercom ?? "").trim(),
+    note: String(body.visitNote ?? "").trim(),
+  };
+  const comment = String(body.comment ?? "").trim();
+  const nameOverride = String(body.clientName ?? "").trim();
 
   if (!Number.isFinite(masterId) || !startsAt) {
     res.status(400).json({ error: "masterId and startsAt required" });
@@ -39,12 +61,56 @@ bookingsRouter.post("/", requireSession, async (req: AuthedRequest, res) => {
   }
 
   const profile = await getProfile(masterId);
-  if (!profile) {
+  if (!profile || profile.status !== "active") {
     res.status(404).json({ error: "Master not found" });
     return;
   }
 
-  const slots = await generateSlots(profile, 14);
+  const catalog = await listServices(masterId);
+  if (catalog.length === 0) {
+    res.status(400).json({ error: "Master has no services" });
+    return;
+  }
+
+  const selected: MasterServiceRow[] = [];
+  if (serviceIds.length > 0) {
+    for (const id of serviceIds) {
+      const svc = catalog.find((row) => row.id === id);
+      if (svc) selected.push(svc);
+    }
+  } else {
+    selected.push(catalog[0]!);
+  }
+
+  if (selected.length === 0) {
+    res.status(400).json({ error: "At least one valid service required" });
+    return;
+  }
+
+  const titles = selected.map((row) => row.title);
+  let durationMin = 0;
+  let price = 0;
+  let anyFrom = false;
+  for (const row of selected) {
+    durationMin += row.duration_min + (row.break_after_min || 0);
+    price += row.price;
+    if (row.price_mode === "from") anyFrom = true;
+  }
+
+  const place = profile.place;
+  let resolvedPlace: "studio" | "visit" | null = placeChoice;
+  if (!resolvedPlace && place) {
+    if (place.mode === "studio") resolvedPlace = "studio";
+    else if (place.mode === "visit") resolvedPlace = "visit";
+  }
+  if (resolvedPlace === "visit") {
+    if (!visitAddress.city || !visitAddress.address) {
+      res.status(400).json({ error: "Visit address required" });
+      return;
+    }
+  }
+
+  const slots = await generateSlots(profile, 14, durationMin);
   const slot = slots.find((s) => s.startsAt === startsAt && s.available);
   if (!slot) {
     res.status(409).json({ error: "Slot unavailable" });
@@ -52,7 +118,9 @@ bookingsRouter.post("/", requireSession, async (req: AuthedRequest, res) => {
   }
 
   const clientName =
-    [tg.first_name, tg.last_name].filter(Boolean).join(" ") || "Клиент";
+    nameOverride ||
+    [tg.first_name, tg.last_name].filter(Boolean).join(" ") ||
+    "Клиент";
 
   try {
     await upsertUser(tg);
@@ -61,16 +129,14 @@ bookingsRouter.post("/", requireSession, async (req: AuthedRequest, res) => {
       telegramUserId: tg.id,
       name: clientName,
     });
-    const services = await listServices(masterId);
-    const primary = services[0];
     const booking = await createBooking({
       masterId,
       clientId: tg.id,
       clientName,
       startsAt,
-      durationMin: primary?.duration_min ?? profile.duration,
-      price: primary?.price ?? profile.price,
-      serviceTitles: primary ? [primary.title] : undefined,
+      durationMin,
+      price,
+      serviceTitles: titles,
       masterClientId: masterClient.id,
     });
 
@@ -80,6 +146,17 @@ bookingsRouter.post("/", requireSession, async (req: AuthedRequest, res) => {
       masterTimezone: profile.timezone,
     });
 
+    const studioAddress =
+      resolvedPlace === "studio" && place?.studio
+        ? [place.studio.city, place.studio.address].filter(Boolean).join(", ")
+        : null;
+    const visitLine =
+      resolvedPlace === "visit"
+        ? [visitAddress.city, visitAddress.area, visitAddress.address]
+            .filter(Boolean)
+            .join(", ")
+        : null;
+
     res.status(201).json({
       booking: {
         id: booking.id,
@@ -87,9 +164,16 @@ bookingsRouter.post("/", requireSession, async (req: AuthedRequest, res) => {
         time: formatTime(booking.starts_at, profile.timezone),
         date: formatDateLabel(booking.starts_at, profile.timezone),
         masterName: profile.name,
+        masterId,
         duration: booking.duration_min,
         price: booking.price,
+        priceLabel: anyFrom ? `от ${price} ₽` : `${price} ₽`,
         status: booking.status,
+        serviceTitles: titles,
+        placeChoice: resolvedPlace,
+        placeAddress: studioAddress ?? visitLine,
+        clientName,
+        comment: comment || null,
       },
     });
   } catch (err) {

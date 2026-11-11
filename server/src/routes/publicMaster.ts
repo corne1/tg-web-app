@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { getProfile, getProfileBySlug } from "../db/profiles.js";
+import { listServices } from "../db/services.js";
 import type { MasterProfileRow } from "../db/types.js";
 import { requireSession, type AuthedRequest } from "../middleware.js";
 import { generateSlots } from "../services/slots.js";
@@ -24,7 +25,8 @@ async function handleGetMaster(req: AuthedRequest, res: import("express").Respon
     res.status(404).json({ error: "Master not found" });
     return;
   }
-  res.json(serializePublicMaster(profile));
+  const services = await listServices(profile.user_id);
+  res.json(serializePublicMaster(profile, services));
 }
 
 async function handleGetSlots(req: AuthedRequest, res: import("express").Response) {
@@ -34,12 +36,15 @@ async function handleGetSlots(req: AuthedRequest, res: import("express").Respons
     return;
   }
   const days = Math.min(14, Math.max(1, Number(req.query.days ?? 7)));
-  const slots = await generateSlots(profile, days);
+  const durationRaw = Number(req.query.duration);
+  const durationMin =
+    Number.isFinite(durationRaw) && durationRaw > 0 ? durationRaw : undefined;
+  const slots = await generateSlots(profile, days, durationMin);
   res.json({
     master: {
       id: profile.user_id,
       name: profile.name,
-      duration: profile.duration,
+      duration: durationMin ?? profile.duration,
       price: profile.price,
     },
     slots,

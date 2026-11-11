@@ -253,7 +253,10 @@ export async function fetchMaster(
   return request(`/api/masters/${encodeURIComponent(String(id))}`);
 }
 
-export async function fetchSlots(masterId: number | string): Promise<{
+export async function fetchSlots(
+  masterId: number | string,
+  opts?: { days?: number; durationMin?: number },
+): Promise<{
   master: {
     id: number;
     name: string;
@@ -262,8 +265,14 @@ export async function fetchSlots(masterId: number | string): Promise<{
   };
   slots: TimeSlot[];
 }> {
+  const params = new URLSearchParams({
+    days: String(opts?.days ?? 7),
+  });
+  if (opts?.durationMin != null && opts.durationMin > 0) {
+    params.set("duration", String(opts.durationMin));
+  }
   return request(
-    `/api/masters/${encodeURIComponent(String(masterId))}/slots?days=7`,
+    `/api/masters/${encodeURIComponent(String(masterId))}/slots?${params}`,
   );
 }
 
@@ -350,6 +359,18 @@ export async function deleteCabinetClientNote(
 export async function createBooking(input: {
   masterId: number;
   startsAt: string;
+  serviceIds?: string[];
+  placeChoice?: "studio" | "visit" | null;
+  visitCity?: string;
+  visitArea?: string;
+  visitAddress?: string;
+  visitApt?: string;
+  visitEntrance?: string;
+  visitFloor?: string;
+  visitIntercom?: string;
+  visitNote?: string;
+  clientName?: string;
+  comment?: string;
 }): Promise<{
   booking: {
     id: string;
@@ -357,17 +378,21 @@ export async function createBooking(input: {
     time: string;
     date: string;
     masterName: string;
+    masterId?: number;
     duration: number;
     price: number;
+    priceLabel?: string;
     status: string;
+    serviceTitles?: string[];
+    placeChoice?: "studio" | "visit" | null;
+    placeAddress?: string | null;
+    clientName?: string;
+    comment?: string | null;
   };
 }> {
   return request("/api/bookings", {
     method: "POST",
-    body: JSON.stringify({
-      masterId: input.masterId,
-      startsAt: input.startsAt,
-    }),
+    body: JSON.stringify(input),
   });
 }
 

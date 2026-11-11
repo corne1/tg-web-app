@@ -94,7 +94,7 @@ export function MyBookingsScreen() {
                   className="btn-sm"
                   onClick={() =>
                     navigate(
-                      `/client/${b.masterId}?reschedule=${encodeURIComponent(b.id)}`,
+                      `/client/${b.masterId}/time?reschedule=${encodeURIComponent(b.id)}`,
                     )
                   }
                 >

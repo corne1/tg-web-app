@@ -33,13 +33,20 @@ export function generateSlotsFromBusy(
   busy: Set<string>,
   days = 7,
   nowMs = Date.now(),
+  /** Total booking length (services + breaks). When set, starts step every 30 min. */
+  durationMin?: number,
 ): GeneratedSlot[] {
   const tz = profile.timezone;
   const todayStart = startOfLocalDay(new Date(nowMs), tz);
   const slots: GeneratedSlot[] = [];
-  const stepMin = profile.duration;
+  const needMin =
+    durationMin != null && durationMin > 0 ? durationMin : profile.duration;
+  const customDuration = durationMin != null && durationMin > 0;
+  const stepMin = customDuration ? 30 : profile.duration;
   const dayBreak =
-    profile.day_break_min != null && profile.day_break_min > 0
+    !customDuration &&
+    profile.day_break_min != null &&
+    profile.day_break_min > 0
       ? profile.day_break_min
       : 0;
 
@@ -55,7 +62,7 @@ export function generateSlotsFromBusy(
 
     for (
       let mins = window.startMin;
-      mins + stepMin <= window.endMin;
+      mins + needMin <= window.endMin;
       mins += stepMin + dayBreak
     ) {
       const hour = Math.floor(mins / 60);
@@ -87,6 +94,7 @@ export function generateSlotsFromBusy(
 export async function generateSlots(
   profile: MasterProfileRow,
   days = 7,
+  durationMin?: number,
 ): Promise<GeneratedSlot[]> {
   const tz = profile.timezone;
   const todayStart = startOfLocalDay(new Date(), tz);
@@ -96,5 +104,5 @@ export async function generateSlots(
     todayStart.toISOString(),
     rangeEnd.toISOString(),
   );
-  return generateSlotsFromBusy(profile, busy, days);
+  return generateSlotsFromBusy(profile, busy, days, Date.now(), durationMin);
 }

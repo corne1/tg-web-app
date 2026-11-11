@@ -80,6 +80,20 @@ export interface TimeSlot {
   available: boolean;
 }
 
+export type PublicPlaceDto = {
+  mode: "studio" | "visit" | "both";
+  studio: {
+    city: string;
+    address: string;
+    addressVisible: boolean;
+    addressHint: string | null;
+  } | null;
+  visit: {
+    city: string;
+    areas: string;
+  } | null;
+};
+
 export interface PublicMaster {
   id: number;
   slug?: string;
@@ -92,6 +106,10 @@ export interface PublicMaster {
   specialty?: string | null;
   city?: string;
   workingHours?: WorkingHoursDto | null;
+  avatarUrl?: string | null;
+  place?: PublicPlaceDto | null;
+  services?: MasterServiceDto[];
+  bookingEnabled?: boolean;
 }
 
 export interface ClientBooking {
