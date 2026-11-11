@@ -22,7 +22,6 @@ const mondayMorningUtc = Date.parse("2024-06-03T05:00:00.000Z"); // 08:00 MSK
 const profile = {
   schedule: "weekday" as const,
   timezone: "Europe/Moscow",
-  duration: 60 as const,
   working_hours: hours,
   day_break_min: null,
   travel_buffer_min: null,
@@ -51,7 +50,6 @@ const preset = generateSlotsFromBusy(
   {
     schedule: "weekday",
     timezone: "Europe/Moscow",
-    duration: 60,
     working_hours: null,
     day_break_min: null,
     travel_buffer_min: null,

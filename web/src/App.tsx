@@ -22,6 +22,7 @@ import {
   saveMasterDraft,
   type MasterSpecialty,
 } from "./lib/masterDraft";
+import { loadServiceTypes } from "./lib/serviceTypesCatalog";
 import { parseEntryContext } from "./lib/startParam";
 import type { MasterProfile, MasterServiceDto } from "./types";
 import { BookingDetailScreen } from "./screens/BookingDetailScreen";
@@ -74,7 +75,8 @@ function syncDraftFromServer(
   saveMasterDraft({
     ...prev,
     name: profile.name,
-    specialty: (profile.specialty as MasterSpecialty | null) ?? null,
+    serviceTypeCode:
+      (profile.serviceTypeCode as MasterSpecialty | null) ?? null,
     city: profile.city ?? "Москва",
     hours: profile.workingHours
       ? normalizeWorkingHours(profile.workingHours)
@@ -164,7 +166,7 @@ function HomeRedirect({
           navigate("/cabinet", { replace: true });
           return;
         }
-        if (profile?.name || profile?.specialty) {
+        if (profile?.name || profile?.serviceTypeCode) {
           navigate(masterResumePath(profile), { replace: true });
           return;
         }
@@ -195,6 +197,7 @@ export function App() {
     async function boot() {
       setLoading(true);
       setError(null);
+      void loadServiceTypes().catch(() => undefined);
       try {
         if (initData) {
           const { user: authed } = await authenticate(initData);

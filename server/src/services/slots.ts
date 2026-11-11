@@ -22,14 +22,11 @@ export type GeneratedSlot = {
 
 export { windowsFor };
 
+const DEFAULT_SLOT_DURATION_MIN = 60;
+
 export type SlotProfileInput = Pick<
   MasterProfileRow,
-  | "schedule"
-  | "timezone"
-  | "duration"
-  | "working_hours"
-  | "day_break_min"
-  | "travel_buffer_min"
+  "schedule" | "timezone" | "working_hours" | "day_break_min" | "travel_buffer_min"
 >;
 
 export type GenerateSlotsOptions = {
@@ -60,9 +57,9 @@ export function generateSlotsFromBusy(
   const needMin =
     opts.durationMin != null && opts.durationMin > 0
       ? opts.durationMin
-      : profile.duration;
+      : DEFAULT_SLOT_DURATION_MIN;
   const customDuration = opts.durationMin != null && opts.durationMin > 0;
-  const stepMin = customDuration ? 30 : profile.duration;
+  const stepMin = customDuration ? 30 : DEFAULT_SLOT_DURATION_MIN;
   const dayBreak =
     !customDuration &&
     profile.day_break_min != null &&

@@ -411,19 +411,8 @@ type BookingStatRow = {
   paid: number | boolean;
   client_name: string;
   id: string;
-  services_json: string | null;
+  service_titles: string[];
 };
-
-function parseServiceTitles(raw: string | null): string[] {
-  if (!raw) return [];
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) return [];
-    return parsed.map((t) => String(t).trim()).filter(Boolean);
-  } catch {
-    return [];
-  }
-}
 
 function serviceLineFromTitles(titles: string[]): {
   serviceTitle: string;
@@ -438,7 +427,10 @@ function serviceLineFromTitles(titles: string[]): {
   };
 }
 
-function mapBookingStatRow(r: Record<string, unknown>): BookingStatRow {
+function mapBookingStatRow(
+  r: Record<string, unknown>,
+  titles: string[],
+): BookingStatRow {
   return {
     id: String(r.id),
     starts_at: String(r.starts_at),
@@ -447,7 +439,7 @@ function mapBookingStatRow(r: Record<string, unknown>): BookingStatRow {
     status: String(r.status),
     paid: r.paid as number | boolean,
     client_name: String(r.client_name),
-    services_json: r.services_json != null ? String(r.services_json) : null,
+    service_titles: titles,
   };
 }
 
@@ -457,28 +449,47 @@ async function listBookingsForClient(
   telegramUserId: number | null,
 ): Promise<BookingStatRow[]> {
   return withDb(async (db) => {
-    if (telegramUserId != null) {
-      const result = await db.execute({
-        sql: `SELECT id, starts_at, duration_min, price, status, paid, client_name, services_json
-          FROM bookings
-          WHERE master_id = ?
-            AND (client_id = ? OR master_client_id = ?)
-          ORDER BY starts_at DESC`,
-        args: [masterId, telegramUserId, masterClientId],
+    const result =
+      telegramUserId != null
+        ? await db.execute({
+            sql: `SELECT id, starts_at, duration_min, price, status, paid, client_name
+              FROM bookings
+              WHERE master_id = ?
+                AND (client_id = ? OR master_client_id = ?)
+              ORDER BY starts_at DESC`,
+            args: [masterId, telegramUserId, masterClientId],
+          })
+        : await db.execute({
+            sql: `SELECT id, starts_at, duration_min, price, status, paid, client_name
+              FROM bookings
+              WHERE master_id = ? AND master_client_id = ?
+              ORDER BY starts_at DESC`,
+            args: [masterId, masterClientId],
+          });
+
+    const ids = result.rows.map((r) => String(r.id));
+    const titlesByBooking = new Map<string, string[]>();
+    if (ids.length > 0) {
+      const placeholders = ids.map(() => "?").join(", ");
+      const svc = await db.execute({
+        sql: `SELECT booking_id, title FROM booking_services
+          WHERE booking_id IN (${placeholders})
+          ORDER BY sort_order ASC`,
+        args: ids,
       });
-      return result.rows.map((r) =>
-        mapBookingStatRow(r as unknown as Record<string, unknown>),
-      );
+      for (const row of svc.rows) {
+        const bid = String(row.booking_id);
+        const list = titlesByBooking.get(bid) ?? [];
+        list.push(String(row.title));
+        titlesByBooking.set(bid, list);
+      }
     }
-    const result = await db.execute({
-      sql: `SELECT id, starts_at, duration_min, price, status, paid, client_name, services_json
-        FROM bookings
-        WHERE master_id = ? AND master_client_id = ?
-        ORDER BY starts_at DESC`,
-      args: [masterId, masterClientId],
-    });
+
     return result.rows.map((r) =>
-      mapBookingStatRow(r as unknown as Record<string, unknown>),
+      mapBookingStatRow(
+        r as unknown as Record<string, unknown>,
+        titlesByBooking.get(String(r.id)) ?? [],
+      ),
     );
   });
 }
@@ -513,7 +524,7 @@ function buildClientDto(
   }));
 
   const history: ClientVisitHistoryItemDto[] = past.map((b) => {
-    const line = serviceLineFromTitles(parseServiceTitles(b.services_json));
+    const line = serviceLineFromTitles(b.service_titles);
     return {
       id: b.id,
       dateLabel: formatHistoryDate(b.starts_at, timeZone),
@@ -527,7 +538,7 @@ function buildClientDto(
   let nextBooking: ClientNextBookingDto | null = null;
   if (next) {
     const p = zonedParts(new Date(next.starts_at), timeZone);
-    const line = serviceLineFromTitles(parseServiceTitles(next.services_json));
+    const line = serviceLineFromTitles(next.service_titles);
     nextBooking = {
       dateLabel: `${p.day} ${MONTH_LONG[p.month - 1]}`,
       time: formatTime(next.starts_at, timeZone),

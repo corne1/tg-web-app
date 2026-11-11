@@ -3,20 +3,9 @@ import {
   canCancelBooking,
   canRescheduleBooking,
 } from "./bookingRules.js";
-import type { BookingRow } from "../db/types.js";
-import type { MasterProfileRow } from "../db/types.js";
+import { bookingServiceTitles } from "../db/bookings.js";
+import type { BookingRow, MasterProfileRow } from "../db/types.js";
 import { formatDateLabel, formatTime } from "../services/time.js";
-
-export function parseBookingServiceTitles(raw: string | null): string[] {
-  if (!raw) return [];
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) return [];
-    return parsed.map((t) => String(t).trim()).filter(Boolean);
-  } catch {
-    return [];
-  }
-}
 
 function ruHoursLabel(hours: number): string {
   const n = Math.max(0, Math.round(hours));
@@ -62,6 +51,11 @@ export function serializeClientBooking(
     : null;
 
   const accessToken = booking.access_token;
+  const titles = bookingServiceTitles(booking);
+  const priceLabel = booking.price_from
+    ? `от ${booking.price.toLocaleString("ru-RU")} ₽`
+    : `${booking.price.toLocaleString("ru-RU")} ₽`;
+
   return {
     id: booking.id,
     startsAt: booking.starts_at,
@@ -72,10 +66,14 @@ export function serializeClientBooking(
     masterAvatarUrl: profile?.avatar_url ?? null,
     duration: booking.duration_min,
     price: booking.price,
+    priceLabel,
     status: booking.status,
     cancelHours,
-    serviceTitles: parseBookingServiceTitles(booking.services_json),
+    serviceTitles: titles,
     clientName: booking.client_name,
+    placeChoice: booking.place_choice,
+    placeAddress: booking.place_address,
+    comment: booking.client_comment,
     canCancel: cancelCheck.ok,
     canReschedule: rescheduleCheck.ok,
     cancelBlockedReason,

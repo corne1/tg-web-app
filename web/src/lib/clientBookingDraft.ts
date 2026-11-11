@@ -12,7 +12,7 @@ export type ClientBookingDraft = {
   masterKey: string;
   masterId: number | null;
   masterName: string;
-  masterSpecialty: string | null;
+  masterServiceTypeCode: string | null;
   masterAvatarUrl: string | null;
   masterCity: string;
   place: PublicPlaceDto | null;
@@ -42,7 +42,7 @@ export function emptyClientDraft(masterKey = ""): ClientBookingDraft {
     masterKey,
     masterId: null,
     masterName: "",
-    masterSpecialty: null,
+    masterServiceTypeCode: null,
     masterAvatarUrl: null,
     masterCity: "",
     place: null,
@@ -72,9 +72,9 @@ function mapService(s: MasterServiceDto): MasterService {
     title: s.title,
     durationMin: s.durationMin,
     price: s.price,
-    priceMode: (s.priceMode as PriceMode) ?? "fixed",
-    breakAfterMin: s.breakAfterMin ?? 0,
-    description: s.description ?? "",
+    priceMode: s.priceMode as PriceMode,
+    breakAfterMin: s.breakAfterMin,
+    description: s.description,
   };
 }
 
@@ -91,7 +91,7 @@ export function hydrateFromPublicMaster(
     masterKey,
     masterId: master.id,
     masterName: master.name,
-    masterSpecialty: master.specialty ?? null,
+    masterServiceTypeCode: master.serviceTypeCode ?? null,
     masterAvatarUrl: master.avatarUrl ?? null,
     masterCity: master.city ?? "",
     place: master.place ?? null,

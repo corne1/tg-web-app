@@ -26,7 +26,8 @@ export function SlotSelectionScreen() {
     id: number;
     name: string;
     duration: number;
-    price: number;
+    price?: number;
+    travelBufferMin?: number | null;
   } | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -105,7 +106,7 @@ export function SlotSelectionScreen() {
         date: selected.date,
         time: selected.time,
         duration: meta.duration,
-        price: meta.price,
+        price: meta.price ?? 0,
       },
     });
   }, [meta, navigate, rescheduleId, selected, submitting]);

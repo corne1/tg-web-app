@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchMe, saveMasterAvatar, saveMasterProfile } from "../api";
+import {
+  fetchMe,
+  saveMasterAvatar,
+  saveMasterProfile,
+  type ServiceTypeDto,
+} from "../api";
 import avatarDemo from "../assets/cabinet/profile/avatar-demo.jpg";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
@@ -13,11 +18,14 @@ import {
 import {
   loadMasterDraft,
   saveMasterDraft,
-  SPECIALTIES,
   type MasterSpecialty,
 } from "../lib/masterDraft";
 import { cacheProfile } from "../lib/profileStorage";
 import { loadPublicAbout, savePublicAbout } from "../lib/publicProfile";
+import {
+  getCachedServiceTypes,
+  loadServiceTypes,
+} from "../lib/serviceTypesCatalog";
 import {
   BackIcon,
   BottomSheet,
@@ -56,8 +64,10 @@ export function EditPublicPageScreen() {
   const { webApp } = useTelegram();
   const draft = loadMasterDraft();
   const [name, setName] = useState(draft.name);
-  const [specialty, setSpecialty] = useState<MasterSpecialty | null>(
-    draft.specialty,
+  const [serviceTypeCode, setServiceTypeCode] =
+    useState<MasterSpecialty | null>(draft.serviceTypeCode);
+  const [serviceTypes, setServiceTypes] = useState<ServiceTypeDto[]>(() =>
+    getCachedServiceTypes(),
   );
   const [about, setAbout] = useState(() => loadPublicAbout());
   const [city, setCity] = useState(draft.city || "Москва");
@@ -70,14 +80,27 @@ export function EditPublicPageScreen() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    void loadServiceTypes()
+      .then(setServiceTypes)
+      .catch((err) => {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Не удалось загрузить направления",
+        );
+      });
+  }, []);
+
+  useEffect(() => {
     let cancelled = false;
     void fetchMe()
       .then((me) => {
         if (cancelled || !me.profile) return;
         cacheProfile(me.profile);
         setName(me.profile.name || draft.name);
-        setSpecialty(
-          (me.profile.specialty as MasterSpecialty | null) ?? draft.specialty,
+        setServiceTypeCode(
+          (me.profile.serviceTypeCode as MasterSpecialty | null) ??
+            draft.serviceTypeCode,
         );
         setCity(me.profile.city || draft.city || "Москва");
         if (me.profile.about != null) {
@@ -94,7 +117,7 @@ export function EditPublicPageScreen() {
     return () => {
       cancelled = true;
     };
-  }, [draft.city, draft.name, draft.specialty]);
+  }, [draft.city, draft.name, draft.serviceTypeCode]);
 
   const persistAvatar = useCallback(async (url: string) => {
     saveMasterAvatarDataUrl(url);
@@ -117,13 +140,13 @@ export function EditPublicPageScreen() {
   }, [goBack]);
 
   const onSave = useCallback(async () => {
-    if (!name.trim() || !specialty || saving) return;
+    if (!name.trim() || !serviceTypeCode || saving) return;
     setSaving(true);
     setError(null);
     try {
       const profile = await saveMasterProfile({
         name: name.trim(),
-        specialty,
+        serviceTypeCode,
         city,
         about: about.trim(),
       });
@@ -131,7 +154,7 @@ export function EditPublicPageScreen() {
       saveMasterDraft({
         ...loadMasterDraft(),
         name: name.trim(),
-        specialty,
+        serviceTypeCode,
         city,
       });
       savePublicAbout(about.trim());
@@ -142,12 +165,12 @@ export function EditPublicPageScreen() {
     } finally {
       setSaving(false);
     }
-  }, [about, city, name, navigate, saving, specialty, webApp]);
+  }, [about, city, name, navigate, saving, serviceTypeCode, webApp]);
 
   useBackButton(goBack);
   useMainButton({ text: "", visible: false, onClick: () => undefined });
 
-  const valid = Boolean(name.trim() && specialty);
+  const valid = Boolean(name.trim() && serviceTypeCode);
 
   const applyTgPhoto = useCallback(() => {
     const url = webApp?.initDataUnsafe?.user?.photo_url;
@@ -227,11 +250,11 @@ export function EditPublicPageScreen() {
             className="ms-field-chips"
           >
             <ChipGroup label="Основное направление">
-              {SPECIALTIES.map((s) => (
+              {serviceTypes.map((s) => (
                 <Chip
-                  key={s.id}
-                  active={specialty === s.id}
-                  onClick={() => setSpecialty(s.id)}
+                  key={s.code}
+                  active={serviceTypeCode === s.code}
+                  onClick={() => setServiceTypeCode(s.code)}
                 >
                   {s.label}
                 </Chip>

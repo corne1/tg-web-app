@@ -4,13 +4,39 @@ import {
   canRescheduleBooking,
 } from "../lib/bookingRules.js";
 import { withDb } from "./client.js";
-import type { BookingRow, BookingStatus } from "./types.js";
+import type {
+  BookingPlaceChoice,
+  BookingRow,
+  BookingServiceRow,
+  BookingStatus,
+} from "./types.js";
 
 export function newBookingAccessToken(): string {
   return randomBytes(18).toString("base64url");
 }
 
-function mapBooking(row: Record<string, unknown>): BookingRow {
+function mapBookingService(row: Record<string, unknown>): BookingServiceRow {
+  return {
+    id: String(row.id),
+    booking_id: String(row.booking_id),
+    service_id: row.service_id != null ? String(row.service_id) : null,
+    sort_order: Number(row.sort_order ?? 0),
+    title: String(row.title),
+    duration_min: Number(row.duration_min),
+    break_after_min: Number(row.break_after_min ?? 0),
+    price: Number(row.price),
+    price_mode: row.price_mode === "from" ? "from" : "fixed",
+    created_at: String(row.created_at),
+  };
+}
+
+function mapBooking(
+  row: Record<string, unknown>,
+  services: BookingServiceRow[] = [],
+): BookingRow {
+  const placeRaw = row.place_choice != null ? String(row.place_choice) : null;
+  const placeChoice: BookingPlaceChoice | null =
+    placeRaw === "studio" || placeRaw === "visit" ? placeRaw : null;
   return {
     id: String(row.id),
     master_id: Number(row.master_id),
@@ -18,6 +44,7 @@ function mapBooking(row: Record<string, unknown>): BookingRow {
     starts_at: String(row.starts_at),
     duration_min: Number(row.duration_min),
     price: Number(row.price),
+    price_from: Boolean(row.price_from),
     status: String(row.status) as BookingStatus,
     paid: Boolean(row.paid),
     client_name: String(row.client_name),
@@ -25,14 +52,60 @@ function mapBooking(row: Record<string, unknown>): BookingRow {
     reminded_1h: Boolean(row.reminded_1h),
     created_at: String(row.created_at),
     updated_at: String(row.updated_at),
-    services_json:
-      row.services_json != null ? String(row.services_json) : null,
     master_client_id:
       row.master_client_id != null ? String(row.master_client_id) : null,
-    access_token:
-      row.access_token != null ? String(row.access_token) : null,
+    access_token: row.access_token != null ? String(row.access_token) : null,
+    place_choice: placeChoice,
+    place_address:
+      row.place_address != null ? String(row.place_address) : null,
+    client_comment:
+      row.client_comment != null ? String(row.client_comment) : null,
+    visit_json: row.visit_json != null ? String(row.visit_json) : null,
+    services,
   };
 }
+
+async function loadServicesForBookings(
+  db: Parameters<Parameters<typeof withDb>[0]>[0],
+  bookingIds: string[],
+): Promise<Map<string, BookingServiceRow[]>> {
+  const map = new Map<string, BookingServiceRow[]>();
+  if (bookingIds.length === 0) return map;
+  const placeholders = bookingIds.map(() => "?").join(", ");
+  const result = await db.execute({
+    sql: `SELECT * FROM booking_services
+      WHERE booking_id IN (${placeholders})
+      ORDER BY sort_order ASC, created_at ASC`,
+    args: bookingIds,
+  });
+  for (const row of result.rows) {
+    const svc = mapBookingService(row as unknown as Record<string, unknown>);
+    const list = map.get(svc.booking_id) ?? [];
+    list.push(svc);
+    map.set(svc.booking_id, list);
+  }
+  return map;
+}
+
+async function hydrateBookings(
+  db: Parameters<Parameters<typeof withDb>[0]>[0],
+  rows: Record<string, unknown>[],
+): Promise<BookingRow[]> {
+  const ids = rows.map((r) => String(r.id));
+  const servicesMap = await loadServicesForBookings(db, ids);
+  return rows.map((r) =>
+    mapBooking(r, servicesMap.get(String(r.id)) ?? []),
+  );
+}
+
+export type BookingServiceInput = {
+  serviceId?: string | null;
+  title: string;
+  durationMin: number;
+  breakAfterMin?: number;
+  price: number;
+  priceMode?: "fixed" | "from";
+};
 
 export type CreateBookingInput = {
   masterId: number;
@@ -41,8 +114,13 @@ export type CreateBookingInput = {
   startsAt: string;
   durationMin: number;
   price: number;
-  serviceTitles?: string[];
+  priceFrom?: boolean;
+  services: BookingServiceInput[];
   masterClientId?: string | null;
+  placeChoice?: BookingPlaceChoice | null;
+  placeAddress?: string | null;
+  clientComment?: string | null;
+  visitJson?: unknown;
 };
 
 export async function createBooking(
@@ -53,33 +131,50 @@ export async function createBooking(
     const id = randomUUID();
     const accessToken = newBookingAccessToken();
     const status: BookingStatus = "confirmed";
-    const servicesJson =
-      input.serviceTitles && input.serviceTitles.length > 0
-        ? JSON.stringify(input.serviceTitles)
-        : null;
-    const masterClientId = input.masterClientId ?? null;
+    const services = input.services.filter((s) => s.title.trim());
+    if (services.length === 0) {
+      throw new Error("At least one booking service required");
+    }
+
+    let masterClientId = input.masterClientId ?? null;
+    if (masterClientId) {
+      const owned = await db.execute({
+        sql: `SELECT id FROM master_clients
+          WHERE id = ? AND master_id = ?`,
+        args: [masterClientId, input.masterId],
+      });
+      if (!owned.rows[0]) masterClientId = null;
+    }
+
+    const visitJson =
+      input.visitJson != null ? JSON.stringify(input.visitJson) : null;
 
     try {
       await db.execute({
         sql: `INSERT INTO bookings (
-          id, master_id, client_id, starts_at, duration_min, price,
-          status, paid, client_name, reminded_24h, reminded_1h, created_at, updated_at,
-          services_json, master_client_id, access_token
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, 0, 0, ?, ?, ?, ?, ?)`,
+          id, master_id, client_id, master_client_id, starts_at, duration_min, price,
+          price_from, status, paid, client_name, place_choice, place_address,
+          client_comment, visit_json, reminded_24h, reminded_1h, access_token,
+          created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?)`,
         args: [
           id,
           input.masterId,
           input.clientId,
+          masterClientId,
           input.startsAt,
           input.durationMin,
           input.price,
+          input.priceFrom ? 1 : 0,
           status,
           input.clientName,
-          now,
-          now,
-          servicesJson,
-          masterClientId,
+          input.placeChoice ?? null,
+          input.placeAddress ?? null,
+          input.clientComment ?? null,
+          visitJson,
           accessToken,
+          now,
+          now,
         ],
       });
     } catch (err) {
@@ -90,6 +185,43 @@ export async function createBooking(
       throw err;
     }
 
+    const serviceRows: BookingServiceRow[] = [];
+    for (let i = 0; i < services.length; i++) {
+      const s = services[i]!;
+      const sid = randomUUID();
+      const row: BookingServiceRow = {
+        id: sid,
+        booking_id: id,
+        service_id: s.serviceId ?? null,
+        sort_order: i,
+        title: s.title.trim(),
+        duration_min: Math.max(1, s.durationMin),
+        break_after_min: Math.max(0, s.breakAfterMin ?? 0),
+        price: Math.max(0, s.price),
+        price_mode: s.priceMode === "from" ? "from" : "fixed",
+        created_at: now,
+      };
+      await db.execute({
+        sql: `INSERT INTO booking_services (
+          id, booking_id, service_id, sort_order, title, duration_min,
+          break_after_min, price, price_mode, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        args: [
+          row.id,
+          row.booking_id,
+          row.service_id,
+          row.sort_order,
+          row.title,
+          row.duration_min,
+          row.break_after_min,
+          row.price,
+          row.price_mode,
+          row.created_at,
+        ],
+      });
+      serviceRows.push(row);
+    }
+
     return {
       id,
       master_id: input.masterId,
@@ -97,6 +229,7 @@ export async function createBooking(
       starts_at: input.startsAt,
       duration_min: input.durationMin,
       price: input.price,
+      price_from: Boolean(input.priceFrom),
       status,
       paid: false,
       client_name: input.clientName,
@@ -104,9 +237,13 @@ export async function createBooking(
       reminded_1h: false,
       created_at: now,
       updated_at: now,
-      services_json: servicesJson,
       master_client_id: masterClientId,
       access_token: accessToken,
+      place_choice: input.placeChoice ?? null,
+      place_address: input.placeAddress ?? null,
+      client_comment: input.clientComment ?? null,
+      visit_json: visitJson,
+      services: serviceRows,
     };
   });
 }
@@ -122,11 +259,14 @@ export async function getBookingByAccessToken(
       args: [t],
     });
     const row = result.rows[0];
-    return row ? mapBooking(row as unknown as Record<string, unknown>) : null;
+    if (!row) return null;
+    const [booking] = await hydrateBookings(db, [
+      row as unknown as Record<string, unknown>,
+    ]);
+    return booking ?? null;
   });
 }
 
-/** Ensure legacy rows get a token (idempotent). */
 export async function ensureBookingAccessToken(
   booking: BookingRow,
 ): Promise<BookingRow> {
@@ -139,14 +279,7 @@ export async function ensureBookingAccessToken(
         WHERE id = ? AND access_token IS NULL`,
       args: [token, now, booking.id],
     });
-    const result = await db.execute({
-      sql: "SELECT * FROM bookings WHERE id = ?",
-      args: [booking.id],
-    });
-    const row = result.rows[0];
-    return row
-      ? mapBooking(row as unknown as Record<string, unknown>)
-      : { ...booking, access_token: token, updated_at: now };
+    return { ...booking, access_token: token, updated_at: now };
   });
 }
 
@@ -171,7 +304,11 @@ export async function getBooking(id: string): Promise<BookingRow | null> {
       args: [id],
     });
     const row = result.rows[0];
-    return row ? mapBooking(row as unknown as Record<string, unknown>) : null;
+    if (!row) return null;
+    const [booking] = await hydrateBookings(db, [
+      row as unknown as Record<string, unknown>,
+    ]);
+    return booking ?? null;
   });
 }
 
@@ -207,8 +344,9 @@ export async function listMasterBookings(
         ORDER BY starts_at ASC`,
       args: [masterId, fromIso, toIso],
     });
-    return result.rows.map((r) =>
-      mapBooking(r as unknown as Record<string, unknown>),
+    return hydrateBookings(
+      db,
+      result.rows as unknown as Record<string, unknown>[],
     );
   });
 }
@@ -226,8 +364,9 @@ export async function listClientBookings(
         ORDER BY starts_at ASC`,
       args: [clientId, now],
     });
-    return result.rows.map((r) =>
-      mapBooking(r as unknown as Record<string, unknown>),
+    return hydrateBookings(
+      db,
+      result.rows as unknown as Record<string, unknown>[],
     );
   });
 }
@@ -244,7 +383,10 @@ export async function cancelBooking(
     });
     const row = result.rows[0];
     if (!row) throw new BookingRuleError("Booking not found");
-    const booking = mapBooking(row as unknown as Record<string, unknown>);
+    const [booking] = await hydrateBookings(db, [
+      row as unknown as Record<string, unknown>,
+    ]);
+    if (!booking) throw new BookingRuleError("Booking not found");
 
     if (booking.client_id !== actorId && booking.master_id !== actorId) {
       throw new BookingRuleError("Forbidden");
@@ -284,7 +426,10 @@ export async function rescheduleBooking(
     });
     const row = result.rows[0];
     if (!row) throw new BookingRuleError("Booking not found");
-    const booking = mapBooking(row as unknown as Record<string, unknown>);
+    const [booking] = await hydrateBookings(db, [
+      row as unknown as Record<string, unknown>,
+    ]);
+    if (!booking) throw new BookingRuleError("Booking not found");
 
     if (booking.client_id !== actorId) {
       throw new BookingRuleError("Forbidden");
@@ -336,7 +481,10 @@ export async function markPaid(
     });
     const row = result.rows[0];
     if (!row) throw new BookingRuleError("Booking not found");
-    const booking = mapBooking(row as unknown as Record<string, unknown>);
+    const [booking] = await hydrateBookings(db, [
+      row as unknown as Record<string, unknown>,
+    ]);
+    if (!booking) throw new BookingRuleError("Booking not found");
 
     if (booking.master_id !== masterId) {
       throw new BookingRuleError("Forbidden");
@@ -383,8 +531,12 @@ export async function listDueReminders(
       args: [from, to],
     });
 
-    return result.rows.map((r) => {
-      const base = mapBooking(r as unknown as Record<string, unknown>);
+    const hydrated = await hydrateBookings(
+      db,
+      result.rows as unknown as Record<string, unknown>[],
+    );
+    return hydrated.map((base, i) => {
+      const r = result.rows[i]!;
       return {
         ...base,
         master_name: String(r.master_name),
@@ -407,4 +559,8 @@ export async function markReminded(
       args: [new Date().toISOString(), id],
     });
   });
+}
+
+export function bookingServiceTitles(booking: BookingRow): string[] {
+  return booking.services.map((s) => s.title).filter(Boolean);
 }

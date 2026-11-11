@@ -27,12 +27,10 @@ export interface MasterProfile {
   userId?: number;
   slug?: string;
   name: string;
-  duration: 50 | 60;
-  price: number;
   schedule: "weekday" | "weekend" | "manual";
   timezone?: string;
   cancelHours?: number;
-  specialty?: string | null;
+  serviceTypeCode?: string | null;
   city?: string;
   status?: "draft" | "active";
   onboardingStep?: number;
@@ -71,6 +69,7 @@ export interface MasterServiceDto {
   priceMode: "fixed" | "from";
   breakAfterMin: number;
   description: string;
+  serviceTypeCode?: string | null;
 }
 
 export interface TimeSlot {
@@ -100,12 +99,10 @@ export interface PublicMaster {
   id: number;
   slug?: string;
   name: string;
-  duration: 50 | 60;
-  price: number;
   schedule: MasterProfile["schedule"];
   timezone: string;
   cancelHours: number;
-  specialty?: string | null;
+  serviceTypeCode?: string | null;
   city?: string;
   workingHours?: WorkingHoursDto | null;
   avatarUrl?: string | null;

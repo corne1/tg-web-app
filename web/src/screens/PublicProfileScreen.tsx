@@ -8,9 +8,13 @@ import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
 import { useTelegram } from "../hooks/useTelegram";
 import { loadMasterAvatarDataUrl } from "../lib/masterAvatar";
-import { specialtyMeta } from "../lib/masterDraft";
+import {
+  loadServiceTypes,
+  specialtyMetaFromCatalog,
+} from "../lib/serviceTypesCatalog";
 import { cacheProfile } from "../lib/profileStorage";
 import type { MasterProfile } from "../types";
+import type { ServiceTypeDto } from "../api";
 import { BackIcon, Button, ChevronRightIcon, IconButton } from "../ui";
 
 function displayLink(url: string): string {
@@ -58,9 +62,13 @@ export function PublicProfileScreen() {
   const { webApp } = useTelegram();
   const [profile, setProfile] = useState<MasterProfile | null>(null);
   const [copied, setCopied] = useState(false);
+  const [serviceTypes, setServiceTypes] = useState<ServiceTypeDto[]>([]);
 
   useEffect(() => {
     let cancelled = false;
+    void loadServiceTypes().then((list) => {
+      if (!cancelled) setServiceTypes(list);
+    });
     void fetchMe()
       .then((me) => {
         if (cancelled || !me.profile) return;
@@ -79,11 +87,12 @@ export function PublicProfileScreen() {
     [bookingLink],
   );
   const title = useMemo(() => {
-    const meta = specialtyMeta(
-      (profile?.specialty as Parameters<typeof specialtyMeta>[0]) ?? null,
+    const meta = specialtyMetaFromCatalog(
+      profile?.serviceTypeCode ?? null,
+      serviceTypes,
     );
-    return meta?.title ?? "мастер";
-  }, [profile?.specialty]);
+    return meta?.title ?? "";
+  }, [profile?.serviceTypeCode, serviceTypes]);
   const published =
     profile?.status === "active" || Boolean(profile?.onboardingComplete);
   const avatarSrc =

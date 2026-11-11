@@ -16,8 +16,12 @@ import {
   studioAddressLine,
 } from "../../lib/clientBookingDraft";
 import { loadClientMaster } from "../../lib/clientMaster";
-import { specialtyMeta, type MasterSpecialty } from "../../lib/masterDraft";
+import {
+  loadServiceTypes,
+  specialtyMetaFromCatalog,
+} from "../../lib/serviceTypesCatalog";
 import type { PublicMaster } from "../../types";
+import type { ServiceTypeDto } from "../../api";
 import { cx } from "../../ui";
 
 const SERVICES_PREVIEW = 3;
@@ -27,6 +31,7 @@ export function ClientPublicProfileScreen() {
   const navigate = useNavigate();
   const { webApp } = useTelegram();
   const [master, setMaster] = useState<PublicMaster | null>(null);
+  const [serviceTypes, setServiceTypes] = useState<ServiceTypeDto[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [showAllServices, setShowAllServices] = useState(false);
@@ -35,6 +40,9 @@ export function ClientPublicProfileScreen() {
     let cancelled = false;
     setLoading(true);
     setError(null);
+    void loadServiceTypes().then((list) => {
+      if (!cancelled) setServiceTypes(list);
+    });
     void loadClientMaster(masterKey)
       .then(({ master: m }) => {
         if (cancelled) return;
@@ -53,11 +61,12 @@ export function ClientPublicProfileScreen() {
   }, [masterKey]);
 
   const role = useMemo(() => {
-    const meta = specialtyMeta(
-      (master?.specialty as MasterSpecialty | null) ?? null,
+    const meta = specialtyMetaFromCatalog(
+      master?.serviceTypeCode ?? null,
+      serviceTypes,
     );
-    return meta?.title ?? "мастер";
-  }, [master?.specialty]);
+    return meta?.title ?? "";
+  }, [master?.serviceTypeCode, serviceTypes]);
 
   const services = master?.services ?? [];
   const visibleServices = showAllServices

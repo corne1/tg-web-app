@@ -16,9 +16,13 @@ import {
   loadMasterAvatarDataUrl,
   saveMasterAvatarDataUrl,
 } from "../lib/masterAvatar";
-import { specialtyMeta } from "../lib/masterDraft";
+import {
+  loadServiceTypes,
+  specialtyMetaFromCatalog,
+} from "../lib/serviceTypesCatalog";
 import { cacheProfile } from "../lib/profileStorage";
 import type { MasterProfile } from "../types";
+import type { ServiceTypeDto } from "../api";
 import { ChevronRightIcon } from "../ui";
 
 type MenuItem = {
@@ -96,12 +100,16 @@ function MenuGroup({ items }: { items: MenuItem[] }) {
 export function CabinetProfileScreen() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<MasterProfile | null>(null);
+  const [serviceTypes, setServiceTypes] = useState<ServiceTypeDto[]>([]);
   const [avatarSrc, setAvatarSrc] = useState(
     () => loadMasterAvatarDataUrl() ?? avatarDemo,
   );
 
   useEffect(() => {
     let cancelled = false;
+    void loadServiceTypes().then((list) => {
+      if (!cancelled) setServiceTypes(list);
+    });
     void fetchMe()
       .then((me) => {
         if (cancelled || !me.profile) return;
@@ -123,11 +131,12 @@ export function CabinetProfileScreen() {
   }, []);
 
   const title = useMemo(() => {
-    const meta = specialtyMeta(
-      (profile?.specialty as Parameters<typeof specialtyMeta>[0]) ?? null,
+    const meta = specialtyMetaFromCatalog(
+      profile?.serviceTypeCode ?? null,
+      serviceTypes,
     );
-    return meta?.title ?? "мастер";
-  }, [profile?.specialty]);
+    return meta?.title ?? "";
+  }, [profile?.serviceTypeCode, serviceTypes]);
 
   const published =
     profile?.status === "active" || Boolean(profile?.onboardingComplete);

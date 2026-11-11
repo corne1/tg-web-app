@@ -96,7 +96,7 @@ export async function fetchMe(): Promise<{
 
 export async function saveMasterProfile(input: {
   name: string;
-  specialty: string;
+  serviceTypeCode: string;
   city?: string;
   about?: string;
 }): Promise<MasterProfile> {
@@ -227,6 +227,20 @@ export async function setMasterOnboardingStep(
   return data.profile;
 }
 
+export type ServiceTypeDto = {
+  code: string;
+  label: string;
+  title: string;
+  sortOrder: number;
+};
+
+export async function fetchServiceTypes(): Promise<ServiceTypeDto[]> {
+  const data = await request<{ serviceTypes: ServiceTypeDto[] }>(
+    "/api/service-types",
+  );
+  return data.serviceTypes ?? [];
+}
+
 export async function searchCities(
   query: string,
   limit = 8,
@@ -266,7 +280,7 @@ export async function fetchSlots(
     id: number;
     name: string;
     duration: number;
-    price: number;
+    price?: number;
     travelBufferMin?: number | null;
   };
   slots: TimeSlot[];

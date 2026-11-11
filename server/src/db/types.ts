@@ -19,14 +19,24 @@ export type ScheduleKind = "weekday" | "weekend" | "manual";
 /** draft = onboarding in progress; active = finished and usable for booking */
 export type MasterProfileStatus = "draft" | "active";
 
+/** Reference catalog: kinds of services (specialty codes). */
+export type ServiceTypeRow = {
+  code: string;
+  label: string;
+  title: string;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
 export type MasterProfileRow = {
   user_id: number;
   slug: string;
   name: string;
-  specialty: string | null;
+  /** FK → service_types.code */
+  service_type_code: string | null;
   city: string;
-  duration: 50 | 60;
-  price: number;
   schedule: ScheduleKind;
   /** Custom weekly hours from onboarding; null → use schedule presets in slots. */
   working_hours: WorkingHours | null;
@@ -58,19 +68,39 @@ export type MasterServiceRow = {
   break_after_min: number;
   description: string;
   sort_order: number;
+  /** FK → service_types.code */
+  service_type_code: string | null;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
 };
 
 export type BookingStatus = "pending" | "confirmed" | "cancelled" | "paid";
+export type BookingPlaceChoice = "studio" | "visit";
+
+export type BookingServiceRow = {
+  id: string;
+  booking_id: string;
+  service_id: string | null;
+  sort_order: number;
+  title: string;
+  duration_min: number;
+  break_after_min: number;
+  price: number;
+  price_mode: "fixed" | "from";
+  created_at: string;
+};
 
 export type BookingRow = {
   id: string;
   master_id: number;
   client_id: number;
   starts_at: string;
+  /** Cached sum of booking_services durations (+ breaks) for slot conflict index. */
   duration_min: number;
+  /** Cached sum of booking_services prices. */
   price: number;
+  price_from: boolean;
   status: BookingStatus;
   paid: boolean;
   client_name: string;
@@ -78,10 +108,11 @@ export type BookingRow = {
   reminded_1h: boolean;
   created_at: string;
   updated_at: string;
-  /** JSON array of service titles selected at booking time. */
-  services_json: string | null;
-  /** Master CRM client id when booking was created from cabinet. */
   master_client_id: string | null;
-  /** Opaque client deep-link token for «Моя запись». */
   access_token: string | null;
+  place_choice: BookingPlaceChoice | null;
+  place_address: string | null;
+  client_comment: string | null;
+  visit_json: string | null;
+  services: BookingServiceRow[];
 };

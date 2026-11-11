@@ -1,9 +1,5 @@
-export type MasterSpecialty =
-  | "manicure"
-  | "brows"
-  | "lashes"
-  | "hair"
-  | "makeup";
+/** Service type code from `/api/service-types`. */
+export type MasterSpecialty = string;
 
 export type PriceMode = "fixed" | "from";
 
@@ -53,7 +49,7 @@ export type PlaceDetails = {
 
 export type MasterDraft = {
   name: string;
-  specialty: MasterSpecialty | null;
+  serviceTypeCode: MasterSpecialty | null;
   city: string;
   services: MasterService[];
   hours: WorkingHours;
@@ -65,18 +61,6 @@ export type MasterDraft = {
 };
 
 const KEY = "masterSetupDraft";
-
-export const SPECIALTIES: {
-  id: MasterSpecialty;
-  label: string;
-  title: string;
-}[] = [
-  { id: "manicure", label: "Маникюр", title: "мастер маникюра" },
-  { id: "brows", label: "Брови", title: "мастер бровей" },
-  { id: "lashes", label: "Ресницы", title: "мастер ресниц" },
-  { id: "hair", label: "Волосы", title: "мастер по волосам" },
-  { id: "makeup", label: "Макияж", title: "визажист" },
-];
 
 export const DURATION_OPTIONS = [
   { value: 30, label: "30 минут" },
@@ -225,10 +209,6 @@ export function normalizeWorkingHours(
   return base;
 }
 
-export function specialtyMeta(id: MasterSpecialty | null) {
-  return SPECIALTIES.find((s) => s.id === id) ?? null;
-}
-
 export function formatDuration(mins: number): string {
   if (mins < 60) return `${mins} мин`;
   const h = Math.floor(mins / 60);
@@ -305,7 +285,7 @@ const emptyPlace = (): PlaceDetails => ({
 
 const emptyDraft = (): MasterDraft => ({
   name: "",
-  specialty: null,
+  serviceTypeCode: null,
   city: "Москва",
   services: [],
   hours: applyHoursPreset("mon-fri"),
@@ -347,6 +327,7 @@ export function loadMasterDraft(): MasterDraft {
     return {
       ...emptyDraft(),
       ...parsed,
+      serviceTypeCode: parsed.serviceTypeCode ?? null,
       services: Array.isArray(parsed.services)
         ? parsed.services.map((s) => normalizeService(s))
         : [],
@@ -373,7 +354,7 @@ export function clearMasterDraft(): void {
 
 /** Step 1 done: identity filled. */
 export function isMasterStep1Done(draft = loadMasterDraft()): boolean {
-  return Boolean(draft.name.trim() && draft.specialty);
+  return Boolean(draft.name.trim() && draft.serviceTypeCode);
 }
 
 export function needsStudioPlace(mode: PlaceMode | null): boolean {

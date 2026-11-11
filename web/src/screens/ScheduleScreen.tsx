@@ -119,7 +119,6 @@ export function ScheduleScreen() {
   }, [selectedDate, sessions]);
 
   const visibleSessions = daySessions.filter((s) => s.status !== "cancelled");
-  const durationMin = profile?.duration ?? 60;
   const workRange = workDayRange(selectedDate, profile?.workingHours);
   const hoursText = workHoursLabel(selectedDate, profile?.workingHours);
 
@@ -352,7 +351,7 @@ export function ScheduleScreen() {
                 const tone = toneForSession(index, cancelled);
                 const end = sessionEndClock(
                   session.startsAt,
-                  durationMin,
+                  session.durationMin ?? 60,
                   session.time,
                 );
                 return (

@@ -12,6 +12,7 @@ import {
   listServices,
   upsertService,
 } from "../db/services.js";
+import { isValidServiceTypeCode } from "../db/serviceTypes.js";
 import { upsertUser } from "../db/users.js";
 import {
   isMasterPlaceValid,
@@ -55,8 +56,10 @@ masterRouter.put("/profile", requireSession, async (req: AuthedRequest, res) => 
   const tg = req.telegramUser!;
   const body = req.body ?? {};
   const name = typeof body.name === "string" ? body.name.trim() : "";
-  const specialty =
-    typeof body.specialty === "string" ? body.specialty.trim() : "";
+  const serviceTypeCode =
+    typeof body.serviceTypeCode === "string"
+      ? body.serviceTypeCode.trim()
+      : "";
   const city =
     typeof body.city === "string" && body.city.trim()
       ? body.city.trim()
@@ -66,8 +69,12 @@ masterRouter.put("/profile", requireSession, async (req: AuthedRequest, res) => 
     res.status(400).json({ error: "Invalid name" });
     return;
   }
-  if (!specialty || specialty.length > 40) {
-    res.status(400).json({ error: "Invalid specialty" });
+  if (!serviceTypeCode || serviceTypeCode.length > 40) {
+    res.status(400).json({ error: "Invalid serviceTypeCode" });
+    return;
+  }
+  if (!(await isValidServiceTypeCode(serviceTypeCode))) {
+    res.status(400).json({ error: "Unknown service type" });
     return;
   }
 
@@ -82,7 +89,7 @@ masterRouter.put("/profile", requireSession, async (req: AuthedRequest, res) => 
       const profile = await upsertProfile({
         userId: tg.id,
         name,
-        specialty,
+        serviceTypeCode,
         city,
         aboutText,
       });
@@ -93,11 +100,9 @@ masterRouter.put("/profile", requireSession, async (req: AuthedRequest, res) => 
     const profile = await upsertProfile({
       userId: tg.id,
       name,
-      specialty,
+      serviceTypeCode,
       city,
       aboutText,
-      duration: 60,
-      price: 0,
       schedule: "weekday",
       status: "draft",
       onboardingStep: Math.max(existing?.onboarding_step ?? 1, 2),
@@ -283,8 +288,6 @@ masterRouter.put("/services/:id", requireSession, async (req: AuthedRequest, res
       profile = await upsertProfile({
         userId: tg.id,
         name: tg.first_name,
-        duration: 60,
-        price,
         schedule: "weekday",
       });
     }
@@ -298,15 +301,6 @@ masterRouter.put("/services/:id", requireSession, async (req: AuthedRequest, res
       priceMode,
       breakAfterMin: Number.isFinite(breakAfterMin) ? breakAfterMin : 0,
       description,
-    });
-
-    await upsertProfile({
-      userId: tg.id,
-      name: profile.name,
-      duration: (durationMin === 50 || durationMin === 60
-        ? durationMin
-        : 60) as 50 | 60,
-      price,
     });
 
     res.json({ service: serializeService(service) });

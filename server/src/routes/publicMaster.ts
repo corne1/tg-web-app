@@ -54,8 +54,7 @@ async function handleGetSlots(req: AuthedRequest, res: import("express").Respons
     master: {
       id: profile.user_id,
       name: profile.name,
-      duration: durationMin ?? profile.duration,
-      price: profile.price,
+      duration: durationMin ?? 60,
       travelBufferMin: visit ? (travelBufferMin ?? null) : null,
     },
     slots,

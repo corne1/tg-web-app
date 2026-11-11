@@ -339,20 +339,25 @@ cabinetRouter.post(
       profile.timezone,
     );
 
-    const titles: string[] = [];
-    let durationMin = 0;
-    let price = 0;
+    const selected = [];
     for (const sid of serviceIds) {
       const svc = await getService(sid, tg.id);
-      if (!svc) continue;
-      titles.push(svc.title);
-      durationMin += svc.duration_min + (svc.break_after_min || 0);
-      price += svc.price;
+      if (svc) selected.push(svc);
     }
-    if (titles.length === 0) {
+    if (selected.length === 0) {
       res.status(400).json({ error: "At least one valid service required" });
       return;
     }
+
+    let durationMin = 0;
+    let price = 0;
+    let anyFrom = false;
+    for (const svc of selected) {
+      durationMin += svc.duration_min + (svc.break_after_min || 0);
+      price += svc.price;
+      if (svc.price_mode === "from") anyFrom = true;
+    }
+    const titles = selected.map((s) => s.title);
 
     const bookingClientId = clientRow.telegram_user_id ?? tg.id;
 
@@ -364,7 +369,15 @@ cabinetRouter.post(
         startsAt,
         durationMin,
         price,
-        serviceTitles: titles,
+        priceFrom: anyFrom,
+        services: selected.map((svc) => ({
+          serviceId: svc.id,
+          title: svc.title,
+          durationMin: svc.duration_min,
+          breakAfterMin: svc.break_after_min || 0,
+          price: svc.price,
+          priceMode: svc.price_mode,
+        })),
         masterClientId: clientRow.id,
       });
       res.status(201).json({

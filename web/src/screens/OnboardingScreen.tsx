@@ -1,16 +1,23 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { saveMasterAvatar, saveMasterProfile } from "../api";
+import {
+  saveMasterAvatar,
+  saveMasterProfile,
+  type ServiceTypeDto,
+} from "../api";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
 import { useTelegram } from "../hooks/useTelegram";
 import {
   loadMasterDraft,
   saveMasterDraft,
-  specialtyMeta,
-  SPECIALTIES,
   type MasterSpecialty,
 } from "../lib/masterDraft";
+import {
+  getCachedServiceTypes,
+  loadServiceTypes,
+  specialtyMetaFromCatalog,
+} from "../lib/serviceTypesCatalog";
 import { MsArrowRight } from "../components/master/MsArrowRight";
 import { cacheProfile } from "../lib/profileStorage";
 import avatarPlaceholder from "../assets/onboarding/avatar-placeholder.svg";
@@ -37,8 +44,10 @@ export function OnboardingScreen() {
   const { webApp } = useTelegram();
   const initial = loadMasterDraft();
   const [name, setName] = useState(initial.name);
-  const [specialty, setSpecialty] = useState<MasterSpecialty | null>(
-    initial.specialty,
+  const [serviceTypeCode, setServiceTypeCode] =
+    useState<MasterSpecialty | null>(initial.serviceTypeCode);
+  const [serviceTypes, setServiceTypes] = useState<ServiceTypeDto[]>(() =>
+    getCachedServiceTypes(),
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,15 +56,35 @@ export function OnboardingScreen() {
   const fileRef = useRef<HTMLInputElement>(null);
   const city = initial.city || "Москва";
 
+  useEffect(() => {
+    let cancelled = false;
+    void loadServiceTypes()
+      .then((list) => {
+        if (!cancelled) setServiceTypes(list);
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setError(
+            err instanceof Error
+              ? err.message
+              : "Не удалось загрузить направления",
+          );
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const draft = useMemo(
-    () => ({ name: name.trim(), specialty, city }),
-    [name, specialty, city],
+    () => ({ name: name.trim(), serviceTypeCode, city }),
+    [name, serviceTypeCode, city],
   );
-  const valid = Boolean(draft.name && draft.specialty);
-  const meta = specialtyMeta(specialty);
+  const valid = Boolean(draft.name && draft.serviceTypeCode);
+  const meta = specialtyMetaFromCatalog(serviceTypeCode, serviceTypes);
   const previewName = draft.name || "Анна";
-  const previewTitle = meta?.title ?? "мастер маникюра";
-  const previewChip = meta?.label ?? "Маникюр";
+  const previewTitle = meta?.title ?? "";
+  const previewChip = meta?.label ?? "";
   void avatarTick;
   const previewAvatar =
     loadMasterAvatarDataUrl() ||
@@ -78,22 +107,22 @@ export function OnboardingScreen() {
     saveMasterDraft({
       ...prev,
       name: draft.name,
-      specialty: draft.specialty,
+      serviceTypeCode: draft.serviceTypeCode,
       city,
     });
-  }, [city, draft.name, draft.specialty]);
+  }, [city, draft.name, draft.serviceTypeCode]);
 
   const persistServer = useCallback(async () => {
-    if (!draft.name || !draft.specialty) return null;
+    if (!draft.name || !draft.serviceTypeCode) return null;
     persistLocal();
     const profile = await saveMasterProfile({
       name: draft.name,
-      specialty: draft.specialty,
+      serviceTypeCode: draft.serviceTypeCode,
       city,
     });
     cacheProfile(profile);
     return profile;
-  }, [city, draft.name, draft.specialty, persistLocal]);
+  }, [city, draft.name, draft.serviceTypeCode, persistLocal]);
 
   const handleClose = useCallback(() => {
     persistLocal();
@@ -189,11 +218,11 @@ export function OnboardingScreen() {
               className="ms-field-chips"
             >
               <ChipGroup label="Основное направление">
-                {SPECIALTIES.map((s) => (
+                {serviceTypes.map((s) => (
                   <Chip
-                    key={s.id}
-                    active={specialty === s.id}
-                    onClick={() => setSpecialty(s.id)}
+                    key={s.code}
+                    active={serviceTypeCode === s.code}
+                    onClick={() => setServiceTypeCode(s.code)}
                   >
                     {s.label}
                   </Chip>

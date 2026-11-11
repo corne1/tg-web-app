@@ -34,10 +34,9 @@ function mapProfile(row: Record<string, unknown>): MasterProfileRow {
     user_id: Number(row.user_id),
     slug: String(row.slug),
     name: String(row.name ?? ""),
-    specialty: row.specialty != null ? String(row.specialty) : null,
+    service_type_code:
+      row.service_type_code != null ? String(row.service_type_code) : null,
     city: String(row.city ?? "Москва"),
-    duration: Number(row.duration) as 50 | 60,
-    price: Number(row.price),
     schedule: String(row.schedule) as ScheduleKind,
     working_hours: workingHours,
     day_break_min:
@@ -71,8 +70,6 @@ export function defaultSlug(userId: number): string {
 export type UpsertProfileInput = {
   userId: number;
   name?: string;
-  duration?: 50 | 60;
-  price?: number;
   schedule?: ScheduleKind;
   workingHours?: WorkingHours | null;
   dayBreakMin?: number | null;
@@ -80,7 +77,7 @@ export type UpsertProfileInput = {
   place?: MasterPlace | null;
   timezone?: string;
   cancelHours?: number;
-  specialty?: string | null;
+  serviceTypeCode?: string | null;
   city?: string;
   aboutText?: string | null;
   status?: MasterProfileStatus;
@@ -103,6 +100,32 @@ export async function ensureMasterProfile(
   });
 }
 
+export async function getProfile(
+  userId: number,
+): Promise<MasterProfileRow | null> {
+  return withDb(async (db) => {
+    const result = await db.execute({
+      sql: "SELECT * FROM master_profiles WHERE user_id = ?",
+      args: [userId],
+    });
+    const row = result.rows[0];
+    return row ? mapProfile(row as unknown as Record<string, unknown>) : null;
+  });
+}
+
+export async function getProfileBySlug(
+  slug: string,
+): Promise<MasterProfileRow | null> {
+  return withDb(async (db) => {
+    const result = await db.execute({
+      sql: "SELECT * FROM master_profiles WHERE slug = ?",
+      args: [slug],
+    });
+    const row = result.rows[0];
+    return row ? mapProfile(row as unknown as Record<string, unknown>) : null;
+  });
+}
+
 export async function upsertProfile(
   input: UpsertProfileInput,
 ): Promise<MasterProfileRow> {
@@ -117,12 +140,24 @@ export async function upsertProfile(
       : null;
 
     const name = (input.name ?? prev?.name ?? "").trim() || "Мастер";
-    const duration = input.duration ?? prev?.duration ?? 60;
-    const price = input.price ?? prev?.price ?? 0;
     const timezone = input.timezone ?? prev?.timezone ?? "Europe/Moscow";
     const cancelHours = input.cancelHours ?? prev?.cancel_hours ?? 24;
-    const specialty =
-      input.specialty !== undefined ? input.specialty : (prev?.specialty ?? null);
+
+    let serviceTypeCode =
+      input.serviceTypeCode !== undefined
+        ? input.serviceTypeCode
+        : (prev?.service_type_code ?? null);
+    if (serviceTypeCode) {
+      const st = await db.execute({
+        sql: `SELECT code FROM service_types
+          WHERE code = ? AND is_active = 1`,
+        args: [serviceTypeCode],
+      });
+      if (!st.rows[0]) {
+        throw new Error(`Unknown service type: ${serviceTypeCode}`);
+      }
+    }
+
     const city = input.city ?? prev?.city ?? "Москва";
     const slug = prev?.slug ?? defaultSlug(input.userId);
 
@@ -157,16 +192,16 @@ export async function upsertProfile(
 
     const place =
       input.place !== undefined ? input.place : (prev?.place ?? null);
+
     const aboutText =
       input.aboutText !== undefined
-        ? input.aboutText == null
-          ? null
-          : String(input.aboutText).trim().slice(0, 2000) || null
+        ? input.aboutText?.trim() || null
         : (prev?.about_text ?? null);
 
-    let schedule = input.schedule ?? prev?.schedule ?? "weekday";
-    if (input.workingHours !== undefined && workingHours) {
-      schedule = scheduleKindFromHours(workingHours);
+    let schedule: ScheduleKind =
+      input.schedule ?? prev?.schedule ?? "weekday";
+    if (workingHours) {
+      schedule = scheduleKindFromHours(workingHours) ?? schedule;
     }
 
     let status: MasterProfileStatus = input.status ?? prev?.status ?? "draft";
@@ -183,7 +218,6 @@ export async function upsertProfile(
       onboardingCompletedAt = null;
     }
 
-    // Never reopen completed onboarding into a fresh draft by accident.
     if (prev?.status === "active" && prev.onboarding_completed_at) {
       status = "active";
       onboardingCompletedAt = prev.onboarding_completed_at;
@@ -198,17 +232,15 @@ export async function upsertProfile(
 
     await db.execute({
       sql: `INSERT INTO master_profiles (
-        user_id, slug, name, specialty, city, duration, price, schedule,
+        user_id, slug, name, service_type_code, city, schedule,
         working_hours_json, day_break_min, travel_buffer_min, place_json,
         timezone, cancel_hours, status, onboarding_step, onboarding_completed_at,
         about_text, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(user_id) DO UPDATE SET
         name = excluded.name,
-        specialty = excluded.specialty,
+        service_type_code = excluded.service_type_code,
         city = excluded.city,
-        duration = excluded.duration,
-        price = excluded.price,
         schedule = excluded.schedule,
         working_hours_json = excluded.working_hours_json,
         day_break_min = excluded.day_break_min,
@@ -225,10 +257,8 @@ export async function upsertProfile(
         input.userId,
         slug,
         name,
-        specialty,
+        serviceTypeCode,
         city,
-        duration,
-        price,
         schedule,
         workingHoursJson,
         dayBreakMin,
@@ -249,10 +279,8 @@ export async function upsertProfile(
       user_id: input.userId,
       slug,
       name,
-      specialty,
+      service_type_code: serviceTypeCode,
       city,
-      duration,
-      price,
       schedule,
       working_hours: workingHours,
       day_break_min: dayBreakMin,
@@ -290,52 +318,10 @@ export async function setMasterAvatarUrl(
     }
     const now = new Date().toISOString();
     await db.execute({
-      sql: `UPDATE master_profiles
-        SET avatar_url = ?, updated_at = ?
-        WHERE user_id = ?`,
+      sql: `UPDATE master_profiles SET avatar_url = ?, updated_at = ? WHERE user_id = ?`,
       args: [avatarUrl, now, userId],
     });
     return { ...prev, avatar_url: avatarUrl, updated_at: now };
-  });
-}
-
-export async function getProfile(
-  userId: number,
-): Promise<MasterProfileRow | null> {
-  return withDb(async (db) => {
-    const result = await db.execute({
-      sql: "SELECT * FROM master_profiles WHERE user_id = ?",
-      args: [userId],
-    });
-    const row = result.rows[0];
-    return row ? mapProfile(row as unknown as Record<string, unknown>) : null;
-  });
-}
-
-export async function getProfileBySlug(
-  slug: string,
-): Promise<MasterProfileRow | null> {
-  return withDb(async (db) => {
-    const result = await db.execute({
-      sql: "SELECT * FROM master_profiles WHERE slug = ? AND status = 'active'",
-      args: [slug],
-    });
-    const row = result.rows[0];
-    return row ? mapProfile(row as unknown as Record<string, unknown>) : null;
-  });
-}
-
-export async function markOnboardingComplete(
-  userId: number,
-): Promise<MasterProfileRow | null> {
-  const profile = await getProfile(userId);
-  if (!profile) return null;
-  return upsertProfile({
-    userId,
-    name: profile.name,
-    onboardingComplete: true,
-    onboardingStep: 4,
-    status: "active",
   });
 }
 
@@ -343,15 +329,23 @@ export async function setOnboardingStep(
   userId: number,
   step: number,
 ): Promise<MasterProfileRow | null> {
-  const profile = await getProfile(userId);
-  if (!profile) return null;
-  if (profile.status === "active" && profile.onboarding_completed_at) {
-    return profile;
-  }
+  return withDb(async (db) => {
+    const existing = await getProfile(userId);
+    if (!existing) return null;
+    return upsertProfile({
+      userId,
+      onboardingStep: Math.max(1, Math.floor(step)),
+    });
+  });
+}
+
+export async function markOnboardingComplete(
+  userId: number,
+): Promise<MasterProfileRow | null> {
+  const existing = await getProfile(userId);
+  if (!existing) return null;
   return upsertProfile({
     userId,
-    name: profile.name,
-    onboardingStep: Math.min(4, Math.max(1, step)),
-    status: "draft",
+    onboardingComplete: true,
   });
 }

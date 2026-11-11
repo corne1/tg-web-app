@@ -99,6 +99,14 @@ bookingsRouter.post("/", requireSession, async (req: AuthedRequest, res) => {
     price += row.price;
     if (row.price_mode === "from") anyFrom = true;
   }
+  const serviceInputs = selected.map((row) => ({
+    serviceId: row.id,
+    title: row.title,
+    durationMin: row.duration_min,
+    breakAfterMin: row.break_after_min || 0,
+    price: row.price,
+    priceMode: row.price_mode,
+  }));
 
   const place = profile.place;
   let resolvedPlace: "studio" | "visit" | null = placeChoice;
@@ -137,23 +145,6 @@ bookingsRouter.post("/", requireSession, async (req: AuthedRequest, res) => {
       telegramUserId: tg.id,
       name: clientName,
     });
-    const booking = await createBooking({
-      masterId,
-      clientId: tg.id,
-      clientName,
-      startsAt,
-      durationMin,
-      price,
-      serviceTitles: titles,
-      masterClientId: masterClient.id,
-    });
-
-    void notifyBookingCreated({
-      booking,
-      masterName: profile.name,
-      masterTimezone: profile.timezone,
-    });
-
     const studioAddress =
       resolvedPlace === "studio" && place?.studio
         ? [place.studio.city, place.studio.address].filter(Boolean).join(", ")
@@ -164,16 +155,35 @@ bookingsRouter.post("/", requireSession, async (req: AuthedRequest, res) => {
             .filter(Boolean)
             .join(", ")
         : null;
+    const placeAddress = studioAddress ?? visitLine;
+
+    const booking = await createBooking({
+      masterId,
+      clientId: tg.id,
+      clientName,
+      startsAt,
+      durationMin,
+      price,
+      priceFrom: anyFrom,
+      services: serviceInputs,
+      masterClientId: masterClient.id,
+      placeChoice: resolvedPlace,
+      placeAddress,
+      clientComment: comment || null,
+      visitJson: resolvedPlace === "visit" ? visitAddress : null,
+    });
+
+    void notifyBookingCreated({
+      booking,
+      masterName: profile.name,
+      masterTimezone: profile.timezone,
+    });
 
     const view = serializeClientBooking(booking, profile);
     res.status(201).json({
       booking: {
         ...view,
-        priceLabel: anyFrom ? `от ${price} ₽` : `${price} ₽`,
         serviceTitles: titles,
-        placeChoice: resolvedPlace,
-        placeAddress: studioAddress ?? visitLine,
-        comment: comment || null,
       },
     });
   } catch (err) {
