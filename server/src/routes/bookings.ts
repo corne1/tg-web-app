@@ -14,14 +14,17 @@ import {
 import { ensureClientFromBooking } from "../db/clients.js";
 import { getProfile } from "../db/profiles.js";
 import { listServices } from "../db/services.js";
-import type { MasterServiceRow } from "../db/types.js";
 import { upsertUser } from "../db/users.js";
+import {
+  buildBookingFromServices,
+  selectServicesByIds,
+} from "../lib/bookingServices.js";
+import { serializeClientBooking } from "../lib/clientBookingView.js";
 import { requireSession, type AuthedRequest } from "../middleware.js";
 import {
   notifyBookingCancelled,
   notifyBookingCreated,
 } from "../services/notify.js";
-import { serializeClientBooking } from "../lib/clientBookingView.js";
 import { generateSlots } from "../services/slots.js";
 import { formatDateLabel, formatTime } from "../services/time.js";
 
@@ -75,38 +78,20 @@ bookingsRouter.post("/", requireSession, async (req: AuthedRequest, res) => {
     return;
   }
 
-  const selected: MasterServiceRow[] = [];
-  if (serviceIds.length > 0) {
-    for (const id of serviceIds) {
-      const svc = catalog.find((row) => row.id === id);
-      if (svc) selected.push(svc);
-    }
-  } else {
-    selected.push(catalog[0]!);
-  }
-
-  if (selected.length === 0) {
-    res.status(400).json({ error: "At least one valid service required" });
+  let selected;
+  try {
+    selected =
+      serviceIds.length > 0
+        ? selectServicesByIds(catalog, serviceIds)
+        : [catalog[0]!];
+  } catch (err) {
+    res.status(400).json({
+      error: err instanceof Error ? err.message : "Invalid services",
+    });
     return;
   }
 
-  const titles = selected.map((row) => row.title);
-  let durationMin = 0;
-  let price = 0;
-  let anyFrom = false;
-  for (const row of selected) {
-    durationMin += row.duration_min + (row.break_after_min || 0);
-    price += row.price;
-    if (row.price_mode === "from") anyFrom = true;
-  }
-  const serviceInputs = selected.map((row) => ({
-    serviceId: row.id,
-    title: row.title,
-    durationMin: row.duration_min,
-    breakAfterMin: row.break_after_min || 0,
-    price: row.price,
-    priceMode: row.price_mode,
-  }));
+  const built = buildBookingFromServices(selected);
 
   const place = profile.place;
   let resolvedPlace: "studio" | "visit" | null = placeChoice;
@@ -124,7 +109,7 @@ bookingsRouter.post("/", requireSession, async (req: AuthedRequest, res) => {
   const travelBufferMin =
     resolvedPlace === "visit" ? (profile.travel_buffer_min ?? 30) : undefined;
   const slots = await generateSlots(profile, 14, {
-    durationMin,
+    durationMin: built.durationMin,
     travelBufferMin,
   });
   const slot = slots.find((s) => s.startsAt === startsAt && s.available);
@@ -162,10 +147,7 @@ bookingsRouter.post("/", requireSession, async (req: AuthedRequest, res) => {
       clientId: tg.id,
       clientName,
       startsAt,
-      durationMin,
-      price,
-      priceFrom: anyFrom,
-      services: serviceInputs,
+      services: built.services,
       masterClientId: masterClient.id,
       placeChoice: resolvedPlace,
       placeAddress,
@@ -183,7 +165,7 @@ bookingsRouter.post("/", requireSession, async (req: AuthedRequest, res) => {
     res.status(201).json({
       booking: {
         ...view,
-        serviceTitles: titles,
+        serviceTitles: built.titles,
       },
     });
   } catch (err) {
@@ -309,13 +291,12 @@ bookingsRouter.post(
       return;
     }
 
-    const slots = await generateSlots(
-      profile,
-      14,
-      existing.duration_min || undefined,
-    );
+    const slots = await generateSlots(profile, 14, {
+      durationMin: existing.duration_min || undefined,
+      excludeBookingId: existing.id,
+    });
     const slot = slots.find((s) => s.startsAt === startsAt && s.available);
-    if (!slot && startsAt !== existing.starts_at) {
+    if (!slot) {
       res.status(409).json({ error: "Slot unavailable" });
       return;
     }

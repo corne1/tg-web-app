@@ -17,9 +17,14 @@ import {
   updateClientNote,
 } from "../db/clients.js";
 import { ensureMasterProfile } from "../db/profiles.js";
-import { getService } from "../db/services.js";
+import { listServices } from "../db/services.js";
 import { upsertUser } from "../db/users.js";
+import {
+  buildBookingFromServices,
+  selectServicesByIds,
+} from "../lib/bookingServices.js";
 import { requireSession, type AuthedRequest } from "../middleware.js";
+import { generateSlots } from "../services/slots.js";
 import {
   addLocalDays,
   formatDateLabel,
@@ -339,25 +344,26 @@ cabinetRouter.post(
       profile.timezone,
     );
 
-    const selected = [];
-    for (const sid of serviceIds) {
-      const svc = await getService(sid, tg.id);
-      if (svc) selected.push(svc);
-    }
-    if (selected.length === 0) {
-      res.status(400).json({ error: "At least one valid service required" });
+    const catalog = await listServices(tg.id);
+    let selected;
+    try {
+      selected = selectServicesByIds(catalog, serviceIds);
+    } catch (err) {
+      res.status(400).json({
+        error: err instanceof Error ? err.message : "Invalid services",
+      });
       return;
     }
+    const built = buildBookingFromServices(selected);
 
-    let durationMin = 0;
-    let price = 0;
-    let anyFrom = false;
-    for (const svc of selected) {
-      durationMin += svc.duration_min + (svc.break_after_min || 0);
-      price += svc.price;
-      if (svc.price_mode === "from") anyFrom = true;
+    const slots = await generateSlots(profile, 14, {
+      durationMin: built.durationMin,
+    });
+    const slot = slots.find((s) => s.startsAt === startsAt && s.available);
+    if (!slot) {
+      res.status(409).json({ error: "Slot unavailable" });
+      return;
     }
-    const titles = selected.map((s) => s.title);
 
     const bookingClientId = clientRow.telegram_user_id ?? tg.id;
 
@@ -367,17 +373,7 @@ cabinetRouter.post(
         clientId: bookingClientId,
         clientName: clientRow.name,
         startsAt,
-        durationMin,
-        price,
-        priceFrom: anyFrom,
-        services: selected.map((svc) => ({
-          serviceId: svc.id,
-          title: svc.title,
-          durationMin: svc.duration_min,
-          breakAfterMin: svc.break_after_min || 0,
-          price: svc.price,
-          priceMode: svc.price_mode,
-        })),
+        services: built.services,
         masterClientId: clientRow.id,
       });
       res.status(201).json({
@@ -390,7 +386,7 @@ cabinetRouter.post(
           duration: booking.duration_min,
           price: booking.price,
           status: booking.status,
-          serviceTitles: titles,
+          serviceTitles: built.titles,
         },
       });
     } catch (err) {

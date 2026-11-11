@@ -16,13 +16,9 @@ import {
   loadMasterAvatarDataUrl,
   saveMasterAvatarDataUrl,
 } from "../lib/masterAvatar";
-import {
-  loadServiceTypes,
-  specialtyMetaFromCatalog,
-} from "../lib/serviceTypesCatalog";
+import { useServiceTypes } from "../hooks/useServiceTypes";
 import { cacheProfile } from "../lib/profileStorage";
 import type { MasterProfile } from "../types";
-import type { ServiceTypeDto } from "../api";
 import { ChevronRightIcon } from "../ui";
 
 type MenuItem = {
@@ -100,16 +96,13 @@ function MenuGroup({ items }: { items: MenuItem[] }) {
 export function CabinetProfileScreen() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<MasterProfile | null>(null);
-  const [serviceTypes, setServiceTypes] = useState<ServiceTypeDto[]>([]);
+  const { serviceTypes, metaFor } = useServiceTypes();
   const [avatarSrc, setAvatarSrc] = useState(
     () => loadMasterAvatarDataUrl() ?? avatarDemo,
   );
 
   useEffect(() => {
     let cancelled = false;
-    void loadServiceTypes().then((list) => {
-      if (!cancelled) setServiceTypes(list);
-    });
     void fetchMe()
       .then((me) => {
         if (cancelled || !me.profile) return;
@@ -131,12 +124,9 @@ export function CabinetProfileScreen() {
   }, []);
 
   const title = useMemo(() => {
-    const meta = specialtyMetaFromCatalog(
-      profile?.serviceTypeCode ?? null,
-      serviceTypes,
-    );
+    const meta = metaFor(profile?.serviceTypeCode ?? null, serviceTypes);
     return meta?.title ?? "";
-  }, [profile?.serviceTypeCode, serviceTypes]);
+  }, [metaFor, profile?.serviceTypeCode, serviceTypes]);
 
   const published =
     profile?.status === "active" || Boolean(profile?.onboardingComplete);

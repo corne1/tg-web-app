@@ -1383,7 +1383,7 @@ body:has(.ms-boot-splash),
   width: 100%;
 }
 
-.ms-specialty-stack {
+.ms-service-type-stack {
   display: flex;
   flex-direction: column;
   gap: 12px;

@@ -1,5 +1,9 @@
-import { listActiveStarts } from "../db/bookings.js";
+import { listActiveBusyIntervals } from "../db/bookings.js";
 import type { MasterProfileRow } from "../db/types.js";
+import {
+  slotConflictsWithBusy,
+  type BusyInterval,
+} from "../lib/bookingInterval.js";
 import { windowsFor } from "../lib/workingHours.js";
 import {
   addLocalDays,
@@ -37,12 +41,14 @@ export type GenerateSlotsOptions = {
    * Slot at T requires T - buffer within the working window.
    */
   travelBufferMin?: number;
+  /** Skip this booking when marking busy (reschedule). */
+  excludeBookingId?: string;
 };
 
-/** Pure slot generation (busy set injected) — unit-testable without DB. */
+/** Pure slot generation (busy intervals injected) — unit-testable without DB. */
 export function generateSlotsFromBusy(
   profile: SlotProfileInput,
-  busy: Set<string>,
+  busy: BusyInterval[],
   days = 7,
   nowMs = Date.now(),
   durationMinOrOpts?: number | GenerateSlotsOptions,
@@ -107,7 +113,9 @@ export function generateSlotsFromBusy(
         dayLabel: formatDayLabel(startsAt, tz),
         date: formatDateShort(startsAt, tz),
         time: formatTime(startsAt, tz),
-        available: !busy.has(startsAt),
+        available: !slotConflictsWithBusy(startsAt, needMin, busy, {
+          excludeBookingId: opts.excludeBookingId,
+        }),
       });
     }
   }
@@ -120,19 +128,18 @@ export async function generateSlots(
   days = 7,
   durationMinOrOpts?: number | GenerateSlotsOptions,
 ): Promise<GeneratedSlot[]> {
+  const opts: GenerateSlotsOptions =
+    typeof durationMinOrOpts === "number"
+      ? { durationMin: durationMinOrOpts }
+      : (durationMinOrOpts ?? {});
   const tz = profile.timezone;
   const todayStart = startOfLocalDay(new Date(), tz);
   const rangeEnd = addLocalDays(todayStart, days, tz);
-  const busy = await listActiveStarts(
+  const busy = await listActiveBusyIntervals(
     profile.user_id,
     todayStart.toISOString(),
     rangeEnd.toISOString(),
+    { excludeBookingId: opts.excludeBookingId },
   );
-  return generateSlotsFromBusy(
-    profile,
-    busy,
-    days,
-    Date.now(),
-    durationMinOrOpts,
-  );
+  return generateSlotsFromBusy(profile, busy, days, Date.now(), opts);
 }

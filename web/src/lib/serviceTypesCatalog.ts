@@ -7,7 +7,7 @@ export function getCachedServiceTypes(): ServiceTypeDto[] {
   return cached ?? [];
 }
 
-export function specialtyMetaFromCatalog(
+export function serviceTypeMeta(
   code: string | null | undefined,
   catalog: ServiceTypeDto[] = getCachedServiceTypes(),
 ): ServiceTypeDto | null {

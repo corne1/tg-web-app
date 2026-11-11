@@ -1,5 +1,9 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import {
+  slotConflictsWithBusy,
+  type BusyInterval,
+} from "../lib/bookingInterval.js";
+import {
   canCancelBooking,
   canRescheduleBooking,
 } from "../lib/bookingRules.js";
@@ -112,8 +116,11 @@ export type CreateBookingInput = {
   clientId: number;
   clientName: string;
   startsAt: string;
-  durationMin: number;
-  price: number;
+  /** Ignored — recomputed from `services`. Kept optional for call-site clarity. */
+  durationMin?: number;
+  /** Ignored — recomputed from `services`. */
+  price?: number;
+  /** Ignored — recomputed from `services`. */
   priceFrom?: boolean;
   services: BookingServiceInput[];
   masterClientId?: string | null;
@@ -122,6 +129,22 @@ export type CreateBookingInput = {
   clientComment?: string | null;
   visitJson?: unknown;
 };
+
+function totalsFromServices(services: BookingServiceInput[]): {
+  durationMin: number;
+  price: number;
+  priceFrom: boolean;
+} {
+  let durationMin = 0;
+  let price = 0;
+  let priceFrom = false;
+  for (const s of services) {
+    durationMin += Math.max(1, s.durationMin) + Math.max(0, s.breakAfterMin ?? 0);
+    price += Math.max(0, s.price);
+    if (s.priceMode === "from") priceFrom = true;
+  }
+  return { durationMin, price, priceFrom };
+}
 
 export async function createBooking(
   input: CreateBookingInput,
@@ -135,6 +158,7 @@ export async function createBooking(
     if (services.length === 0) {
       throw new Error("At least one booking service required");
     }
+    const totals = totalsFromServices(services);
 
     let masterClientId = input.masterClientId ?? null;
     if (masterClientId) {
@@ -149,8 +173,42 @@ export async function createBooking(
     const visitJson =
       input.visitJson != null ? JSON.stringify(input.visitJson) : null;
 
-    try {
-      await db.execute({
+    const newEndIso = new Date(
+      Date.parse(input.startsAt) + totals.durationMin * 60_000,
+    ).toISOString();
+    const candidates = await db.execute({
+      sql: `SELECT id, starts_at, duration_min FROM bookings
+        WHERE master_id = ?
+          AND status != 'cancelled'
+          AND starts_at < ?`,
+      args: [input.masterId, newEndIso],
+    });
+    const busy: BusyInterval[] = candidates.rows.map((r) => ({
+      id: String(r.id),
+      startsAt: String(r.starts_at),
+      durationMin: Number(r.duration_min),
+    }));
+    if (
+      slotConflictsWithBusy(input.startsAt, totals.durationMin, busy)
+    ) {
+      throw new BookingConflictError("Slot already booked");
+    }
+
+    const serviceRows: BookingServiceRow[] = services.map((s, i) => ({
+      id: randomUUID(),
+      booking_id: id,
+      service_id: s.serviceId ?? null,
+      sort_order: i,
+      title: s.title.trim(),
+      duration_min: Math.max(1, s.durationMin),
+      break_after_min: Math.max(0, s.breakAfterMin ?? 0),
+      price: Math.max(0, s.price),
+      price_mode: (s.priceMode === "from" ? "from" : "fixed") as "fixed" | "from",
+      created_at: now,
+    }));
+
+    const statements = [
+      {
         sql: `INSERT INTO bookings (
           id, master_id, client_id, master_client_id, starts_at, duration_min, price,
           price_from, status, paid, client_name, place_choice, place_address,
@@ -163,9 +221,9 @@ export async function createBooking(
           input.clientId,
           masterClientId,
           input.startsAt,
-          input.durationMin,
-          input.price,
-          input.priceFrom ? 1 : 0,
+          totals.durationMin,
+          totals.price,
+          totals.priceFrom ? 1 : 0,
           status,
           input.clientName,
           input.placeChoice ?? null,
@@ -176,32 +234,8 @@ export async function createBooking(
           now,
           now,
         ],
-      });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      if (message.toLowerCase().includes("unique")) {
-        throw new BookingConflictError("Slot already booked");
-      }
-      throw err;
-    }
-
-    const serviceRows: BookingServiceRow[] = [];
-    for (let i = 0; i < services.length; i++) {
-      const s = services[i]!;
-      const sid = randomUUID();
-      const row: BookingServiceRow = {
-        id: sid,
-        booking_id: id,
-        service_id: s.serviceId ?? null,
-        sort_order: i,
-        title: s.title.trim(),
-        duration_min: Math.max(1, s.durationMin),
-        break_after_min: Math.max(0, s.breakAfterMin ?? 0),
-        price: Math.max(0, s.price),
-        price_mode: s.priceMode === "from" ? "from" : "fixed",
-        created_at: now,
-      };
-      await db.execute({
+      },
+      ...serviceRows.map((row) => ({
         sql: `INSERT INTO booking_services (
           id, booking_id, service_id, sort_order, title, duration_min,
           break_after_min, price, price_mode, created_at
@@ -218,8 +252,17 @@ export async function createBooking(
           row.price_mode,
           row.created_at,
         ],
-      });
-      serviceRows.push(row);
+      })),
+    ];
+
+    try {
+      await db.batch(statements, "write");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      if (message.toLowerCase().includes("unique")) {
+        throw new BookingConflictError("Slot already booked");
+      }
+      throw err;
     }
 
     return {
@@ -227,9 +270,9 @@ export async function createBooking(
       master_id: input.masterId,
       client_id: input.clientId,
       starts_at: input.startsAt,
-      duration_min: input.durationMin,
-      price: input.price,
-      price_from: Boolean(input.priceFrom),
+      duration_min: totals.durationMin,
+      price: totals.price,
+      price_from: totals.priceFrom,
       status,
       paid: false,
       client_name: input.clientName,
@@ -312,21 +355,37 @@ export async function getBooking(id: string): Promise<BookingRow | null> {
   });
 }
 
-export async function listActiveStarts(
+export async function listActiveBusyIntervals(
   masterId: number,
   fromIso: string,
   toIso: string,
-): Promise<Set<string>> {
+  opts?: { excludeBookingId?: string },
+): Promise<BusyInterval[]> {
   return withDb(async (db) => {
+    // Include bookings that may still be running when `fromIso` starts.
+    const lookbackIso = new Date(
+      Date.parse(fromIso) - 24 * 60 * 60 * 1000,
+    ).toISOString();
     const result = await db.execute({
-      sql: `SELECT starts_at FROM bookings
+      sql: `SELECT id, starts_at, duration_min FROM bookings
         WHERE master_id = ?
           AND status != 'cancelled'
           AND starts_at >= ?
           AND starts_at < ?`,
-      args: [masterId, fromIso, toIso],
+      args: [masterId, lookbackIso, toIso],
     });
-    return new Set(result.rows.map((r) => String(r.starts_at)));
+    const excludeId = opts?.excludeBookingId;
+    const out: BusyInterval[] = [];
+    for (const r of result.rows) {
+      const id = String(r.id);
+      if (excludeId && id === excludeId) continue;
+      out.push({
+        id,
+        startsAt: String(r.starts_at),
+        durationMin: Number(r.duration_min),
+      });
+    }
+    return out;
   });
 }
 
@@ -444,6 +503,28 @@ export async function rescheduleBooking(
     });
     if (!rescheduleCheck.ok) {
       throw new BookingRuleError(rescheduleCheck.reason);
+    }
+
+    const newEndIso = new Date(
+      Date.parse(newStartsAt) + booking.duration_min * 60_000,
+    ).toISOString();
+    const candidates = await db.execute({
+      sql: `SELECT id, starts_at, duration_min FROM bookings
+        WHERE master_id = ?
+          AND status != 'cancelled'
+          AND id != ?
+          AND starts_at < ?`,
+      args: [booking.master_id, id, newEndIso],
+    });
+    const busy: BusyInterval[] = candidates.rows.map((r) => ({
+      id: String(r.id),
+      startsAt: String(r.starts_at),
+      durationMin: Number(r.duration_min),
+    }));
+    if (
+      slotConflictsWithBusy(newStartsAt, booking.duration_min, busy)
+    ) {
+      throw new BookingConflictError("Slot already booked");
     }
 
     const now = new Date().toISOString();

@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
-import type { ServiceTypeDto } from "../../api";
+import { useMemo, useState } from "react";
 import avatarPlaceholder from "../../assets/onboarding/avatar-placeholder.svg";
 import timerIcon from "../../assets/onboarding/timer.svg";
+import { useServiceTypes } from "../../hooks/useServiceTypes";
 import {
   formatDuration,
   formatPrice,
@@ -18,10 +18,6 @@ import {
   reviewDaysOffShort,
   reviewWorkingDayRows,
 } from "../../lib/placeStepFlow";
-import {
-  loadServiceTypes,
-  specialtyMetaFromCatalog,
-} from "../../lib/serviceTypesCatalog";
 
 type Props = {
   draft: MasterDraft;
@@ -186,13 +182,9 @@ export function PlacePublishReview({
   onEditPlace,
 }: Props) {
   const [servicesExpanded, setServicesExpanded] = useState(false);
-  const [serviceTypes, setServiceTypes] = useState<ServiceTypeDto[]>([]);
+  const { serviceTypes, metaFor } = useServiceTypes();
 
-  useEffect(() => {
-    void loadServiceTypes().then(setServiceTypes);
-  }, []);
-
-  const meta = specialtyMetaFromCatalog(draft.serviceTypeCode, serviceTypes);
+  const meta = metaFor(draft.serviceTypeCode, serviceTypes);
   const displayName = draft.name.trim() || "Мастер";
   const displayTitle = meta?.title ?? "";
   const displayChip = meta?.label ?? "";

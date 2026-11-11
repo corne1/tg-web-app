@@ -3,23 +3,13 @@ import { mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { config } from "../config.js";
+import {
+  SERVICE_TYPE_CODES,
+  SERVICE_TYPE_SEED,
+} from "./serviceTypeSeed.js";
 
 let client: Client | null = null;
 let migrated = false;
-
-/** Keep in sync with `SERVICE_TYPE_SEED` in serviceTypes.ts */
-const SERVICE_TYPE_SEED: ReadonlyArray<{
-  code: string;
-  label: string;
-  title: string;
-  sortOrder: number;
-}> = [
-  { code: "manicure", label: "Маникюр", title: "мастер маникюра", sortOrder: 1 },
-  { code: "brows", label: "Брови", title: "мастер бровей", sortOrder: 2 },
-  { code: "lashes", label: "Ресницы", title: "мастер ресниц", sortOrder: 3 },
-  { code: "hair", label: "Волосы", title: "мастер по волосам", sortOrder: 4 },
-  { code: "makeup", label: "Макияж", title: "визажист", sortOrder: 5 },
-];
 
 const SCHEMA_VERSION = 2;
 
@@ -272,7 +262,7 @@ function parseLegacyTitles(raw: unknown): string[] {
 
 function validTypeCode(code: string | null): string | null {
   if (!code) return null;
-  return SERVICE_TYPE_SEED.some((s) => s.code === code) ? code : null;
+  return SERVICE_TYPE_CODES.has(code) ? code : null;
 }
 
 /**

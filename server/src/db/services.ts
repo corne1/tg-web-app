@@ -58,10 +58,15 @@ export async function listServices(
 export async function getService(
   id: string,
   masterId: number,
+  activeOnly = true,
 ): Promise<MasterServiceRow | null> {
   return withDb(async (db) => {
     const result = await db.execute({
-      sql: `SELECT * FROM master_services WHERE id = ? AND master_id = ?`,
+      sql: activeOnly
+        ? `SELECT * FROM master_services
+           WHERE id = ? AND master_id = ? AND is_active = 1`
+        : `SELECT * FROM master_services
+           WHERE id = ? AND master_id = ?`,
       args: [id, masterId],
     });
     const row = result.rows[0];
@@ -97,6 +102,16 @@ export async function upsertService(
       });
       const raw = profile.rows[0]?.service_type_code;
       serviceTypeCode = raw != null ? String(raw) : null;
+    }
+    if (serviceTypeCode) {
+      const st = await db.execute({
+        sql: `SELECT code FROM service_types
+          WHERE code = ? AND is_active = 1`,
+        args: [serviceTypeCode],
+      });
+      if (!st.rows[0]) {
+        throw new Error(`Unknown service type: ${serviceTypeCode}`);
+      }
     }
 
     const isActive =

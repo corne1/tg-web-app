@@ -1,14 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  fetchMe,
-  saveMasterAvatar,
-  saveMasterProfile,
-  type ServiceTypeDto,
-} from "../api";
+import { fetchMe, saveMasterAvatar, saveMasterProfile } from "../api";
 import avatarDemo from "../assets/cabinet/profile/avatar-demo.jpg";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
+import { useServiceTypes } from "../hooks/useServiceTypes";
 import { useTelegram } from "../hooks/useTelegram";
 import {
   loadMasterAvatarDataUrl,
@@ -18,14 +14,10 @@ import {
 import {
   loadMasterDraft,
   saveMasterDraft,
-  type MasterSpecialty,
+  type ServiceTypeCode,
 } from "../lib/masterDraft";
 import { cacheProfile } from "../lib/profileStorage";
 import { loadPublicAbout, savePublicAbout } from "../lib/publicProfile";
-import {
-  getCachedServiceTypes,
-  loadServiceTypes,
-} from "../lib/serviceTypesCatalog";
 import {
   BackIcon,
   BottomSheet,
@@ -65,10 +57,8 @@ export function EditPublicPageScreen() {
   const draft = loadMasterDraft();
   const [name, setName] = useState(draft.name);
   const [serviceTypeCode, setServiceTypeCode] =
-    useState<MasterSpecialty | null>(draft.serviceTypeCode);
-  const [serviceTypes, setServiceTypes] = useState<ServiceTypeDto[]>(() =>
-    getCachedServiceTypes(),
-  );
+    useState<ServiceTypeCode | null>(draft.serviceTypeCode);
+  const { serviceTypes, error: catalogError } = useServiceTypes();
   const [about, setAbout] = useState(() => loadPublicAbout());
   const [city, setCity] = useState(draft.city || "Москва");
   const [saving, setSaving] = useState(false);
@@ -80,16 +70,8 @@ export function EditPublicPageScreen() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    void loadServiceTypes()
-      .then(setServiceTypes)
-      .catch((err) => {
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Не удалось загрузить направления",
-        );
-      });
-  }, []);
+    if (catalogError) setError(catalogError);
+  }, [catalogError]);
 
   useEffect(() => {
     let cancelled = false;
@@ -99,7 +81,7 @@ export function EditPublicPageScreen() {
         cacheProfile(me.profile);
         setName(me.profile.name || draft.name);
         setServiceTypeCode(
-          (me.profile.serviceTypeCode as MasterSpecialty | null) ??
+          (me.profile.serviceTypeCode as ServiceTypeCode | null) ??
             draft.serviceTypeCode,
         );
         setCity(me.profile.city || draft.city || "Москва");

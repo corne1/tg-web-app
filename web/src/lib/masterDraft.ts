@@ -1,5 +1,5 @@
 /** Service type code from `/api/service-types`. */
-export type MasterSpecialty = string;
+export type ServiceTypeCode = string;
 
 export type PriceMode = "fixed" | "from";
 
@@ -49,7 +49,7 @@ export type PlaceDetails = {
 
 export type MasterDraft = {
   name: string;
-  serviceTypeCode: MasterSpecialty | null;
+  serviceTypeCode: ServiceTypeCode | null;
   city: string;
   services: MasterService[];
   hours: WorkingHours;

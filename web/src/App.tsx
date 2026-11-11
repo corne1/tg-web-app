@@ -20,7 +20,7 @@ import {
   loadMasterDraft,
   normalizeWorkingHours,
   saveMasterDraft,
-  type MasterSpecialty,
+  type ServiceTypeCode,
 } from "./lib/masterDraft";
 import { loadServiceTypes } from "./lib/serviceTypesCatalog";
 import { parseEntryContext } from "./lib/startParam";
@@ -76,7 +76,7 @@ function syncDraftFromServer(
     ...prev,
     name: profile.name,
     serviceTypeCode:
-      (profile.serviceTypeCode as MasterSpecialty | null) ?? null,
+      (profile.serviceTypeCode as ServiceTypeCode | null) ?? null,
     city: profile.city ?? "Москва",
     hours: profile.workingHours
       ? normalizeWorkingHours(profile.workingHours)

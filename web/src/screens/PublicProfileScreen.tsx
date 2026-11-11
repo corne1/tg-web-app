@@ -6,15 +6,11 @@ import editIcon from "../assets/onboarding/action-edit.svg";
 import avatarDemo from "../assets/cabinet/profile/avatar-demo.jpg";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
+import { useServiceTypes } from "../hooks/useServiceTypes";
 import { useTelegram } from "../hooks/useTelegram";
 import { loadMasterAvatarDataUrl } from "../lib/masterAvatar";
-import {
-  loadServiceTypes,
-  specialtyMetaFromCatalog,
-} from "../lib/serviceTypesCatalog";
 import { cacheProfile } from "../lib/profileStorage";
 import type { MasterProfile } from "../types";
-import type { ServiceTypeDto } from "../api";
 import { BackIcon, Button, ChevronRightIcon, IconButton } from "../ui";
 
 function displayLink(url: string): string {
@@ -62,13 +58,10 @@ export function PublicProfileScreen() {
   const { webApp } = useTelegram();
   const [profile, setProfile] = useState<MasterProfile | null>(null);
   const [copied, setCopied] = useState(false);
-  const [serviceTypes, setServiceTypes] = useState<ServiceTypeDto[]>([]);
+  const { serviceTypes, metaFor } = useServiceTypes();
 
   useEffect(() => {
     let cancelled = false;
-    void loadServiceTypes().then((list) => {
-      if (!cancelled) setServiceTypes(list);
-    });
     void fetchMe()
       .then((me) => {
         if (cancelled || !me.profile) return;
@@ -87,12 +80,9 @@ export function PublicProfileScreen() {
     [bookingLink],
   );
   const title = useMemo(() => {
-    const meta = specialtyMetaFromCatalog(
-      profile?.serviceTypeCode ?? null,
-      serviceTypes,
-    );
+    const meta = metaFor(profile?.serviceTypeCode ?? null, serviceTypes);
     return meta?.title ?? "";
-  }, [profile?.serviceTypeCode, serviceTypes]);
+  }, [metaFor, profile?.serviceTypeCode, serviceTypes]);
   const published =
     profile?.status === "active" || Boolean(profile?.onboardingComplete);
   const avatarSrc =

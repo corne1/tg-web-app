@@ -1,23 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  saveMasterAvatar,
-  saveMasterProfile,
-  type ServiceTypeDto,
-} from "../api";
+import { saveMasterAvatar, saveMasterProfile } from "../api";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
+import { useServiceTypes } from "../hooks/useServiceTypes";
 import { useTelegram } from "../hooks/useTelegram";
 import {
   loadMasterDraft,
   saveMasterDraft,
-  type MasterSpecialty,
+  type ServiceTypeCode,
 } from "../lib/masterDraft";
-import {
-  getCachedServiceTypes,
-  loadServiceTypes,
-  specialtyMetaFromCatalog,
-} from "../lib/serviceTypesCatalog";
 import { MsArrowRight } from "../components/master/MsArrowRight";
 import { cacheProfile } from "../lib/profileStorage";
 import avatarPlaceholder from "../assets/onboarding/avatar-placeholder.svg";
@@ -45,10 +37,12 @@ export function OnboardingScreen() {
   const initial = loadMasterDraft();
   const [name, setName] = useState(initial.name);
   const [serviceTypeCode, setServiceTypeCode] =
-    useState<MasterSpecialty | null>(initial.serviceTypeCode);
-  const [serviceTypes, setServiceTypes] = useState<ServiceTypeDto[]>(() =>
-    getCachedServiceTypes(),
-  );
+    useState<ServiceTypeCode | null>(initial.serviceTypeCode);
+  const {
+    serviceTypes,
+    error: catalogError,
+    metaFor,
+  } = useServiceTypes();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [photoSheet, setPhotoSheet] = useState(false);
@@ -57,31 +51,15 @@ export function OnboardingScreen() {
   const city = initial.city || "Москва";
 
   useEffect(() => {
-    let cancelled = false;
-    void loadServiceTypes()
-      .then((list) => {
-        if (!cancelled) setServiceTypes(list);
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          setError(
-            err instanceof Error
-              ? err.message
-              : "Не удалось загрузить направления",
-          );
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    if (catalogError) setError(catalogError);
+  }, [catalogError]);
 
   const draft = useMemo(
     () => ({ name: name.trim(), serviceTypeCode, city }),
     [name, serviceTypeCode, city],
   );
   const valid = Boolean(draft.name && draft.serviceTypeCode);
-  const meta = specialtyMetaFromCatalog(serviceTypeCode, serviceTypes);
+  const meta = metaFor(serviceTypeCode, serviceTypes);
   const previewName = draft.name || "Анна";
   const previewTitle = meta?.title ?? "";
   const previewChip = meta?.label ?? "";
@@ -211,7 +189,7 @@ export function OnboardingScreen() {
             />
           </Field>
 
-          <div className="ms-specialty-stack">
+          <div className="ms-service-type-stack">
             <Field
               label="Основное направление"
               as="fieldset"

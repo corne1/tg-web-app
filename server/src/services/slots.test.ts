@@ -27,18 +27,30 @@ const profile = {
   travel_buffer_min: null,
 };
 
-const slots = generateSlotsFromBusy(profile, new Set(), 1, mondayMorningUtc);
+const slots = generateSlotsFromBusy(profile, [], 1, mondayMorningUtc);
 assert(slots.length === 2, `expected 2 slots (10:00, 11:00), got ${slots.length}`);
 assert(slots.every((s) => s.available), "all available");
 
-const busy = new Set([slots[0]!.startsAt]);
+const busy = [{ startsAt: slots[0]!.startsAt, durationMin: 60 }];
 const withBusy = generateSlotsFromBusy(profile, busy, 1, mondayMorningUtc);
 assert(withBusy[0]?.available === false, "first busy");
 assert(withBusy[1]?.available === true, "second free");
 
+// 90-min booking at 10:00 blocks 11:00 start of a 60-min slot
+const longBusy = [{ startsAt: slots[0]!.startsAt, durationMin: 90 }];
+const withOverlap = generateSlotsFromBusy(
+  profile,
+  longBusy,
+  1,
+  mondayMorningUtc,
+  { durationMin: 60 },
+);
+assert(withOverlap[0]?.available === false, "10:00 blocked");
+assert(withOverlap.every((s) => !s.available || s.time !== "11:00"), "11:00 blocked by overlap");
+
 const withBreak = generateSlotsFromBusy(
   { ...profile, day_break_min: 30 },
-  new Set(),
+  [],
   1,
   mondayMorningUtc,
 );
@@ -54,7 +66,7 @@ const preset = generateSlotsFromBusy(
     day_break_min: null,
     travel_buffer_min: null,
   },
-  new Set(),
+  [],
   1,
   mondayMorningUtc,
 );
