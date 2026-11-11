@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { addressRouter } from "./address.js";
 import { authRouter } from "./auth.js";
 import { bookingsRouter } from "./bookings.js";
 import { cabinetRouter } from "./cabinet.js";
@@ -16,6 +17,7 @@ apiRouter.get("/health", (_req, res) => {
 
 apiRouter.use("/auth", authRouter);
 apiRouter.use("/cities", citiesRouter);
+apiRouter.use("/address", addressRouter);
 apiRouter.use(meRouter);
 apiRouter.use("/master", masterRouter);
 apiRouter.use("/masters", publicMasterRouter);

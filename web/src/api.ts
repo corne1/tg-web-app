@@ -98,6 +98,7 @@ export async function saveMasterProfile(input: {
   name: string;
   specialty: string;
   city?: string;
+  about?: string;
 }): Promise<MasterProfile> {
   const data = await request<{ profile: MasterProfile }>(
     "/api/master/profile",
@@ -178,10 +179,14 @@ export async function deleteMasterService(id: string): Promise<void> {
 
 export async function saveMasterPlace(
   place: MasterPlaceDto,
+  opts?: { travelBufferMin?: number | null },
 ): Promise<MasterProfile> {
   const data = await request<{ profile: MasterProfile }>("/api/master/place", {
     method: "PUT",
-    body: JSON.stringify({ place }),
+    body: JSON.stringify({
+      place,
+      travelBufferMin: opts?.travelBufferMin,
+    }),
   });
   return data.profile;
 }
@@ -255,13 +260,14 @@ export async function fetchMaster(
 
 export async function fetchSlots(
   masterId: number | string,
-  opts?: { days?: number; durationMin?: number },
+  opts?: { days?: number; durationMin?: number; visit?: boolean },
 ): Promise<{
   master: {
     id: number;
     name: string;
     duration: number;
     price: number;
+    travelBufferMin?: number | null;
   };
   slots: TimeSlot[];
 }> {
@@ -271,9 +277,31 @@ export async function fetchSlots(
   if (opts?.durationMin != null && opts.durationMin > 0) {
     params.set("duration", String(opts.durationMin));
   }
+  if (opts?.visit) params.set("visit", "1");
   return request(
     `/api/masters/${encodeURIComponent(String(masterId))}/slots?${params}`,
   );
+}
+
+export type AddressHit = {
+  label: string;
+  city: string;
+  street: string;
+  house: string;
+};
+
+export async function suggestAddresses(
+  query: string,
+  limit = 6,
+): Promise<AddressHit[]> {
+  const params = new URLSearchParams({
+    q: query,
+    limit: String(limit),
+  });
+  const data = await request<{ suggestions: AddressHit[] }>(
+    `/api/address?${params}`,
+  );
+  return data.suggestions ?? [];
 }
 
 export async function fetchCabinetSessions(
@@ -398,6 +426,18 @@ export async function createBooking(input: {
 
 export async function fetchMyBookings(): Promise<{ bookings: ClientBooking[] }> {
   return request("/api/bookings/mine");
+}
+
+export async function fetchClientBooking(
+  id: string,
+): Promise<{ booking: ClientBooking }> {
+  return request(`/api/bookings/${encodeURIComponent(id)}`);
+}
+
+export async function fetchClientBookingByToken(
+  token: string,
+): Promise<{ booking: ClientBooking }> {
+  return request(`/api/bookings/t/${encodeURIComponent(token)}`);
 }
 
 export async function cancelBooking(id: string): Promise<void> {

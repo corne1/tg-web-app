@@ -39,13 +39,24 @@ async function handleGetSlots(req: AuthedRequest, res: import("express").Respons
   const durationRaw = Number(req.query.duration);
   const durationMin =
     Number.isFinite(durationRaw) && durationRaw > 0 ? durationRaw : undefined;
-  const slots = await generateSlots(profile, days, durationMin);
+  const visit =
+    req.query.visit === "1" ||
+    req.query.visit === "true" ||
+    req.query.place === "visit";
+  const travelBufferMin = visit
+    ? (profile.travel_buffer_min ?? 30)
+    : undefined;
+  const slots = await generateSlots(profile, days, {
+    durationMin,
+    travelBufferMin,
+  });
   res.json({
     master: {
       id: profile.user_id,
       name: profile.name,
       duration: durationMin ?? profile.duration,
       price: profile.price,
+      travelBufferMin: visit ? (travelBufferMin ?? null) : null,
     },
     slots,
   });

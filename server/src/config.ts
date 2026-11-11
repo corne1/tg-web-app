@@ -59,6 +59,12 @@ export function bookingDeepLink(slug: string): string | null {
   return `https://t.me/${config.botUsername}?startapp=book_${encodeURIComponent(slug)}`;
 }
 
+/** Personal client link to a single booking (`startapp=b_<token>`). */
+export function clientBookingDeepLink(accessToken: string): string | null {
+  if (!config.botUsername || !accessToken) return null;
+  return `https://t.me/${config.botUsername}?startapp=b_${encodeURIComponent(accessToken)}`;
+}
+
 export function cabinetDeepLink(): string | null {
   if (!config.botUsername) return null;
   return `https://t.me/${config.botUsername}?startapp=cabinet`;

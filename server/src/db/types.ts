@@ -31,6 +31,8 @@ export type MasterProfileRow = {
   /** Custom weekly hours from onboarding; null → use schedule presets in slots. */
   working_hours: WorkingHours | null;
   day_break_min: number | null;
+  /** Minutes reserved before visit start for travel (visit bookings). */
+  travel_buffer_min: number | null;
   /** Reception place from onboarding step 4; null if not set. */
   place: MasterPlace | null;
   timezone: string;
@@ -40,6 +42,8 @@ export type MasterProfileRow = {
   onboarding_completed_at: string | null;
   /** Public avatar URL or data-URL (Blur #16). */
   avatar_url: string | null;
+  /** Public «О мастере» bio. */
+  about_text: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -78,4 +82,6 @@ export type BookingRow = {
   services_json: string | null;
   /** Master CRM client id when booking was created from cabinet. */
   master_client_id: string | null;
+  /** Opaque client deep-link token for «Моя запись». */
+  access_token: string | null;
 };

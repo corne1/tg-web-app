@@ -26,6 +26,8 @@ import { parseEntryContext } from "./lib/startParam";
 import type { MasterProfile, MasterServiceDto } from "./types";
 import { BookingDetailScreen } from "./screens/BookingDetailScreen";
 import { ClientAddressScreen } from "./screens/client/ClientAddressScreen";
+import { ClientBookingDetailScreen } from "./screens/client/ClientBookingDetailScreen";
+import { ClientBookingTokenScreen } from "./screens/client/ClientBookingTokenScreen";
 import { ClientConfirmScreen } from "./screens/client/ClientConfirmScreen";
 import { ClientDateTimeScreen } from "./screens/client/ClientDateTimeScreen";
 import { ClientPlaceScreen } from "./screens/client/ClientPlaceScreen";
@@ -125,6 +127,14 @@ function HomeRedirect({
 
     async function route() {
       const ctx = parseEntryContext(startParam);
+
+      if (ctx.mode === "clientBooking") {
+        navigate(
+          `/client/bookings/t/${encodeURIComponent(ctx.accessToken)}`,
+          { replace: true },
+        );
+        return;
+      }
 
       if (ctx.mode === "client") {
         if ("masterId" in ctx) {
@@ -393,6 +403,14 @@ export function App() {
               element={<BookingDetailScreen />}
             />
             <Route path="/client/bookings" element={<MyBookingsScreen />} />
+            <Route
+              path="/client/bookings/t/:accessToken"
+              element={<ClientBookingTokenScreen />}
+            />
+            <Route
+              path="/client/bookings/:bookingId"
+              element={<ClientBookingDetailScreen />}
+            />
             <Route
               path="/client/:masterId/services"
               element={<ClientServicesScreen />}

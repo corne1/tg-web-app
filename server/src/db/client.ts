@@ -196,6 +196,24 @@ export async function migrate(): Promise<void> {
   );
   await tryExec(
     db,
+    `ALTER TABLE master_profiles ADD COLUMN about_text TEXT`,
+  );
+  await tryExec(
+    db,
+    `ALTER TABLE master_profiles ADD COLUMN travel_buffer_min INTEGER`,
+  );
+  await tryExec(
+    db,
+    `ALTER TABLE bookings ADD COLUMN access_token TEXT`,
+  );
+  await tryExec(
+    db,
+    `CREATE UNIQUE INDEX IF NOT EXISTS idx_bookings_access_token
+      ON bookings(access_token)
+      WHERE access_token IS NOT NULL`,
+  );
+  await tryExec(
+    db,
     `CREATE INDEX IF NOT EXISTS idx_bookings_master_client
       ON bookings(master_id, master_client_id)`,
   );

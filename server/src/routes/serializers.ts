@@ -23,8 +23,10 @@ export function serializeProfile(profile: MasterProfileRow) {
     onboardingCompletedAt: profile.onboarding_completed_at,
     workingHours: profile.working_hours,
     dayBreakMin: profile.day_break_min,
+    travelBufferMin: profile.travel_buffer_min,
     place: profile.place,
     avatarUrl: profile.avatar_url,
+    about: profile.about_text,
     bookingLink:
       bookingDeepLink(profile.slug) ?? masterDeepLink(profile.user_id),
   };
@@ -90,6 +92,7 @@ export function serializePublicMaster(
     city: profile.city,
     workingHours: profile.working_hours as WorkingHours | null,
     avatarUrl: profile.avatar_url,
+    about: profile.about_text,
     place: serializePublicPlace(profile),
     services: services.map(serializeService),
     bookingEnabled: profile.status === "active" && services.length > 0,

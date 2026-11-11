@@ -41,8 +41,10 @@ export interface MasterProfile {
   bookingLink?: string | null;
   workingHours?: WorkingHoursDto | null;
   dayBreakMin?: number | null;
+  travelBufferMin?: number | null;
   place?: MasterPlaceDto | null;
   avatarUrl?: string | null;
+  about?: string | null;
 }
 
 export type AddressVisibilityDto = "public" | "after_booking";
@@ -107,6 +109,7 @@ export interface PublicMaster {
   city?: string;
   workingHours?: WorkingHoursDto | null;
   avatarUrl?: string | null;
+  about?: string | null;
   place?: PublicPlaceDto | null;
   services?: MasterServiceDto[];
   bookingEnabled?: boolean;
@@ -119,8 +122,17 @@ export interface ClientBooking {
   time: string;
   masterId: number;
   masterName: string;
+  masterAvatarUrl?: string | null;
   duration?: number;
   price?: number;
   status?: SessionStatus;
   cancelHours?: number;
+  serviceTitles?: string[];
+  clientName?: string;
+  canCancel?: boolean;
+  canReschedule?: boolean;
+  cancelBlockedReason?: string | null;
+  rescheduleBlockedReason?: string | null;
+  accessToken?: string | null;
+  bookingLink?: string | null;
 }

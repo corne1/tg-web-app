@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   completeMasterOnboarding,
+  fetchMe,
   saveMasterPlace,
   setMasterOnboardingStep,
   type CityHit,
@@ -41,6 +42,8 @@ import {
 import { cacheProfile } from "../../lib/profileStorage";
 import {
   Button,
+  Chip,
+  ChipGroup,
   Field,
   Input,
   RadioMark,
@@ -208,6 +211,7 @@ export function PlaceSettings({ mode }: { mode: SettingsMode }) {
   const [toast, setToast] = useState<string | null>(null);
   const [toastTone, setToastTone] = useState<"success" | "danger">("success");
   const [reviewDraft, setReviewDraft] = useState<MasterDraft>(initial);
+  const [travelBufferMin, setTravelBufferMin] = useState<number>(30);
 
   const cityQuery =
     activeCityField === "visit" ? visitCityQuery : studioCityQuery;
@@ -220,6 +224,20 @@ export function PlaceSettings({ mode }: { mode: SettingsMode }) {
     if (isSettings) return;
     void setMasterOnboardingStep(4).catch(() => undefined);
   }, [isSettings]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetchMe()
+      .then((me) => {
+        if (cancelled) return;
+        const buf = me.profile?.travelBufferMin;
+        if (buf != null && buf > 0) setTravelBufferMin(buf);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const persist = useCallback(
     (
@@ -250,12 +268,18 @@ export function PlaceSettings({ mode }: { mode: SettingsMode }) {
     const place = draftToPlaceDto(draft);
     if (!place) return;
     try {
-      const profile = await saveMasterPlace(place);
+      const profile = await saveMasterPlace(place, {
+        travelBufferMin:
+          place.mode === "studio" ? null : travelBufferMin,
+      });
       cacheProfile(profile);
+      if (profile.travelBufferMin != null) {
+        setTravelBufferMin(profile.travelBufferMin);
+      }
     } catch {
       // Local draft remains; retry on complete.
     }
-  }, []);
+  }, [travelBufferMin]);
 
   const goBack = useCallback(() => {
     if (activeCityField) {
@@ -748,6 +772,22 @@ export function PlaceSettings({ mode }: { mode: SettingsMode }) {
             }}
           />
         </Field>
+        <Field label="Время на дорогу" as="div">
+          <ChipGroup label="Время на дорогу">
+            {[15, 30, 45, 60, 90, 120].map((min) => (
+              <Chip
+                key={min}
+                active={travelBufferMin === min}
+                onClick={() => setTravelBufferMin(min)}
+              >
+                {min} мин
+              </Chip>
+            ))}
+          </ChipGroup>
+        </Field>
+        <p className="ms-place-travel-hint">
+          Резервируется перед началом визита. Клиент видит время начала приёма.
+        </p>
         {placeMode === "visit" && (
           <div className="ms-info ms-place-client-info" role="note">
             <img

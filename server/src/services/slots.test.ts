@@ -25,6 +25,7 @@ const profile = {
   duration: 60 as const,
   working_hours: hours,
   day_break_min: null,
+  travel_buffer_min: null,
 };
 
 const slots = generateSlotsFromBusy(profile, new Set(), 1, mondayMorningUtc);
@@ -53,6 +54,7 @@ const preset = generateSlotsFromBusy(
     duration: 60,
     working_hours: null,
     day_break_min: null,
+    travel_buffer_min: null,
   },
   new Set(),
   1,

@@ -13,8 +13,50 @@ import {
   readClientDraft,
   resolveClientServices,
 } from "../../lib/clientBookingDraft";
+import { monthTitle, sameDay } from "../../lib/scheduleUi";
 import type { TimeSlot } from "../../types";
-import { cx } from "../../ui";
+import { BottomSheet, SheetSimpleHeader, cx } from "../../ui";
+
+type DayGroup = {
+  key: string;
+  dayLabel: string;
+  date: string;
+  dateISO: string;
+  slots: TimeSlot[];
+};
+
+const DOW = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
+
+function parseSlotDate(slot: TimeSlot): Date | null {
+  // Prefer startsAt; fall back to dayLabel/date strings.
+  const d = new Date(slot.startsAt);
+  if (!Number.isNaN(d.getTime())) {
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  }
+  return null;
+}
+
+function dateKey(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function buildMonthCells(anchor: Date): Date[] {
+  const year = anchor.getFullYear();
+  const month = anchor.getMonth();
+  const first = new Date(year, month, 1);
+  const startPad = (first.getDay() + 6) % 7;
+  const start = new Date(year, month, 1 - startPad);
+  const cells: Date[] = [];
+  for (let i = 0; i < 42; i++) {
+    cells.push(
+      new Date(start.getFullYear(), start.getMonth(), start.getDate() + i),
+    );
+  }
+  return cells;
+}
 
 export function ClientDateTimeScreen() {
   const { masterId: masterKey = "" } = useParams();
@@ -24,12 +66,24 @@ export function ClientDateTimeScreen() {
   const draft = useMemo(() => readClientDraft(), []);
   const services = resolveClientServices(draft);
   const totals = clientBookingTotals(services);
+  const isVisit = draft.placeChoice === "visit";
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [slots, setSlots] = useState<TimeSlot[]>([]);
+  const [dayKey, setDayKey] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [calOpen, setCalOpen] = useState(false);
+
+  const today = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
+  const [monthAnchor, setMonthAnchor] = useState(
+    () => new Date(today.getFullYear(), today.getMonth(), 1),
+  );
 
   useEffect(() => {
     if (!rescheduleId && services.length === 0) {
@@ -48,9 +102,12 @@ export function ClientDateTimeScreen() {
         const data = await fetchSlots(masterKey, {
           days: 14,
           durationMin: totals.totalMin || undefined,
+          visit: isVisit,
         });
         if (cancelled) return;
-        setSlots(data.slots.filter((s) => s.available));
+        const available = data.slots.filter((s) => s.available);
+        setSlots(available);
+        setSelectedId(null);
       } catch (err) {
         if (!cancelled) {
           setError(
@@ -65,24 +122,51 @@ export function ClientDateTimeScreen() {
     return () => {
       cancelled = true;
     };
-  }, [masterKey, totals.totalMin]);
+  }, [isVisit, masterKey, totals.totalMin]);
 
-  const days = useMemo(() => {
-    const map = new Map<string, TimeSlot[]>();
+  const days: DayGroup[] = useMemo(() => {
+    const map = new Map<string, DayGroup>();
     for (const slot of slots) {
-      const key = `${slot.dayLabel}|${slot.date}`;
-      const list = map.get(key) ?? [];
-      list.push(slot);
-      map.set(key, list);
+      const parsed = parseSlotDate(slot);
+      const iso = parsed ? dateKey(parsed) : slot.date;
+      const key = iso;
+      const existing = map.get(key);
+      if (existing) existing.slots.push(slot);
+      else {
+        map.set(key, {
+          key,
+          dayLabel: slot.dayLabel,
+          date: slot.date,
+          dateISO: iso,
+          slots: [slot],
+        });
+      }
     }
-    return [...map.entries()];
+    return [...map.values()];
   }, [slots]);
 
+  const daysWithSlots = useMemo(() => {
+    const set = new Set(days.map((d) => d.dateISO));
+    return set;
+  }, [days]);
+
+  useEffect(() => {
+    if (days.length === 0) {
+      setDayKey(null);
+      return;
+    }
+    if (!dayKey || !days.some((d) => d.key === dayKey)) {
+      setDayKey(days[0]!.key);
+    }
+  }, [dayKey, days]);
+
+  const activeDay = days.find((d) => d.key === dayKey) ?? null;
   const selected = slots.find((s) => s.id === selectedId);
+  const cells = useMemo(() => buildMonthCells(monthAnchor), [monthAnchor]);
 
   const goBack = useCallback(() => {
     if (rescheduleId) {
-      navigate("/client/bookings");
+      navigate(`/client/bookings/${encodeURIComponent(rescheduleId)}`);
       return;
     }
     if (needsClientAddressStep(draft.placeChoice)) {
@@ -103,8 +187,8 @@ export function ClientDateTimeScreen() {
       setError(null);
       try {
         await rescheduleBooking(rescheduleId, selected.startsAt);
-        navigate("/client/bookings", {
-          state: { justRescheduled: true },
+        navigate(`/client/bookings/${encodeURIComponent(rescheduleId)}`, {
+          replace: true,
         });
       } catch (err) {
         setError(err instanceof Error ? err.message : "Не удалось перенести");
@@ -125,52 +209,91 @@ export function ClientDateTimeScreen() {
   useMainButton({ text: "", visible: false, onClick: () => undefined });
 
   return (
-    <ClientFlowShell
-      title="Дата и время"
-      onBack={goBack}
-      footer={
-        <div className="ms-nb-footer">
-          {!selected && !loading ? (
-            <p className="ms-nb-footer-hint">Выберите дату и время</p>
-          ) : null}
-          {error ? <p className="ms-client-error">{error}</p> : null}
-          <button
-            type="button"
-            className={cx("ms-btn", "ms-btn-primary", "ms-nb-continue")}
-            disabled={!selected || submitting}
-            onClick={() => void continueNext()}
-          >
-            <span>{rescheduleId ? "Перенести" : "Продолжить"}</span>
-            <MsArrowRight />
-          </button>
-        </div>
-      }
-    >
-      <div className="ms-nb">
-        <div className="ms-nb-intro">
-          <h2 className="ms-nb-title">Когда вам удобно?</h2>
-          <p className="ms-nb-lead">
-            Показаны ближайшие свободные слоты
-            {totals.totalMin ? ` · ${totals.totalMin} мин` : ""}
-          </p>
-        </div>
+    <>
+      <ClientFlowShell
+        title="Дата и время"
+        onBack={goBack}
+        footer={
+          <div className="ms-nb-footer">
+            {!selected && !loading ? (
+              <p className="ms-nb-footer-hint">Выберите дату и время</p>
+            ) : null}
+            {error ? <p className="ms-client-error">{error}</p> : null}
+            <button
+              type="button"
+              className={cx("ms-btn", "ms-btn-primary", "ms-nb-continue")}
+              disabled={!selected || submitting}
+              onClick={() => void continueNext()}
+            >
+              <span>{rescheduleId ? "Перенести" : "Продолжить"}</span>
+              <MsArrowRight />
+            </button>
+          </div>
+        }
+      >
+        <div className="ms-nb">
+          <div className="ms-nb-intro">
+            <h2 className="ms-nb-title">Когда вам удобно?</h2>
+            <p className="ms-nb-lead">
+              Ближайшие свободные слоты
+              {totals.totalMin ? ` · ${totals.totalMin} мин` : ""}
+              {isVisit ? " · с учётом дороги" : ""}
+            </p>
+          </div>
 
-        {loading ? (
-          <p className="ms-client-muted">Загрузка слотов…</p>
-        ) : days.length === 0 ? (
-          <p className="ms-client-muted">Нет доступных дат и времени</p>
-        ) : (
-          <div className="ms-client-slots">
-            {days.map(([key, daySlots]) => {
-              const [dayLabel, date] = key.split("|");
-              return (
-                <section key={key} className="ms-client-day">
-                  <h3 className="ms-client-day-title">
-                    {dayLabel}
-                    {date ? <span> · {date}</span> : null}
-                  </h3>
+          {loading ? (
+            <p className="ms-client-muted">Загрузка слотов…</p>
+          ) : days.length === 0 ? (
+            <p className="ms-client-muted">Нет доступных дат и времени</p>
+          ) : (
+            <>
+              <div className="ms-client-day-row">
+                <div
+                  className="ms-client-day-chips"
+                  role="tablist"
+                  aria-label="Даты"
+                >
+                  {days.map((day) => {
+                    const on = day.key === dayKey;
+                    return (
+                      <button
+                        key={day.key}
+                        type="button"
+                        role="tab"
+                        aria-selected={on}
+                        className={cx("ms-client-day-chip", on && "is-on")}
+                        onClick={() => {
+                          setDayKey(day.key);
+                          setSelectedId(null);
+                        }}
+                      >
+                        <span className="ms-client-day-chip-label">
+                          {day.dayLabel}
+                        </span>
+                        <span className="ms-client-day-chip-date">
+                          {day.date}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <button
+                  type="button"
+                  className="ms-client-cal-open"
+                  onClick={() => setCalOpen(true)}
+                >
+                  Календарь
+                </button>
+              </div>
+
+              {activeDay ? (
+                <section
+                  className="ms-client-day"
+                  aria-label={activeDay.dayLabel}
+                >
+                  <h3 className="ms-client-day-title">Время</h3>
                   <div className="ms-client-slot-grid">
-                    {daySlots.map((slot) => {
+                    {activeDay.slots.map((slot) => {
                       const on = selectedId === slot.id;
                       return (
                         <button
@@ -185,11 +308,90 @@ export function ClientDateTimeScreen() {
                     })}
                   </div>
                 </section>
+              ) : null}
+            </>
+          )}
+        </div>
+      </ClientFlowShell>
+
+      <BottomSheet open={calOpen} onClose={() => setCalOpen(false)}>
+        <SheetSimpleHeader title="Выберите дату" />
+        <div className="ms-nb-cal ms-client-cal-sheet">
+          <div className="ms-nb-cal-head">
+            <button
+              type="button"
+              className="ms-nb-cal-nav"
+              aria-label="Предыдущий месяц"
+              onClick={() =>
+                setMonthAnchor(
+                  new Date(
+                    monthAnchor.getFullYear(),
+                    monthAnchor.getMonth() - 1,
+                    1,
+                  ),
+                )
+              }
+            >
+              ‹
+            </button>
+            <p className="ms-nb-cal-title">{monthTitle(monthAnchor)}</p>
+            <button
+              type="button"
+              className="ms-nb-cal-nav"
+              aria-label="Следующий месяц"
+              onClick={() =>
+                setMonthAnchor(
+                  new Date(
+                    monthAnchor.getFullYear(),
+                    monthAnchor.getMonth() + 1,
+                    1,
+                  ),
+                )
+              }
+            >
+              ›
+            </button>
+          </div>
+          <div className="ms-nb-cal-dow">
+            {DOW.map((d) => (
+              <span key={d}>{d}</span>
+            ))}
+          </div>
+          <div className="ms-nb-cal-grid">
+            {cells.map((day) => {
+              const inMonth = day.getMonth() === monthAnchor.getMonth();
+              const past = day < today;
+              const iso = dateKey(day);
+              const working = daysWithSlots.has(iso);
+              const selected = dayKey === iso;
+              return (
+                <button
+                  key={iso}
+                  type="button"
+                  disabled={!inMonth || past || !working}
+                  className={cx(
+                    "ms-nb-cal-day",
+                    !inMonth && "is-out",
+                    selected && "is-on",
+                    sameDay(day, today) && "is-today",
+                    working && inMonth && !past && "has-slots",
+                  )}
+                  onClick={() => {
+                    setDayKey(iso);
+                    setSelectedId(null);
+                    setCalOpen(false);
+                  }}
+                >
+                  {day.getDate()}
+                  {working && inMonth && !past ? (
+                    <span className="ms-nb-cal-day-dot" aria-hidden />
+                  ) : null}
+                </button>
               );
             })}
           </div>
-        )}
-      </div>
-    </ClientFlowShell>
+        </div>
+      </BottomSheet>
+    </>
   );
 }

@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { cancelBooking, fetchMyBookings } from "../api";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { fetchMyBookings } from "../api";
 import { ScreenShell } from "../components/calendar/ScreenShell";
 import { BookingsListSkeleton } from "../components/calendar/Skeleton";
-import { SecondaryButton } from "../components/calendar/SecondaryButton";
 import { UiMainButton } from "../components/calendar/UiMainButton";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
@@ -12,6 +11,7 @@ import type { ClientBooking } from "../types";
 
 export function MyBookingsScreen() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isTelegram } = useTelegram();
   const [bookings, setBookings] = useState<ClientBooking[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,17 +34,17 @@ export function MyBookingsScreen() {
     void load();
   }, [load]);
 
-  async function cancel(id: string) {
-    try {
-      await cancelBooking(id);
-      setBookings((list) => list.filter((b) => b.id !== id));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Не удалось отменить");
+  useEffect(() => {
+    const focusId = (location.state as { focusId?: string } | null)?.focusId;
+    if (focusId) {
+      navigate(`/client/bookings/${encodeURIComponent(focusId)}`, {
+        replace: true,
+      });
     }
-  }
+  }, [location.state, navigate]);
 
   const goHome = useCallback(() => navigate("/"), [navigate]);
-  const bookAgain = useCallback(() => navigate("/client"), [navigate]);
+  const bookAgain = useCallback(() => navigate("/client/bookings"), [navigate]);
 
   useBackButton(goHome);
   useMainButton({
@@ -56,7 +56,7 @@ export function MyBookingsScreen() {
   return (
     <ScreenShell
       title="Мои записи"
-      subtitle="Предстоящие консультации"
+      subtitle="Предстоящие визиты"
       footer={
         <div className="footer-links">
           <Link to="/" className="text-link">
@@ -72,7 +72,7 @@ export function MyBookingsScreen() {
         <div className="empty-inline">
           <p>Нет предстоящих записей</p>
           <p className="screen-subtitle">
-            Откройте ссылку мастера в Telegram, чтобы выбрать слот.
+            Откройте ссылку мастера в Telegram, чтобы записаться.
           </p>
           {!isTelegram && (
             <UiMainButton onClick={bookAgain}>Как записаться</UiMainButton>
@@ -81,33 +81,29 @@ export function MyBookingsScreen() {
       ) : (
         <ul className="booking-list">
           {bookings.map((b) => (
-            <li key={b.id} className="booking-card">
-              <div className="booking-meta">
-                <p className="booking-when">
-                  {b.date}, {b.time}
-                </p>
-                <p className="booking-who">с {b.masterName}</p>
-              </div>
-              <div className="booking-actions">
-                <SecondaryButton
-                  fullWidth={false}
-                  className="btn-sm"
-                  onClick={() =>
-                    navigate(
-                      `/client/${b.masterId}/time?reschedule=${encodeURIComponent(b.id)}`,
-                    )
-                  }
-                >
-                  Перенести
-                </SecondaryButton>
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-sm"
-                  onClick={() => void cancel(b.id)}
-                >
-                  Отменить
-                </button>
-              </div>
+            <li key={b.id}>
+              <button
+                type="button"
+                className="booking-card ms-client-booking-card"
+                onClick={() =>
+                  navigate(`/client/bookings/${encodeURIComponent(b.id)}`)
+                }
+              >
+                <div className="booking-meta">
+                  <p className="booking-when">
+                    {b.date}, {b.time}
+                  </p>
+                  <p className="booking-who">с {b.masterName}</p>
+                  {b.serviceTitles && b.serviceTitles.length > 0 ? (
+                    <p className="ms-client-booking-svcs">
+                      {b.serviceTitles.join(" · ")}
+                    </p>
+                  ) : null}
+                </div>
+                <span className="ms-client-booking-chevron" aria-hidden>
+                  ›
+                </span>
+              </button>
             </li>
           ))}
         </ul>

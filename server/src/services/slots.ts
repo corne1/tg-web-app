@@ -24,8 +24,23 @@ export { windowsFor };
 
 export type SlotProfileInput = Pick<
   MasterProfileRow,
-  "schedule" | "timezone" | "duration" | "working_hours" | "day_break_min"
+  | "schedule"
+  | "timezone"
+  | "duration"
+  | "working_hours"
+  | "day_break_min"
+  | "travel_buffer_min"
 >;
+
+export type GenerateSlotsOptions = {
+  /** Total booking length (services + breaks). When set, starts step every 30 min. */
+  durationMin?: number;
+  /**
+   * Travel buffer before visit start (client still sees visit start time).
+   * Slot at T requires T - buffer within the working window.
+   */
+  travelBufferMin?: number;
+};
 
 /** Pure slot generation (busy set injected) — unit-testable without DB. */
 export function generateSlotsFromBusy(
@@ -33,21 +48,30 @@ export function generateSlotsFromBusy(
   busy: Set<string>,
   days = 7,
   nowMs = Date.now(),
-  /** Total booking length (services + breaks). When set, starts step every 30 min. */
-  durationMin?: number,
+  durationMinOrOpts?: number | GenerateSlotsOptions,
 ): GeneratedSlot[] {
+  const opts: GenerateSlotsOptions =
+    typeof durationMinOrOpts === "number"
+      ? { durationMin: durationMinOrOpts }
+      : (durationMinOrOpts ?? {});
   const tz = profile.timezone;
   const todayStart = startOfLocalDay(new Date(nowMs), tz);
   const slots: GeneratedSlot[] = [];
   const needMin =
-    durationMin != null && durationMin > 0 ? durationMin : profile.duration;
-  const customDuration = durationMin != null && durationMin > 0;
+    opts.durationMin != null && opts.durationMin > 0
+      ? opts.durationMin
+      : profile.duration;
+  const customDuration = opts.durationMin != null && opts.durationMin > 0;
   const stepMin = customDuration ? 30 : profile.duration;
   const dayBreak =
     !customDuration &&
     profile.day_break_min != null &&
     profile.day_break_min > 0
       ? profile.day_break_min
+      : 0;
+  const travelBuffer =
+    opts.travelBufferMin != null && opts.travelBufferMin > 0
+      ? opts.travelBufferMin
       : 0;
 
   for (let d = 0; d < days; d++) {
@@ -65,6 +89,9 @@ export function generateSlotsFromBusy(
       mins + needMin <= window.endMin;
       mins += stepMin + dayBreak
     ) {
+      if (travelBuffer > 0 && mins - travelBuffer < window.startMin) {
+        continue;
+      }
       const hour = Math.floor(mins / 60);
       const minute = mins % 60;
       const startsAt = localToUtcIso(
@@ -94,7 +121,7 @@ export function generateSlotsFromBusy(
 export async function generateSlots(
   profile: MasterProfileRow,
   days = 7,
-  durationMin?: number,
+  durationMinOrOpts?: number | GenerateSlotsOptions,
 ): Promise<GeneratedSlot[]> {
   const tz = profile.timezone;
   const todayStart = startOfLocalDay(new Date(), tz);
@@ -104,5 +131,11 @@ export async function generateSlots(
     todayStart.toISOString(),
     rangeEnd.toISOString(),
   );
-  return generateSlotsFromBusy(profile, busy, days, Date.now(), durationMin);
+  return generateSlotsFromBusy(
+    profile,
+    busy,
+    days,
+    Date.now(),
+    durationMinOrOpts,
+  );
 }

@@ -2,6 +2,7 @@ export type EntryContext =
   | { mode: "master" }
   | { mode: "client"; masterId: number }
   | { mode: "client"; slug: string }
+  | { mode: "clientBooking"; accessToken: string }
   | { mode: "default" };
 
 /**
@@ -9,6 +10,7 @@ export type EntryContext =
  * - cabinet | master → master cabinet / onboarding
  * - p_<telegramUserId> → client booking by master tg id
  * - book_<slug> → client booking by master slug
+ * - b_<token> → open personal «Моя запись» by opaque access token
  */
 export function parseEntryContext(
   startParam: string | undefined | null,
@@ -20,6 +22,11 @@ export function parseEntryContext(
     return { mode: "master" };
   }
 
+  const byBooking = /^b_([A-Za-z0-9_-]+)$/.exec(raw);
+  if (byBooking) {
+    return { mode: "clientBooking", accessToken: byBooking[1]! };
+  }
+
   const byId = /^p_(\d+)$/.exec(raw);
   if (byId) {
     const masterId = Number(byId[1]);
@@ -28,7 +35,7 @@ export function parseEntryContext(
 
   const bySlug = /^book_([a-zA-Z0-9_-]+)$/.exec(raw);
   if (bySlug) {
-    return { mode: "client", slug: bySlug[1] };
+    return { mode: "client", slug: bySlug[1]! };
   }
 
   return { mode: "default" };

@@ -4,7 +4,9 @@ import {
   BookingRuleError,
   cancelBooking,
   createBooking,
+  ensureBookingAccessToken,
   getBooking,
+  getBookingByAccessToken,
   listClientBookings,
   markPaid,
   rescheduleBooking,
@@ -19,6 +21,7 @@ import {
   notifyBookingCancelled,
   notifyBookingCreated,
 } from "../services/notify.js";
+import { serializeClientBooking } from "../lib/clientBookingView.js";
 import { generateSlots } from "../services/slots.js";
 import { formatDateLabel, formatTime } from "../services/time.js";
 
@@ -110,7 +113,12 @@ bookingsRouter.post("/", requireSession, async (req: AuthedRequest, res) => {
     }
   }
 
-  const slots = await generateSlots(profile, 14, durationMin);
+  const travelBufferMin =
+    resolvedPlace === "visit" ? (profile.travel_buffer_min ?? 30) : undefined;
+  const slots = await generateSlots(profile, 14, {
+    durationMin,
+    travelBufferMin,
+  });
   const slot = slots.find((s) => s.startsAt === startsAt && s.available);
   if (!slot) {
     res.status(409).json({ error: "Slot unavailable" });
@@ -157,22 +165,14 @@ bookingsRouter.post("/", requireSession, async (req: AuthedRequest, res) => {
             .join(", ")
         : null;
 
+    const view = serializeClientBooking(booking, profile);
     res.status(201).json({
       booking: {
-        id: booking.id,
-        startsAt: booking.starts_at,
-        time: formatTime(booking.starts_at, profile.timezone),
-        date: formatDateLabel(booking.starts_at, profile.timezone),
-        masterName: profile.name,
-        masterId,
-        duration: booking.duration_min,
-        price: booking.price,
+        ...view,
         priceLabel: anyFrom ? `от ${price} ₽` : `${price} ₽`,
-        status: booking.status,
         serviceTitles: titles,
         placeChoice: resolvedPlace,
         placeAddress: studioAddress ?? visitLine,
-        clientName,
         comment: comment || null,
       },
     });
@@ -191,23 +191,52 @@ bookingsRouter.get("/mine", requireSession, async (req: AuthedRequest, res) => {
   const rows = await listClientBookings(tg.id);
   const enriched = await Promise.all(
     rows.map(async (b) => {
-      const profile = await getProfile(b.master_id);
-      const tz = profile?.timezone ?? "Europe/Moscow";
-      return {
-        id: b.id,
-        startsAt: b.starts_at,
-        date: formatDateLabel(b.starts_at, tz),
-        time: formatTime(b.starts_at, tz),
-        masterId: b.master_id,
-        masterName: profile?.name ?? "Мастер",
-        duration: b.duration_min,
-        price: b.price,
-        status: b.status,
-        cancelHours: profile?.cancel_hours ?? 24,
-      };
+      const withToken = await ensureBookingAccessToken(b);
+      const profile = await getProfile(withToken.master_id);
+      return serializeClientBooking(withToken, profile);
     }),
   );
   res.json({ bookings: enriched });
+});
+
+/** Opaque token deep-link: /api/bookings/t/:token */
+bookingsRouter.get(
+  "/t/:token",
+  requireSession,
+  async (req: AuthedRequest, res) => {
+    const tg = req.telegramUser!;
+    const token = String(req.params.token ?? "");
+    let booking = await getBookingByAccessToken(token);
+    if (!booking) {
+      res.status(404).json({ error: "Booking not found" });
+      return;
+    }
+    // First open by the booker binds session; master can also open.
+    if (booking.client_id !== tg.id && booking.master_id !== tg.id) {
+      res.status(403).json({ error: "Forbidden" });
+      return;
+    }
+    booking = await ensureBookingAccessToken(booking);
+    const profile = await getProfile(booking.master_id);
+    res.json({ booking: serializeClientBooking(booking, profile) });
+  },
+);
+
+bookingsRouter.get("/:id", requireSession, async (req: AuthedRequest, res) => {
+  const tg = req.telegramUser!;
+  const id = String(req.params.id);
+  let booking = await getBooking(id);
+  if (!booking) {
+    res.status(404).json({ error: "Booking not found" });
+    return;
+  }
+  if (booking.client_id !== tg.id && booking.master_id !== tg.id) {
+    res.status(403).json({ error: "Forbidden" });
+    return;
+  }
+  booking = await ensureBookingAccessToken(booking);
+  const profile = await getProfile(booking.master_id);
+  res.json({ booking: serializeClientBooking(booking, profile) });
 });
 
 bookingsRouter.post(
@@ -270,7 +299,11 @@ bookingsRouter.post(
       return;
     }
 
-    const slots = await generateSlots(profile, 14);
+    const slots = await generateSlots(
+      profile,
+      14,
+      existing.duration_min || undefined,
+    );
     const slot = slots.find((s) => s.startsAt === startsAt && s.available);
     if (!slot && startsAt !== existing.starts_at) {
       res.status(409).json({ error: "Slot unavailable" });

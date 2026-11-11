@@ -1,8 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { suggestAddresses, type AddressHit } from "../../api";
 import { ClientFlowShell } from "../../components/client/ClientFlowShell";
 import { MsArrowRight } from "../../components/master/MsArrowRight";
 import { useBackButton } from "../../hooks/useBackButton";
+import { useCitySearch } from "../../hooks/useCitySearch";
 import { useMainButton } from "../../hooks/useMainButton";
 import {
   needsClientPlaceStep,
@@ -11,11 +13,30 @@ import {
 } from "../../lib/clientBookingDraft";
 import { Field, Input, Textarea, cx } from "../../ui";
 
+function areaAllowsVisit(
+  areas: string,
+  city: string,
+  area: string,
+): boolean {
+  const hay = areas.trim().toLowerCase();
+  if (!hay) return true;
+  const needles = [city, area]
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+  if (needles.length === 0) return true;
+  return needles.some(
+    (n) => hay.includes(n) || n.includes(hay.split(",")[0]!.trim()),
+  );
+}
+
 export function ClientAddressScreen() {
   const { masterId: masterKey = "" } = useParams();
   const navigate = useNavigate();
   const initial = readClientDraft();
-  const [visitCity, setVisitCity] = useState(initial.visitCity);
+  const visitZones = initial.place?.visit?.areas ?? "";
+  const [visitCity, setVisitCity] = useState(
+    () => initial.visitCity || initial.place?.visit?.city || "",
+  );
   const [visitArea, setVisitArea] = useState(initial.visitArea);
   const [visitAddress, setVisitAddress] = useState(initial.visitAddress);
   const [visitApt, setVisitApt] = useState(initial.visitApt);
@@ -23,6 +44,16 @@ export function ClientAddressScreen() {
   const [visitFloor, setVisitFloor] = useState(initial.visitFloor);
   const [visitIntercom, setVisitIntercom] = useState(initial.visitIntercom);
   const [visitNote, setVisitNote] = useState(initial.visitNote);
+  const [cityOpen, setCityOpen] = useState(false);
+  const [addrOpen, setAddrOpen] = useState(false);
+  const [addrHits, setAddrHits] = useState<AddressHit[]>([]);
+  const [zoneError, setZoneError] = useState<string | null>(null);
+
+  const { suggestions: cityHits, commitQuery } = useCitySearch(
+    cityOpen,
+    visitCity,
+    8,
+  );
 
   useEffect(() => {
     const d = readClientDraft();
@@ -33,6 +64,28 @@ export function ClientAddressScreen() {
     }
   }, [masterKey, navigate]);
 
+  useEffect(() => {
+    if (!addrOpen) {
+      setAddrHits([]);
+      return;
+    }
+    const q = [visitCity, visitAddress].filter(Boolean).join(", ").trim();
+    if (q.length < 3) {
+      setAddrHits([]);
+      return;
+    }
+    let cancelled = false;
+    const t = window.setTimeout(() => {
+      void suggestAddresses(q, 6).then((hits) => {
+        if (!cancelled) setAddrHits(hits);
+      });
+    }, 300);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(t);
+    };
+  }, [addrOpen, visitAddress, visitCity]);
+
   const goBack = useCallback(() => {
     if (needsClientPlaceStep(readClientDraft().place)) {
       navigate(`/client/${encodeURIComponent(masterKey)}/place`);
@@ -41,9 +94,28 @@ export function ClientAddressScreen() {
     navigate(`/client/${encodeURIComponent(masterKey)}/services`);
   }, [masterKey, navigate]);
 
-  const canContinue = Boolean(
-    visitCity.trim() && visitAddress.trim(),
+  const inZone = useMemo(
+    () => areaAllowsVisit(visitZones, visitCity, visitArea),
+    [visitArea, visitCity, visitZones],
   );
+
+  const canContinue = Boolean(
+    visitCity.trim() && visitAddress.trim() && inZone,
+  );
+
+  useEffect(() => {
+    if (!visitCity.trim() && !visitArea.trim()) {
+      setZoneError(null);
+      return;
+    }
+    setZoneError(
+      inZone
+        ? null
+        : visitZones
+          ? `Адрес вне зоны выезда мастера (${visitZones})`
+          : null,
+    );
+  }, [inZone, visitArea, visitCity, visitZones]);
 
   const continueNext = useCallback(() => {
     if (!canContinue) return;
@@ -102,19 +174,96 @@ export function ClientAddressScreen() {
           <Field label="Город" as="label">
             <Input
               value={visitCity}
-              onChange={(e) => setVisitCity(e.target.value)}
+              onChange={(e) => {
+                setVisitCity(e.target.value);
+                setCityOpen(true);
+              }}
+              onFocus={() => setCityOpen(true)}
+              onBlur={() => {
+                window.setTimeout(() => setCityOpen(false), 150);
+                void commitQuery(visitCity).then((city) => {
+                  if (city) setVisitCity(city);
+                });
+              }}
               placeholder="Москва"
               autoComplete="address-level2"
             />
           </Field>
+          {cityOpen && cityHits.length > 0 ? (
+            <ul className="ms-city-suggest" role="listbox">
+              {cityHits.map((hit) => (
+                <li key={`${hit.name}-${hit.region ?? ""}`}>
+                  <button
+                    type="button"
+                    className="ms-city-suggest-item"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      setVisitCity(hit.name);
+                      setCityOpen(false);
+                    }}
+                  >
+                    <span className="ms-city-suggest-text">
+                      <span className="ms-city-suggest-name">{hit.name}</span>
+                      {hit.region ? (
+                        <span className="ms-city-suggest-region">
+                          {hit.region}
+                        </span>
+                      ) : null}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+
           <Field label="Улица и дом" as="label">
             <Input
               value={visitAddress}
-              onChange={(e) => setVisitAddress(e.target.value)}
+              onChange={(e) => {
+                setVisitAddress(e.target.value);
+                setAddrOpen(true);
+              }}
+              onFocus={() => setAddrOpen(true)}
+              onBlur={() => {
+                window.setTimeout(() => setAddrOpen(false), 150);
+              }}
               placeholder="Тверская, 12"
               autoComplete="street-address"
             />
           </Field>
+          {addrOpen && addrHits.length > 0 ? (
+            <ul className="ms-city-suggest" role="listbox">
+              {addrHits.map((hit) => (
+                <li key={hit.label}>
+                  <button
+                    type="button"
+                    className="ms-city-suggest-item"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      if (hit.city) setVisitCity(hit.city);
+                      const line = [hit.street, hit.house]
+                        .filter(Boolean)
+                        .join(", ");
+                      setVisitAddress(line || hit.label);
+                      setAddrOpen(false);
+                    }}
+                  >
+                    <span className="ms-city-suggest-text">
+                      <span className="ms-city-suggest-name">{hit.label}</span>
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+
+          {zoneError ? <p className="ms-client-error">{zoneError}</p> : null}
+          {visitZones ? (
+            <p className="ms-client-muted ms-client-zone-note">
+              Зона выезда: {visitZones}
+            </p>
+          ) : null}
+
           <Field label="Район" as="label">
             <Input
               value={visitArea}

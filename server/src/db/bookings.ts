@@ -1,10 +1,14 @@
-import { randomUUID } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import {
   canCancelBooking,
   canRescheduleBooking,
 } from "../lib/bookingRules.js";
 import { withDb } from "./client.js";
 import type { BookingRow, BookingStatus } from "./types.js";
+
+export function newBookingAccessToken(): string {
+  return randomBytes(18).toString("base64url");
+}
 
 function mapBooking(row: Record<string, unknown>): BookingRow {
   return {
@@ -25,6 +29,8 @@ function mapBooking(row: Record<string, unknown>): BookingRow {
       row.services_json != null ? String(row.services_json) : null,
     master_client_id:
       row.master_client_id != null ? String(row.master_client_id) : null,
+    access_token:
+      row.access_token != null ? String(row.access_token) : null,
   };
 }
 
@@ -45,6 +51,7 @@ export async function createBooking(
   return withDb(async (db) => {
     const now = new Date().toISOString();
     const id = randomUUID();
+    const accessToken = newBookingAccessToken();
     const status: BookingStatus = "confirmed";
     const servicesJson =
       input.serviceTitles && input.serviceTitles.length > 0
@@ -57,8 +64,8 @@ export async function createBooking(
         sql: `INSERT INTO bookings (
           id, master_id, client_id, starts_at, duration_min, price,
           status, paid, client_name, reminded_24h, reminded_1h, created_at, updated_at,
-          services_json, master_client_id
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, 0, 0, ?, ?, ?, ?)`,
+          services_json, master_client_id, access_token
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, 0, 0, ?, ?, ?, ?, ?)`,
         args: [
           id,
           input.masterId,
@@ -72,6 +79,7 @@ export async function createBooking(
           now,
           servicesJson,
           masterClientId,
+          accessToken,
         ],
       });
     } catch (err) {
@@ -98,7 +106,47 @@ export async function createBooking(
       updated_at: now,
       services_json: servicesJson,
       master_client_id: masterClientId,
+      access_token: accessToken,
     };
+  });
+}
+
+export async function getBookingByAccessToken(
+  token: string,
+): Promise<BookingRow | null> {
+  const t = token.trim();
+  if (!t) return null;
+  return withDb(async (db) => {
+    const result = await db.execute({
+      sql: "SELECT * FROM bookings WHERE access_token = ?",
+      args: [t],
+    });
+    const row = result.rows[0];
+    return row ? mapBooking(row as unknown as Record<string, unknown>) : null;
+  });
+}
+
+/** Ensure legacy rows get a token (idempotent). */
+export async function ensureBookingAccessToken(
+  booking: BookingRow,
+): Promise<BookingRow> {
+  if (booking.access_token) return booking;
+  const token = newBookingAccessToken();
+  return withDb(async (db) => {
+    const now = new Date().toISOString();
+    await db.execute({
+      sql: `UPDATE bookings SET access_token = ?, updated_at = ?
+        WHERE id = ? AND access_token IS NULL`,
+      args: [token, now, booking.id],
+    });
+    const result = await db.execute({
+      sql: "SELECT * FROM bookings WHERE id = ?",
+      args: [booking.id],
+    });
+    const row = result.rows[0];
+    return row
+      ? mapBooking(row as unknown as Record<string, unknown>)
+      : { ...booking, access_token: token, updated_at: now };
   });
 }
 

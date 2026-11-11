@@ -80,6 +80,10 @@ export function EditPublicPageScreen() {
           (me.profile.specialty as MasterSpecialty | null) ?? draft.specialty,
         );
         setCity(me.profile.city || draft.city || "Москва");
+        if (me.profile.about != null) {
+          setAbout(me.profile.about);
+          savePublicAbout(me.profile.about);
+        }
         const remote = me.profile.avatarUrl;
         if (remote) {
           saveMasterAvatarDataUrl(remote);
@@ -121,6 +125,7 @@ export function EditPublicPageScreen() {
         name: name.trim(),
         specialty,
         city,
+        about: about.trim(),
       });
       cacheProfile(profile);
       saveMasterDraft({

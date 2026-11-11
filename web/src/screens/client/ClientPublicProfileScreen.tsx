@@ -133,6 +133,13 @@ export function ClientPublicProfileScreen() {
       </section>
 
       <div className="ms-client-profile-content">
+        {master.about?.trim() ? (
+          <section className="ms-client-section">
+            <h2 className="ms-client-section-title">О мастере</h2>
+            <p className="ms-client-about">{master.about.trim()}</p>
+          </section>
+        ) : null}
+
         {services.length > 0 ? (
           <section className="ms-client-section">
             <h2 className="ms-client-section-title">Услуги</h2>

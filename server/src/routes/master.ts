@@ -74,12 +74,17 @@ masterRouter.put("/profile", requireSession, async (req: AuthedRequest, res) => 
   try {
     await upsertUser(tg);
     const existing = await getProfile(tg.id);
+    const aboutRaw = body.about ?? body.aboutText;
+    const aboutText =
+      typeof aboutRaw === "string" ? aboutRaw : undefined;
+
     if (existing?.status === "active" && existing.onboarding_completed_at) {
       const profile = await upsertProfile({
         userId: tg.id,
         name,
         specialty,
         city,
+        aboutText,
       });
       res.json({ profile: serializeProfile(profile) });
       return;
@@ -90,6 +95,7 @@ masterRouter.put("/profile", requireSession, async (req: AuthedRequest, res) => 
       name,
       specialty,
       city,
+      aboutText,
       duration: 60,
       price: 0,
       schedule: "weekday",
@@ -159,11 +165,31 @@ masterRouter.put("/place", requireSession, async (req: AuthedRequest, res) => {
       );
     }
     const city = primaryCityFromPlace(place) ?? profile.city;
+    const travelRaw = body.travelBufferMin;
+    const travelBufferMin =
+      travelRaw === null || travelRaw === undefined || travelRaw === ""
+        ? undefined
+        : Number(travelRaw);
+    if (
+      travelBufferMin !== undefined &&
+      (!Number.isFinite(travelBufferMin) ||
+        travelBufferMin < 0 ||
+        travelBufferMin > 240)
+    ) {
+      res.status(400).json({ error: "Invalid travelBufferMin" });
+      return;
+    }
     const next = await upsertProfile({
       userId: tg.id,
       name: profile.name,
       place,
       city,
+      travelBufferMin:
+        place.mode === "studio"
+          ? null
+          : travelBufferMin !== undefined
+            ? travelBufferMin
+            : (profile.travel_buffer_min ?? 30),
       onboardingStep: Math.max(profile.onboarding_step, 4),
     });
     res.json({ profile: serializeProfile(next) });

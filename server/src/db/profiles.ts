@@ -42,6 +42,12 @@ function mapProfile(row: Record<string, unknown>): MasterProfileRow {
     working_hours: workingHours,
     day_break_min:
       dayBreakMin != null && Number.isFinite(dayBreakMin) ? dayBreakMin : null,
+    travel_buffer_min: (() => {
+      const raw = row.travel_buffer_min;
+      if (raw == null || raw === "") return null;
+      const n = Number(raw);
+      return Number.isFinite(n) && n > 0 ? n : null;
+    })(),
     place,
     timezone: String(row.timezone),
     cancel_hours: Number(row.cancel_hours),
@@ -52,6 +58,7 @@ function mapProfile(row: Record<string, unknown>): MasterProfileRow {
         ? String(row.onboarding_completed_at)
         : null,
     avatar_url: row.avatar_url != null ? String(row.avatar_url) : null,
+    about_text: row.about_text != null ? String(row.about_text) : null,
     created_at: String(row.created_at),
     updated_at: String(row.updated_at),
   };
@@ -69,11 +76,13 @@ export type UpsertProfileInput = {
   schedule?: ScheduleKind;
   workingHours?: WorkingHours | null;
   dayBreakMin?: number | null;
+  travelBufferMin?: number | null;
   place?: MasterPlace | null;
   timezone?: string;
   cancelHours?: number;
   specialty?: string | null;
   city?: string;
+  aboutText?: string | null;
   status?: MasterProfileStatus;
   onboardingStep?: number;
   onboardingComplete?: boolean;
@@ -133,8 +142,27 @@ export async function upsertProfile(
       dayBreakMin = null;
     }
 
+    let travelBufferMin =
+      input.travelBufferMin !== undefined
+        ? input.travelBufferMin
+        : (prev?.travel_buffer_min ?? null);
+    if (
+      travelBufferMin != null &&
+      (!Number.isFinite(travelBufferMin) ||
+        travelBufferMin < 0 ||
+        travelBufferMin > 240)
+    ) {
+      travelBufferMin = null;
+    }
+
     const place =
       input.place !== undefined ? input.place : (prev?.place ?? null);
+    const aboutText =
+      input.aboutText !== undefined
+        ? input.aboutText == null
+          ? null
+          : String(input.aboutText).trim().slice(0, 2000) || null
+        : (prev?.about_text ?? null);
 
     let schedule = input.schedule ?? prev?.schedule ?? "weekday";
     if (input.workingHours !== undefined && workingHours) {
@@ -171,10 +199,10 @@ export async function upsertProfile(
     await db.execute({
       sql: `INSERT INTO master_profiles (
         user_id, slug, name, specialty, city, duration, price, schedule,
-        working_hours_json, day_break_min, place_json,
+        working_hours_json, day_break_min, travel_buffer_min, place_json,
         timezone, cancel_hours, status, onboarding_step, onboarding_completed_at,
-        created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        about_text, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(user_id) DO UPDATE SET
         name = excluded.name,
         specialty = excluded.specialty,
@@ -184,12 +212,14 @@ export async function upsertProfile(
         schedule = excluded.schedule,
         working_hours_json = excluded.working_hours_json,
         day_break_min = excluded.day_break_min,
+        travel_buffer_min = excluded.travel_buffer_min,
         place_json = excluded.place_json,
         timezone = excluded.timezone,
         cancel_hours = excluded.cancel_hours,
         status = excluded.status,
         onboarding_step = excluded.onboarding_step,
         onboarding_completed_at = excluded.onboarding_completed_at,
+        about_text = excluded.about_text,
         updated_at = excluded.updated_at`,
       args: [
         input.userId,
@@ -202,12 +232,14 @@ export async function upsertProfile(
         schedule,
         workingHoursJson,
         dayBreakMin,
+        travelBufferMin,
         placeJson,
         timezone,
         cancelHours,
         status,
         onboardingStep,
         onboardingCompletedAt,
+        aboutText,
         createdAt,
         now,
       ],
@@ -224,6 +256,7 @@ export async function upsertProfile(
       schedule,
       working_hours: workingHours,
       day_break_min: dayBreakMin,
+      travel_buffer_min: travelBufferMin,
       place,
       timezone,
       cancel_hours: cancelHours,
@@ -231,6 +264,7 @@ export async function upsertProfile(
       onboarding_step: onboardingStep,
       onboarding_completed_at: onboardingCompletedAt,
       avatar_url: prev?.avatar_url ?? null,
+      about_text: aboutText,
       created_at: createdAt,
       updated_at: now,
     };

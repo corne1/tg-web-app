@@ -31,7 +31,7 @@ export function ClientSuccessScreen() {
   const openBooking = useCallback(() => {
     const id = booking?.id ?? draft.bookingId;
     if (id) {
-      navigate(`/client/bookings`, { state: { focusId: id } });
+      navigate(`/client/bookings/${encodeURIComponent(id)}`, { replace: true });
       return;
     }
     navigate("/client/bookings");
