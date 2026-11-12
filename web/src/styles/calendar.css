@@ -3117,13 +3117,163 @@ label.ms-sheet-item {
   font-weight: 600;
 }
 
-.ms-break-select {
+/* Figma 21091:27808 — Добавить перерыв */
+.ms-break-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--ms-radius-card);
+  background: var(--ms-fill2);
+  border: 1px solid var(--ms-line-soft);
+  box-sizing: border-box;
+}
+
+.ms-break-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ms-break-card-copy {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ms-break-card-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.16px;
+  line-height: 24px;
   color: var(--ms-ink);
 }
 
-.ms-break-optional {
+.ms-break-card-sub {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: -0.14px;
+  line-height: 20px;
   color: var(--ms-muted);
+}
+
+.ms-break-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ms-break-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.ms-break-field-label {
+  font-size: 14px;
   font-weight: 500;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  color: var(--ms-ink);
+}
+
+.ms-break-time-trigger {
+  appearance: none;
+  width: 100%;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--ms-radius-full);
+  border: 1px solid var(--ms-line-soft);
+  background: #fff;
+  box-shadow: var(--ms-shadow-e1);
+  color: var(--ms-ink);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ms-break-time-trigger.is-placeholder {
+  color: var(--ms-muted);
+  font-weight: 400;
+}
+
+.ms-break-days-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ms-break-days-label {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  color: var(--ms-ink);
+}
+
+.ms-break-days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.ms-break-day {
+  appearance: none;
+  min-height: 40px;
+  padding: 8px 0;
+  border-radius: 12px;
+  border: 1px solid var(--ms-line);
+  background: #fff;
+  color: var(--ms-ink);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.13px;
+  line-height: 18px;
+  box-shadow: var(--ms-shadow-e1);
+  cursor: pointer;
+}
+
+.ms-break-day.is-on {
+  background: var(--ms-purple);
+  border-color: var(--ms-purple);
+  color: #fff;
+  box-shadow: none;
+}
+
+.ms-break-optional-tip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: var(--ms-radius-full);
+  background: #e8f3ff;
+  color: var(--ms-info);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.13px;
+  line-height: 18px;
+}
+
+.ms-break-optional-tip-icon {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  display: block;
 }
 
 .ms-sheet-hours {

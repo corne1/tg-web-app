@@ -4,7 +4,7 @@ import {
   slotConflictsWithBusy,
   type BusyInterval,
 } from "../lib/bookingInterval.js";
-import { windowsFor } from "../lib/workingHours.js";
+import { breakWindowFor, windowsFor } from "../lib/workingHours.js";
 import {
   addLocalDays,
   formatDateShort,
@@ -30,7 +30,12 @@ const DEFAULT_SLOT_DURATION_MIN = 60;
 
 export type SlotProfileInput = Pick<
   MasterProfileRow,
-  "schedule" | "timezone" | "working_hours" | "day_break_min" | "travel_buffer_min"
+  | "schedule"
+  | "timezone"
+  | "working_hours"
+  | "schedule_break"
+  | "day_break_min"
+  | "travel_buffer_min"
 >;
 
 export type GenerateSlotsOptions = {
@@ -87,12 +92,21 @@ export function generateSlotsFromBusy(
     );
     if (!window) continue;
 
+    const lunch = breakWindowFor(profile.schedule_break, parts.weekday);
+
     for (
       let mins = window.startMin;
       mins + needMin <= window.endMin;
       mins += stepMin + dayBreak
     ) {
       if (travelBuffer > 0 && mins - travelBuffer < window.startMin) {
+        continue;
+      }
+      if (
+        lunch &&
+        mins < lunch.endMin &&
+        mins + needMin > lunch.startMin
+      ) {
         continue;
       }
       const hour = Math.floor(mins / 60);

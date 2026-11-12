@@ -13,7 +13,7 @@ import clockIcon from "../../assets/cabinet/clock.svg";
 import infoIcon from "../../assets/onboarding/info.svg";
 import {
   applyHoursPreset,
-  DAY_BREAK_OPTIONS,
+  defaultScheduleBreak,
   hasEnabledWorkingDay,
   HOURS_PRESETS,
   loadMasterDraft,
@@ -24,6 +24,7 @@ import {
   WEEKDAYS,
   type DayHours,
   type HoursPresetId,
+  type ScheduleBreak,
   type WeekdayId,
   type WorkingHours,
 } from "../../lib/masterDraft";
@@ -40,7 +41,6 @@ import {
   ChevronRightIcon,
   Chip,
   RadioMark,
-  SelectTrigger,
   SheetAltAction,
   SheetFooter,
   SheetHeader,
@@ -52,9 +52,9 @@ import {
 
 type Sheet =
   | { kind: "time"; day: WeekdayId; field: "start" | "end" }
+  | { kind: "break-time"; field: "start" | "end" }
   | { kind: "copy-source" }
   | { kind: "copy-targets"; source: WeekdayId }
-  | { kind: "break" }
   | null;
 
 const TIME_OPTS = timeOptions(30);
@@ -90,8 +90,9 @@ export function HoursSettings({ mode }: { mode: SettingsMode }) {
   const [preset, setPreset] = useState<HoursPresetId | null>(
     initial.hoursPreset,
   );
-  const [dayBreakMin, setDayBreakMin] = useState<number | null>(
-    initial.dayBreakMin,
+  const [dayBreakMin] = useState<number | null>(initial.dayBreakMin);
+  const [scheduleBreak, setScheduleBreak] = useState<ScheduleBreak>(
+    initial.scheduleBreak ?? defaultScheduleBreak(),
   );
   const [sheet, setSheet] = useState<Sheet>(null);
   const [copySource, setCopySource] = useState<WeekdayId | null>(null);
@@ -106,16 +107,21 @@ export function HoursSettings({ mode }: { mode: SettingsMode }) {
   }, [isSettings]);
 
   const persist = useCallback(
-    (nextHours = hours, nextPreset = preset, nextBreak = dayBreakMin) => {
+    (
+      nextHours = hours,
+      nextPreset = preset,
+      nextScheduleBreak = scheduleBreak,
+    ) => {
       const draft = loadMasterDraft();
       saveMasterDraft({
         ...draft,
         hours: nextHours,
         hoursPreset: nextPreset,
-        dayBreakMin: nextBreak,
+        dayBreakMin,
+        scheduleBreak: nextScheduleBreak,
       });
     },
-    [dayBreakMin, hours, preset],
+    [dayBreakMin, hours, preset, scheduleBreak],
   );
 
   const goBack = useCallback(() => {
@@ -136,18 +142,19 @@ export function HoursSettings({ mode }: { mode: SettingsMode }) {
   const canContinue = hasEnabledWorkingDay(hours);
 
   const syncHoursToServer = useCallback(
-    async (nextHours = hours, nextBreak = dayBreakMin) => {
+    async (nextHours = hours, nextScheduleBreak = scheduleBreak) => {
       try {
         const profile = await saveMasterHours({
           hours: nextHours,
-          dayBreakMin: nextBreak,
+          dayBreakMin,
+          scheduleBreak: nextScheduleBreak,
         });
         cacheProfile(profile);
       } catch {
         // Local draft remains; server sync retries on next continue/complete.
       }
     },
-    [dayBreakMin, hours],
+    [dayBreakMin, hours, scheduleBreak],
   );
 
   const handleContinue = useCallback(() => {
@@ -215,8 +222,36 @@ export function HoursSettings({ mode }: { mode: SettingsMode }) {
     [hours],
   );
 
-  const breakLabel =
-    DAY_BREAK_OPTIONS.find((o) => o.value === dayBreakMin)?.label ?? "Не задан";
+  const updateScheduleBreak = useCallback(
+    (patch: Partial<ScheduleBreak>) => {
+      setScheduleBreak((prev) => {
+        const next = { ...prev, ...patch };
+        persist(hours, preset, next);
+        return next;
+      });
+      webApp?.HapticFeedback?.selectionChanged?.();
+    },
+    [hours, persist, preset, webApp],
+  );
+
+  const toggleBreakDay = useCallback(
+    (id: WeekdayId) => {
+      setScheduleBreak((prev) => {
+        const has = prev.days.includes(id);
+        const days = has
+          ? prev.days.filter((d) => d !== id)
+          : [...prev.days, id];
+        const next = {
+          ...prev,
+          days: days.length > 0 ? days : prev.days,
+        };
+        persist(hours, preset, next);
+        return next;
+      });
+      webApp?.HapticFeedback?.selectionChanged?.();
+    },
+    [hours, persist, preset, webApp],
+  );
 
   const openCopy = useCallback(() => {
     if (enabledDays.length === 0) {
@@ -399,18 +434,106 @@ export function HoursSettings({ mode }: { mode: SettingsMode }) {
       </section>
 
       <section className="ms-hours-section">
-        <h3 className="ms-hours-section-title">Перерывы в течение дня</h3>
-        <SelectTrigger
-          className="ms-break-select"
-          value={
+        <h3 className="ms-hours-section-title">Перерыв в течение дня</h3>
+        <div className="ms-break-card">
+          <div className="ms-break-card-head">
+            <div className="ms-break-card-copy">
+              <p className="ms-break-card-title">Добавить перерыв</p>
+              <p className="ms-break-card-sub">
+                В это время клиенты не смогут записаться
+              </p>
+            </div>
+            <button
+              type="button"
+              className={`ms-switch ${scheduleBreak.enabled ? "is-on" : ""}`}
+              role="switch"
+              aria-checked={scheduleBreak.enabled}
+              aria-label="Добавить перерыв"
+              onClick={() =>
+                updateScheduleBreak({ enabled: !scheduleBreak.enabled })
+              }
+            >
+              <span className="ms-switch-knob" />
+            </button>
+          </div>
+
+          {scheduleBreak.enabled ? (
             <>
-              <span className="ms-break-optional">Необязательно</span>
-              {" · "}
-              {breakLabel}
+              <div className="ms-break-fields">
+                <label className="ms-break-field">
+                  <span className="ms-break-field-label">Начало перерыва</span>
+                  <button
+                    type="button"
+                    className={cx(
+                      "ms-break-time-trigger",
+                      !scheduleBreak.start && "is-placeholder",
+                    )}
+                    onClick={() =>
+                      setSheet({ kind: "break-time", field: "start" })
+                    }
+                  >
+                    <span>{scheduleBreak.start ?? "Выберите время"}</span>
+                    <ChevronRightIcon className="ms-sheet-chevron-right" />
+                  </button>
+                </label>
+                <label className="ms-break-field">
+                  <span className="ms-break-field-label">
+                    Окончание перерыва
+                  </span>
+                  <button
+                    type="button"
+                    className={cx(
+                      "ms-break-time-trigger",
+                      !scheduleBreak.end && "is-placeholder",
+                    )}
+                    onClick={() =>
+                      setSheet({ kind: "break-time", field: "end" })
+                    }
+                  >
+                    <span>{scheduleBreak.end ?? "Выберите время"}</span>
+                    <ChevronRightIcon className="ms-sheet-chevron-right" />
+                  </button>
+                </label>
+              </div>
+
+              <div className="ms-break-days-block">
+                <p className="ms-break-days-label">В какие дни действует?</p>
+                <div
+                  className="ms-break-days"
+                  role="group"
+                  aria-label="Дни перерыва"
+                >
+                  {WEEKDAYS.map((day) => {
+                    const on = scheduleBreak.days.includes(day.id);
+                    return (
+                      <button
+                        key={day.id}
+                        type="button"
+                        className={cx("ms-break-day", on && "is-on")}
+                        aria-pressed={on}
+                        onClick={() => toggleBreakDay(day.id)}
+                      >
+                        {day.short}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </>
-          }
-          onClick={() => setSheet({ kind: "break" })}
-        />
+          ) : null}
+
+          <div className="ms-break-optional-tip" role="note">
+            <img
+              className="ms-break-optional-tip-icon"
+              src={infoIcon}
+              width={20}
+              height={20}
+              alt=""
+              aria-hidden
+            />
+            <span>Необязательно</span>
+          </div>
+        </div>
       </section>
 
       {sheet?.kind === "time" && (
@@ -430,9 +553,55 @@ export function HoursSettings({ mode }: { mode: SettingsMode }) {
               : hours[sheet.day].start
           }
           field={sheet.field}
+          constraintLabel={
+            sheet.field === "end" ? "начала рабочего дня" : null
+          }
           onClose={() => setSheet(null)}
           onPick={(value) => {
             updateDayTime(sheet.day, { [sheet.field]: value });
+            setSheet(null);
+          }}
+        />
+      )}
+
+      {sheet?.kind === "break-time" && (
+        <TimeSheet
+          title={
+            sheet.field === "start"
+              ? "Начало перерыва"
+              : "Окончание перерыва"
+          }
+          dayLabel="Перерыв"
+          value={
+            (sheet.field === "start"
+              ? scheduleBreak.start
+              : scheduleBreak.end) ??
+            (sheet.field === "start" ? "13:00" : "14:00")
+          }
+          other={
+            sheet.field === "start"
+              ? (scheduleBreak.end ?? "23:30")
+              : (scheduleBreak.start ?? "00:00")
+          }
+          field={sheet.field}
+          constraintLabel={
+            sheet.field === "end" && scheduleBreak.start
+              ? "начала перерыва"
+              : null
+          }
+          onClose={() => setSheet(null)}
+          onPick={(value) => {
+            if (sheet.field === "start") {
+              const end = scheduleBreak.end;
+              const clearEnd =
+                end != null && timeToMinutes(value) >= timeToMinutes(end);
+              updateScheduleBreak({
+                start: value,
+                end: clearEnd ? null : end,
+              });
+            } else {
+              updateScheduleBreak({ end: value });
+            }
             setSheet(null);
           }}
         />
@@ -545,28 +714,6 @@ export function HoursSettings({ mode }: { mode: SettingsMode }) {
         ) : null}
       </BottomSheet>
 
-      <BottomSheet
-        open={sheet?.kind === "break"}
-        onClose={() => setSheet(null)}
-      >
-        <SheetSimpleHeader title="Перерыв в течение дня" />
-        <SheetList>
-          {DAY_BREAK_OPTIONS.map((opt) => (
-            <li key={String(opt.value)}>
-              <SheetItem
-                active={dayBreakMin === opt.value}
-                onClick={() => {
-                  setDayBreakMin(opt.value);
-                  persist(hours, preset, opt.value);
-                  setSheet(null);
-                }}
-              >
-                {opt.label}
-              </SheetItem>
-            </li>
-          ))}
-        </SheetList>
-      </BottomSheet>
     </>
   );
 
@@ -648,6 +795,7 @@ function TimeSheet({
   value,
   other,
   field,
+  constraintLabel,
   onClose,
   onPick,
 }: {
@@ -656,6 +804,7 @@ function TimeSheet({
   value: string;
   other: string;
   field: "start" | "end";
+  constraintLabel?: string | null;
   onClose: () => void;
   onPick: (value: string) => void;
 }) {
@@ -684,8 +833,8 @@ function TimeSheet({
   const customValid = isTimeAllowed(customValue, field, other);
 
   const infoText =
-    field === "end"
-      ? `Время должно быть позже начала рабочего дня — ${other}`
+    field === "end" && constraintLabel
+      ? `Время должно быть позже ${constraintLabel} — ${other}`
       : null;
 
   const customLead =

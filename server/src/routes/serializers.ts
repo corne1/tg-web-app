@@ -20,6 +20,7 @@ export function serializeProfile(profile: MasterProfileRow) {
     onboardingComplete,
     onboardingCompletedAt: profile.onboarding_completed_at,
     workingHours: profile.working_hours,
+    scheduleBreak: profile.schedule_break,
     dayBreakMin: profile.day_break_min,
     travelBufferMin: profile.travel_buffer_min,
     place: profile.place,

@@ -17,6 +17,14 @@ export type DayHours = {
 
 export type WorkingHours = Record<WeekdayId, DayHours>;
 
+/** Blocked lunch/break window (Figma «Добавить перерыв»). */
+export type ScheduleBreak = {
+  enabled: boolean;
+  start: string | null;
+  end: string | null;
+  days: WeekdayId[];
+};
+
 export const WEEKDAY_IDS: WeekdayId[] = [
   "mon",
   "tue",
@@ -26,6 +34,90 @@ export const WEEKDAY_IDS: WeekdayId[] = [
   "sat",
   "sun",
 ];
+
+export function defaultScheduleBreak(): ScheduleBreak {
+  return {
+    enabled: false,
+    start: null,
+    end: null,
+    days: ["mon", "tue", "wed", "thu", "fri"],
+  };
+}
+
+export function normalizeScheduleBreak(raw: unknown): ScheduleBreak {
+  const base = defaultScheduleBreak();
+  if (!raw || typeof raw !== "object") return base;
+  const src = raw as Partial<ScheduleBreak>;
+  const days = Array.isArray(src.days)
+    ? src.days.filter((d): d is WeekdayId =>
+        (WEEKDAY_IDS as string[]).includes(String(d)),
+      )
+    : base.days;
+  const start =
+    typeof src.start === "string" && timeToMinutes(src.start) != null
+      ? src.start
+      : null;
+  const end =
+    typeof src.end === "string" && timeToMinutes(src.end) != null
+      ? src.end
+      : null;
+  return {
+    enabled: Boolean(src.enabled),
+    start,
+    end,
+    days: days.length > 0 ? days : base.days,
+  };
+}
+
+/** Persist hours + optional break in one JSON blob. */
+export function stringifyWorkingHoursBundle(
+  hours: WorkingHours,
+  scheduleBreak?: ScheduleBreak | null,
+): string {
+  if (scheduleBreak) {
+    return JSON.stringify({ ...hours, break: scheduleBreak });
+  }
+  return JSON.stringify(hours);
+}
+
+export function parseWorkingHoursBundle(raw: string | null | undefined): {
+  hours: WorkingHours | null;
+  scheduleBreak: ScheduleBreak;
+} {
+  if (!raw) {
+    return { hours: null, scheduleBreak: defaultScheduleBreak() };
+  }
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    const hours = normalizeWorkingHours(parsed);
+    const breakRaw =
+      parsed && typeof parsed === "object"
+        ? (parsed as { break?: unknown }).break
+        : undefined;
+    return {
+      hours,
+      scheduleBreak: normalizeScheduleBreak(breakRaw),
+    };
+  } catch {
+    return { hours: null, scheduleBreak: defaultScheduleBreak() };
+  }
+}
+
+/** Break window for a JS weekday (0=Sun…6=Sat), or null if inactive. */
+export function breakWindowFor(
+  scheduleBreak: ScheduleBreak | null | undefined,
+  weekday: number,
+): { startMin: number; endMin: number } | null {
+  if (!scheduleBreak?.enabled || !scheduleBreak.start || !scheduleBreak.end) {
+    return null;
+  }
+  const id = JS_WEEKDAY_TO_ID[weekday];
+  if (!id || !scheduleBreak.days.includes(id)) return null;
+  const startMin = timeToMinutes(scheduleBreak.start);
+  const endMin = timeToMinutes(scheduleBreak.end);
+  if (startMin == null || endMin == null || endMin <= startMin) return null;
+  return { startMin, endMin };
+}
 
 /** JS getDay() / zonedParts.weekday: 0=Sun … 6=Sat → draft weekday id */
 export const JS_WEEKDAY_TO_ID: WeekdayId[] = [
@@ -92,12 +184,7 @@ export function normalizeWorkingHours(
 export function parseWorkingHoursJson(
   raw: string | null | undefined,
 ): WorkingHours | null {
-  if (!raw) return null;
-  try {
-    return normalizeWorkingHours(JSON.parse(raw));
-  } catch {
-    return null;
-  }
+  return parseWorkingHoursBundle(raw).hours;
 }
 
 /** Infer coarse ScheduleKind from custom hours (kept in sync with `schedule` column). */

@@ -18,6 +18,7 @@ import {
 } from "./lib/profileStorage";
 import {
   loadMasterDraft,
+  normalizeScheduleBreak,
   normalizeWorkingHours,
   saveMasterDraft,
   type ServiceTypeCode,
@@ -85,6 +86,9 @@ function syncDraftFromServer(
       profile.dayBreakMin !== undefined
         ? profile.dayBreakMin
         : prev.dayBreakMin,
+    scheduleBreak: profile.scheduleBreak
+      ? normalizeScheduleBreak(profile.scheduleBreak)
+      : prev.scheduleBreak,
     placeMode: place?.mode ?? prev.placeMode,
     studioPlace: place
       ? {

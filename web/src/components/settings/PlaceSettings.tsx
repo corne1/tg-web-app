@@ -441,6 +441,7 @@ export function PlaceSettings({ mode }: { mode: SettingsMode }) {
       const profile = await completeMasterOnboarding({
         hours: draft.hours,
         dayBreakMin: draft.dayBreakMin,
+        scheduleBreak: draft.scheduleBreak,
         place,
       });
       cacheProfile(profile);

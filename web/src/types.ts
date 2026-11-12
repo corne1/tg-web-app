@@ -38,6 +38,12 @@ export interface MasterProfile {
   onboardingCompletedAt?: string | null;
   bookingLink?: string | null;
   workingHours?: WorkingHoursDto | null;
+  scheduleBreak?: {
+    enabled: boolean;
+    start: string | null;
+    end: string | null;
+    days: Array<"mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun">;
+  } | null;
   dayBreakMin?: number | null;
   travelBufferMin?: number | null;
   place?: MasterPlaceDto | null;

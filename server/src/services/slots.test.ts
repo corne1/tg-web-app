@@ -1,5 +1,8 @@
 import { generateSlotsFromBusy } from "./slots.js";
-import type { WorkingHours } from "../lib/workingHours.js";
+import {
+  defaultScheduleBreak,
+  type WorkingHours,
+} from "../lib/workingHours.js";
 
 function assert(cond: unknown, msg: string): asserts cond {
   if (!cond) throw new Error(msg);
@@ -23,6 +26,7 @@ const profile = {
   schedule: "weekday" as const,
   timezone: "Europe/Moscow",
   working_hours: hours,
+  schedule_break: defaultScheduleBreak(),
   day_break_min: null,
   travel_buffer_min: null,
 };
@@ -63,6 +67,7 @@ const preset = generateSlotsFromBusy(
     schedule: "weekday",
     timezone: "Europe/Moscow",
     working_hours: null,
+    schedule_break: defaultScheduleBreak(),
     day_break_min: null,
     travel_buffer_min: null,
   },
@@ -71,5 +76,35 @@ const preset = generateSlotsFromBusy(
   mondayMorningUtc,
 );
 assert(preset.length === 10, `preset weekday day → 10 slots, got ${preset.length}`);
+
+const lunchHours: WorkingHours = {
+  ...hours,
+  mon: { enabled: true, start: "10:00", end: "16:00" },
+};
+const withLunch = generateSlotsFromBusy(
+  {
+    ...profile,
+    working_hours: lunchHours,
+    schedule_break: {
+      enabled: true,
+      start: "12:00",
+      end: "13:00",
+      days: ["mon"],
+    },
+  },
+  [],
+  1,
+  mondayMorningUtc,
+  { durationMin: 60 },
+);
+assert(
+  withLunch.every((s) => s.time !== "12:00"),
+  "lunch blocks 12:00 start",
+);
+assert(
+  withLunch.some((s) => s.time === "11:00") &&
+    withLunch.some((s) => s.time === "13:00"),
+  "slots before/after lunch remain",
+);
 
 console.log("slots.test.ts: ok");

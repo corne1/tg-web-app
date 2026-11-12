@@ -147,12 +147,14 @@ export async function createCabinetBooking(input: {
 export async function saveMasterHours(input: {
   hours: WorkingHoursDto;
   dayBreakMin?: number | null;
+  scheduleBreak?: MasterProfile["scheduleBreak"];
 }): Promise<MasterProfile> {
   const data = await request<{ profile: MasterProfile }>("/api/master/hours", {
     method: "PUT",
     body: JSON.stringify({
       hours: input.hours,
       dayBreakMin: input.dayBreakMin ?? null,
+      scheduleBreak: input.scheduleBreak ?? undefined,
     }),
   });
   return data.profile;
@@ -194,6 +196,7 @@ export async function saveMasterPlace(
 export async function completeMasterOnboarding(input?: {
   hours?: WorkingHoursDto;
   dayBreakMin?: number | null;
+  scheduleBreak?: MasterProfile["scheduleBreak"];
   place?: MasterPlaceDto | null;
 }): Promise<MasterProfile> {
   const data = await request<{ profile: MasterProfile }>(
@@ -203,6 +206,7 @@ export async function completeMasterOnboarding(input?: {
       body: JSON.stringify({
         hours: input?.hours,
         dayBreakMin: input?.dayBreakMin ?? null,
+        scheduleBreak: input?.scheduleBreak ?? undefined,
         place: input?.place ?? undefined,
       }),
     },

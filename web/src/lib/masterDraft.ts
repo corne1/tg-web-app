@@ -47,6 +47,14 @@ export type PlaceDetails = {
   addressVisibility: AddressVisibility;
 };
 
+/** Lunch / blocked window during working days (Figma 21091:27808). */
+export type ScheduleBreak = {
+  enabled: boolean;
+  start: string | null;
+  end: string | null;
+  days: WeekdayId[];
+};
+
 export type MasterDraft = {
   name: string;
   serviceTypeCode: ServiceTypeCode | null;
@@ -55,6 +63,8 @@ export type MasterDraft = {
   hours: WorkingHours;
   hoursPreset: HoursPresetId | null;
   dayBreakMin: number | null;
+  /** Blocked break window — clients cannot book during this time. */
+  scheduleBreak: ScheduleBreak;
   placeMode: PlaceMode | null;
   studioPlace: PlaceDetails;
   visitPlace: PlaceDetails;
@@ -289,6 +299,40 @@ const emptyPlace = (): PlaceDetails => ({
   addressVisibility: "public",
 });
 
+export function defaultScheduleBreak(): ScheduleBreak {
+  return {
+    enabled: false,
+    start: null,
+    end: null,
+    days: ["mon", "tue", "wed", "thu", "fri"],
+  };
+}
+
+export function normalizeScheduleBreak(raw: unknown): ScheduleBreak {
+  const base = defaultScheduleBreak();
+  if (!raw || typeof raw !== "object") return base;
+  const src = raw as Partial<ScheduleBreak>;
+  const days = Array.isArray(src.days)
+    ? src.days.filter((d): d is WeekdayId =>
+        WEEKDAYS.some((w) => w.id === d),
+      )
+    : base.days;
+  const start =
+    typeof src.start === "string" && timeToMinutes(src.start) != null
+      ? src.start
+      : null;
+  const end =
+    typeof src.end === "string" && timeToMinutes(src.end) != null
+      ? src.end
+      : null;
+  return {
+    enabled: Boolean(src.enabled),
+    start,
+    end,
+    days: days.length > 0 ? days : base.days,
+  };
+}
+
 const emptyDraft = (): MasterDraft => ({
   name: "",
   serviceTypeCode: null,
@@ -297,6 +341,7 @@ const emptyDraft = (): MasterDraft => ({
   hours: applyHoursPreset("mon-fri"),
   hoursPreset: "mon-fri",
   dayBreakMin: null,
+  scheduleBreak: defaultScheduleBreak(),
   placeMode: null,
   studioPlace: emptyPlace(),
   visitPlace: emptyPlace(),
@@ -341,6 +386,7 @@ export function loadMasterDraft(): MasterDraft {
       hoursPreset,
       dayBreakMin:
         typeof parsed.dayBreakMin === "number" ? parsed.dayBreakMin : null,
+      scheduleBreak: normalizeScheduleBreak(parsed.scheduleBreak),
       placeMode,
       studioPlace: normalizePlace(parsed.studioPlace),
       visitPlace: normalizePlace(parsed.visitPlace),

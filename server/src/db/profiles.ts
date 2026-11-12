@@ -3,9 +3,13 @@ import {
   type MasterPlace,
 } from "../lib/place.js";
 import {
+  defaultScheduleBreak,
+  normalizeScheduleBreak,
   normalizeWorkingHours,
-  parseWorkingHoursJson,
+  parseWorkingHoursBundle,
   scheduleKindFromHours,
+  stringifyWorkingHoursBundle,
+  type ScheduleBreak,
   type WorkingHours,
 } from "../lib/workingHours.js";
 import { withDb } from "./client.js";
@@ -19,7 +23,7 @@ function mapProfile(row: Record<string, unknown>): MasterProfileRow {
   const statusRaw = String(row.status ?? "draft");
   const status: MasterProfileStatus =
     statusRaw === "active" ? "active" : "draft";
-  const workingHours = parseWorkingHoursJson(
+  const bundle = parseWorkingHoursBundle(
     row.working_hours_json != null ? String(row.working_hours_json) : null,
   );
   const place = parsePlaceJson(
@@ -38,7 +42,8 @@ function mapProfile(row: Record<string, unknown>): MasterProfileRow {
       row.service_type_code != null ? String(row.service_type_code) : null,
     city: String(row.city ?? "Москва"),
     schedule: String(row.schedule) as ScheduleKind,
-    working_hours: workingHours,
+    working_hours: bundle.hours,
+    schedule_break: bundle.scheduleBreak,
     day_break_min:
       dayBreakMin != null && Number.isFinite(dayBreakMin) ? dayBreakMin : null,
     travel_buffer_min: (() => {
@@ -72,6 +77,7 @@ export type UpsertProfileInput = {
   name?: string;
   schedule?: ScheduleKind;
   workingHours?: WorkingHours | null;
+  scheduleBreak?: ScheduleBreak | null;
   dayBreakMin?: number | null;
   travelBufferMin?: number | null;
   place?: MasterPlace | null;
@@ -169,6 +175,13 @@ export async function upsertProfile(
       workingHours = normalizeWorkingHours(workingHours);
     }
 
+    const scheduleBreak =
+      input.scheduleBreak !== undefined
+        ? input.scheduleBreak
+          ? normalizeScheduleBreak(input.scheduleBreak)
+          : defaultScheduleBreak()
+        : (prev?.schedule_break ?? defaultScheduleBreak());
+
     let dayBreakMin =
       input.dayBreakMin !== undefined
         ? input.dayBreakMin
@@ -226,7 +239,7 @@ export async function upsertProfile(
 
     const createdAt = prev?.created_at ?? now;
     const workingHoursJson = workingHours
-      ? JSON.stringify(workingHours)
+      ? stringifyWorkingHoursBundle(workingHours, scheduleBreak)
       : null;
     const placeJson = place ? JSON.stringify(place) : null;
 
@@ -283,6 +296,7 @@ export async function upsertProfile(
       city,
       schedule,
       working_hours: workingHours,
+      schedule_break: scheduleBreak,
       day_break_min: dayBreakMin,
       travel_buffer_min: travelBufferMin,
       place,

@@ -21,6 +21,7 @@ import {
 } from "../lib/place.js";
 import {
   hasEnabledWorkingDay,
+  normalizeScheduleBreak,
   normalizeWorkingHours,
 } from "../lib/workingHours.js";
 import { requireSession, type AuthedRequest } from "../middleware.js";
@@ -214,6 +215,10 @@ masterRouter.put("/hours", requireSession, async (req: AuthedRequest, res) => {
     dayBreakRaw === null || dayBreakRaw === undefined || dayBreakRaw === ""
       ? null
       : Number(dayBreakRaw);
+  const scheduleBreak =
+    body.scheduleBreak !== undefined
+      ? normalizeScheduleBreak(body.scheduleBreak)
+      : undefined;
 
   if (!hours || !hasEnabledWorkingDay(hours)) {
     res.status(400).json({ error: "At least one working day required" });
@@ -240,6 +245,7 @@ masterRouter.put("/hours", requireSession, async (req: AuthedRequest, res) => {
       userId: tg.id,
       name: profile.name,
       workingHours: hours,
+      scheduleBreak,
       dayBreakMin,
       onboardingStep: Math.max(profile.onboarding_step, 3),
     });
@@ -344,9 +350,14 @@ masterRouter.post(
         res.status(400).json({ error: "At least one working day required" });
         return;
       }
+      const scheduleBreak =
+        body.scheduleBreak !== undefined
+          ? normalizeScheduleBreak(body.scheduleBreak)
+          : undefined;
       await upsertProfile({
         userId: tg.id,
         workingHours: hours,
+        scheduleBreak,
         dayBreakMin:
           dayBreakMin !== undefined && Number.isFinite(dayBreakMin)
             ? dayBreakMin

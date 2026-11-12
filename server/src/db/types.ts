@@ -1,5 +1,8 @@
 import type { MasterPlace } from "../lib/place.js";
-import type { WorkingHours } from "../lib/workingHours.js";
+import type {
+  ScheduleBreak,
+  WorkingHours,
+} from "../lib/workingHours.js";
 
 export type StoredUser = {
   id: number;
@@ -40,6 +43,8 @@ export type MasterProfileRow = {
   schedule: ScheduleKind;
   /** Custom weekly hours from onboarding; null → use schedule presets in slots. */
   working_hours: WorkingHours | null;
+  /** Blocked break window stored inside working_hours_json. */
+  schedule_break: ScheduleBreak;
   day_break_min: number | null;
   /** Minutes reserved before visit start for travel (visit bookings). */
   travel_buffer_min: number | null;
