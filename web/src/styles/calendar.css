@@ -2830,66 +2830,84 @@ label.ms-sheet-item {
 .ms-preset-list {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 8px;
 }
 
+/* Figma 21091:26916 Fast setting card — fill2 + soft border, radio right */
 .ms-preset-card {
   appearance: none;
   width: 100%;
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
+  align-items: center;
+  gap: 16px;
   padding: 16px;
   border-radius: var(--ms-radius-card);
-  border: 1px solid var(--ms-line);
-  background: #fff;
-  box-shadow: var(--ms-shadow-e1);
+  border: 1px solid var(--ms-line-soft);
+  background: var(--ms-fill2);
+  box-shadow: none;
   text-align: left;
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+  transition: border-color 0.15s;
 }
 
 .ms-preset-card.is-active {
-  border-color: var(--ms-purple);
-  background: var(--ms-purple-soft);
-  box-shadow: 0 0 0 3px rgba(98, 61, 245, 0.12);
+  border-color: var(--ms-purple-border);
+  background: var(--ms-fill2);
+  box-shadow: none;
 }
 
-.ms-preset-radio {
+.ms-preset-card .ms-radio {
   flex: 0 0 auto;
-  width: 20px;
-  height: 20px;
-  margin-top: 0.1rem;
-  border-radius: var(--ms-radius-full);
-  border: 1.5px solid var(--ms-line);
-  position: relative;
+  border-color: rgba(36, 46, 66, 0.12);
+  background: #fff;
 }
 
-.ms-preset-card.is-active .ms-preset-radio {
-  border-color: var(--ms-purple);
-}
-
-.ms-preset-card.is-active .ms-preset-radio::after {
-  content: "";
-  position: absolute;
-  inset: 3px;
-  border-radius: 999px;
+.ms-preset-card.is-active .ms-radio {
+  border-color: transparent;
   background: var(--ms-purple);
+}
+
+.ms-preset-card.is-active .ms-radio::after {
+  inset: 5px;
+  background: #fff;
 }
 
 .ms-preset-text {
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 4px;
   min-width: 0;
 }
 
 .ms-preset-title {
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: -0.16px;
   line-height: 24px;
   color: var(--ms-ink);
+}
+
+.ms-preset-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ms-preset-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  color: var(--ms-muted);
+}
+
+.ms-preset-meta-row img {
+  flex: 0 0 auto;
+  display: block;
 }
 
 .ms-preset-sub {
@@ -3177,15 +3195,32 @@ label.ms-sheet-item {
   border: 1px solid var(--ms-line-soft);
   border-radius: var(--ms-radius-card);
   background: var(--ms-fill2);
+  box-shadow: none;
   text-align: left;
   cursor: pointer;
   color: inherit;
   font: inherit;
 }
 
+/* Same Fast setting card Selected: primary/border, keep fill2 */
 .ms-place-card.is-active {
-  border-color: var(--ms-purple);
-  background: var(--ms-purple-soft);
+  border-color: var(--ms-purple-border);
+  background: var(--ms-fill2);
+}
+
+.ms-place-card .ms-radio {
+  border-color: rgba(36, 46, 66, 0.12);
+  background: #fff;
+}
+
+.ms-place-card.is-active .ms-radio {
+  border-color: transparent;
+  background: var(--ms-purple);
+}
+
+.ms-place-card.is-active .ms-radio::after {
+  inset: 5px;
+  background: #fff;
 }
 
 .ms-place-card.is-static {
@@ -3202,18 +3237,18 @@ label.ms-sheet-item {
 
 .ms-place-title {
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: -0.16px;
   line-height: 24px;
   color: var(--ms-ink);
 }
 
 .ms-place-sub {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 400;
-  letter-spacing: -0.13px;
-  line-height: 18px;
-  color: #5e636e;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  color: var(--ms-muted);
 }
 
 .ms-place-block {

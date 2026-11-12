@@ -56,16 +56,16 @@ type CityField = "studio" | "visit";
 function IconHouse() {
   return (
     <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden>
-      <rect width="40" height="40" rx="20" fill="#623DF5" />
+      <rect width="40" height="40" rx="20" fill="#E9EAEC" />
       <path
         d="M12.5 20.5 20 14.5l7.5 6V28a1.5 1.5 0 0 1-1.5 1.5h-12A1.5 1.5 0 0 1 12.5 28v-7.5Z"
-        stroke="#fff"
+        stroke="#5E636E"
         strokeWidth="1.6"
         strokeLinejoin="round"
       />
       <path
         d="M17.5 29.5V22h5v7.5"
-        stroke="#fff"
+        stroke="#5E636E"
         strokeWidth="1.6"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -77,18 +77,18 @@ function IconHouse() {
 function IconCar() {
   return (
     <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden>
-      <rect width="40" height="40" rx="20" fill="#623DF5" />
+      <rect width="40" height="40" rx="20" fill="#E9EAEC" />
       <path
         d="M13 23.5h14l-1.2-5.2A2 2 0 0 0 23.9 17H16a2 2 0 0 0-1.9 1.3L13 23.5Z"
-        stroke="#fff"
+        stroke="#5E636E"
         strokeWidth="1.6"
         strokeLinejoin="round"
       />
-      <circle cx="16.5" cy="26" r="1.6" fill="#fff" />
-      <circle cx="23.5" cy="26" r="1.6" fill="#fff" />
+      <circle cx="16.5" cy="26" r="1.6" fill="#5E636E" />
+      <circle cx="23.5" cy="26" r="1.6" fill="#5E636E" />
       <path
         d="M13 23.5h-1.2M27 23.5h1.5"
-        stroke="#fff"
+        stroke="#5E636E"
         strokeWidth="1.6"
         strokeLinecap="round"
       />
@@ -99,14 +99,14 @@ function IconCar() {
 function IconPin() {
   return (
     <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden>
-      <rect width="40" height="40" rx="20" fill="#623DF5" />
+      <rect width="40" height="40" rx="20" fill="#E9EAEC" />
       <path
         d="M20 12.5c-3.3 0-6 2.5-6 5.7 0 4.3 6 9.3 6 9.3s6-5 6-9.3c0-3.2-2.7-5.7-6-5.7Z"
-        stroke="#fff"
+        stroke="#5E636E"
         strokeWidth="1.6"
         strokeLinejoin="round"
       />
-      <circle cx="20" cy="18.2" r="1.8" fill="#fff" />
+      <circle cx="20" cy="18.2" r="1.8" fill="#5E636E" />
     </svg>
   );
 }

@@ -8,6 +8,8 @@ import type { SettingsMode } from "./settingsMode";
 import { useBackButton } from "../../hooks/useBackButton";
 import { useMainButton } from "../../hooks/useMainButton";
 import { useTelegram } from "../../hooks/useTelegram";
+import calendarIcon from "../../assets/cabinet/calendar.svg";
+import clockIcon from "../../assets/cabinet/clock.svg";
 import {
   applyHoursPreset,
   DAY_BREAK_OPTIONS,
@@ -272,20 +274,45 @@ export function HoursSettings({ mode }: { mode: SettingsMode }) {
       <section className="ms-hours-section">
         <h3 className="ms-hours-section-title">Быстрая настройка</h3>
         <div className="ms-preset-list">
-          {HOURS_PRESETS.map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              className={`ms-preset-card ${preset === p.id ? "is-active" : ""}`}
-              onClick={() => applyPreset(p.id)}
-            >
-              <span className="ms-preset-radio" aria-hidden />
-              <span className="ms-preset-text">
-                <span className="ms-preset-title">{p.title}</span>
-                <span className="ms-preset-sub">{p.subtitle}</span>
-              </span>
-            </button>
-          ))}
+          {HOURS_PRESETS.map((p) => {
+            const active = preset === p.id;
+            return (
+              <button
+                key={p.id}
+                type="button"
+                className={cx("ms-preset-card", active && "is-active")}
+                onClick={() => applyPreset(p.id)}
+                aria-pressed={active}
+              >
+                <span className="ms-preset-text">
+                  <span className="ms-preset-title">{p.title}</span>
+                  <span className="ms-preset-meta">
+                    <span className="ms-preset-meta-row">
+                      <img
+                        src={clockIcon}
+                        width={20}
+                        height={20}
+                        alt=""
+                        aria-hidden
+                      />
+                      <span>{p.hoursLabel}</span>
+                    </span>
+                    <span className="ms-preset-meta-row">
+                      <img
+                        src={calendarIcon}
+                        width={20}
+                        height={20}
+                        alt=""
+                        aria-hidden
+                      />
+                      <span>{p.offLabel}</span>
+                    </span>
+                  </span>
+                </span>
+                <RadioMark checked={active} />
+              </button>
+            );
+          })}
         </div>
       </section>
 

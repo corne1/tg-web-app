@@ -99,33 +99,39 @@ export const WEEKDAYS: { id: WeekdayId; label: string; short: string }[] = [
 export const HOURS_PRESETS: {
   id: Exclude<HoursPresetId, "manual">;
   title: string;
-  subtitle: string;
+  /** Clock row under title (Figma Fast setting card). */
+  hoursLabel: string;
+  /** Calendar row under hours (Figma Fast setting card). */
+  offLabel: string;
   start: string;
   end: string;
   enabled: WeekdayId[];
 }[] = [
   {
     id: "mon-fri",
-    title: "Пн–Пт",
-    subtitle: "10:00–19:00 · суббота и воскресенье — выходные",
+    title: "Понедельник – Пятница",
+    hoursLabel: "10:00–18:00",
+    offLabel: "суббота и воскресенье — выходные",
     start: "10:00",
-    end: "19:00",
+    end: "18:00",
     enabled: ["mon", "tue", "wed", "thu", "fri"],
   },
   {
     id: "mon-sat",
-    title: "Пн–Сб",
-    subtitle: "10:00–20:00 · воскресенье — выходной",
+    title: "Понедельник – Суббота",
+    hoursLabel: "10:00–18:00",
+    offLabel: "воскресенье — выходной",
     start: "10:00",
-    end: "20:00",
+    end: "18:00",
     enabled: ["mon", "tue", "wed", "thu", "fri", "sat"],
   },
   {
     id: "everyday",
     title: "Каждый день",
-    subtitle: "10:00–22:00 ежедневно",
+    hoursLabel: "10:00–18:00",
+    offLabel: "без выходных",
     start: "10:00",
-    end: "22:00",
+    end: "18:00",
     enabled: ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
   },
 ];
@@ -261,7 +267,7 @@ export const PLACE_OPTIONS: {
 }[] = [
   {
     id: "studio",
-    title: "В кабинете или студии",
+    title: "В кабинете",
     subtitle: "Клиенты приходят ко мне",
   },
   {
