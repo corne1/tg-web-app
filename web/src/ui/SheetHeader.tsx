@@ -3,10 +3,12 @@ import { IconButton } from "./IconButton";
 
 export function SheetHeader({
   title,
+  lead,
   onClose,
   onBack,
 }: {
   title: string;
+  lead?: string;
   onClose: () => void;
   onBack?: () => void;
 }) {
@@ -25,7 +27,10 @@ export function SheetHeader({
         ) : (
           <span className="ms-sheet-toolbar-side" aria-hidden />
         )}
-        <h3 className="ms-sheet-toolbar-title">{title}</h3>
+        <div className="ms-sheet-toolbar-center">
+          <h3 className="ms-sheet-toolbar-title">{title}</h3>
+          {lead ? <p className="ms-sheet-toolbar-lead">{lead}</p> : null}
+        </div>
         <IconButton
           label="Закрыть"
           className="ms-sheet-icon-btn"

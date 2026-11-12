@@ -10,12 +10,14 @@ import { useMainButton } from "../../hooks/useMainButton";
 import { useTelegram } from "../../hooks/useTelegram";
 import calendarIcon from "../../assets/cabinet/calendar.svg";
 import clockIcon from "../../assets/cabinet/clock.svg";
+import infoIcon from "../../assets/onboarding/info.svg";
 import {
   applyHoursPreset,
   DAY_BREAK_OPTIONS,
   hasEnabledWorkingDay,
   HOURS_PRESETS,
   loadMasterDraft,
+  minutesToTime,
   saveMasterDraft,
   timeOptions,
   timeToMinutes,
@@ -34,8 +36,14 @@ import {
 import {
   BottomSheet,
   Button,
+  ChevronDownIcon,
+  ChevronRightIcon,
+  Chip,
   RadioMark,
   SelectTrigger,
+  SheetAltAction,
+  SheetFooter,
+  SheetHeader,
   SheetItem,
   SheetList,
   SheetSimpleHeader,
@@ -336,11 +344,16 @@ export function HoursSettings({ mode }: { mode: SettingsMode }) {
                 <div className="ms-day-row">
                   <div className="ms-day-meta">
                     <p className="ms-day-name">{day.label}</p>
-                    <span
-                      className={`ms-day-badge ${row.enabled ? "is-work" : "is-off"}`}
-                    >
-                      {row.enabled ? "Рабочий день" : "Выходной"}
-                    </span>
+                    {row.enabled ? (
+                      <span className="ms-day-badge" role="status">
+                        <span className="ms-day-badge-dot" aria-hidden />
+                        Рабочий день
+                      </span>
+                    ) : (
+                      <span className="ms-day-badge is-off" role="status">
+                        Выходной
+                      </span>
+                    )}
                   </div>
                   <button
                     type="button"
@@ -406,6 +419,9 @@ export function HoursSettings({ mode }: { mode: SettingsMode }) {
             sheet.field === "start"
               ? "Начало рабочего дня"
               : "Окончание рабочего дня"
+          }
+          dayLabel={
+            WEEKDAYS.find((d) => d.id === sheet.day)?.label ?? ""
           }
           value={hours[sheet.day][sheet.field]}
           other={
@@ -586,8 +602,49 @@ export function HoursSettings({ mode }: { mode: SettingsMode }) {
   );
 }
 
+const HOUR_OPTS = Array.from({ length: 24 }, (_, i) => i);
+const MINUTE_OPTS = Array.from({ length: 60 }, (_, i) => i);
+
+function isTimeAllowed(
+  candidate: string,
+  field: "start" | "end",
+  other: string,
+): boolean {
+  const mins = timeToMinutes(candidate);
+  const otherMins = timeToMinutes(other);
+  return field === "start" ? mins < otherMins : mins > otherMins;
+}
+
+/** Six half-hour chips around the current value (Figma Быстрый выбор). */
+function quickTimeChoices(
+  center: string,
+  field: "start" | "end",
+  other: string,
+): string[] {
+  const valid = TIME_OPTS.filter((t) => isTimeAllowed(t, field, other));
+  if (valid.length === 0) return [];
+
+  const centerMin = timeToMinutes(center);
+  const window: string[] = [];
+  for (let i = -2; i <= 3; i++) {
+    const t = minutesToTime(centerMin + i * 30);
+    if (valid.includes(t)) window.push(t);
+  }
+  if (window.length === 6) return window;
+
+  return [...valid]
+    .sort(
+      (a, b) =>
+        Math.abs(timeToMinutes(a) - centerMin) -
+        Math.abs(timeToMinutes(b) - centerMin),
+    )
+    .slice(0, 6)
+    .sort((a, b) => timeToMinutes(a) - timeToMinutes(b));
+}
+
 function TimeSheet({
   title,
+  dayLabel,
   value,
   other,
   field,
@@ -595,30 +652,174 @@ function TimeSheet({
   onPick,
 }: {
   title: string;
+  dayLabel: string;
   value: string;
   other: string;
   field: "start" | "end";
   onClose: () => void;
   onPick: (value: string) => void;
 }) {
-  const filtered = TIME_OPTS.filter((t) => {
-    const mins = timeToMinutes(t);
-    if (field === "start") return mins < timeToMinutes(other);
-    return mins > timeToMinutes(other);
-  });
+  const [panel, setPanel] = useState<"list" | "custom">("list");
+  const [draft, setDraft] = useState(value);
+  const [customHours, setCustomHours] = useState(() =>
+    Math.floor(timeToMinutes(value) / 60),
+  );
+  const [customMinutes, setCustomMinutes] = useState(
+    () => timeToMinutes(value) % 60,
+  );
+
+  useEffect(() => {
+    setDraft(value);
+    setPanel("list");
+    setCustomHours(Math.floor(timeToMinutes(value) / 60));
+    setCustomMinutes(timeToMinutes(value) % 60);
+  }, [value, field]);
+
+  const quick = useMemo(
+    () => quickTimeChoices(draft, field, other),
+    [draft, field, other],
+  );
+
+  const customValue = minutesToTime(customHours * 60 + customMinutes);
+  const customValid = isTimeAllowed(customValue, field, other);
+
+  const infoText =
+    field === "end"
+      ? `Время должно быть позже начала рабочего дня — ${other}`
+      : null;
+
+  const customLead =
+    field === "start"
+      ? "Укажите начало рабочего дня"
+      : "Укажите окончание рабочего дня";
 
   return (
-    <BottomSheet open sheetClassName="ms-sheet-hours" onClose={onClose}>
-      <SheetSimpleHeader title={title} />
-      <SheetList className="ms-time-list">
-        {filtered.map((t) => (
-          <li key={t}>
-            <SheetItem active={t === value} onClick={() => onPick(t)}>
-              {t}
-            </SheetItem>
-          </li>
-        ))}
-      </SheetList>
+    <BottomSheet open sheetClassName="ms-sheet-picker" onClose={onClose}>
+      <SheetHeader
+        title={panel === "custom" ? "Другое время" : title}
+        lead={panel === "custom" ? customLead : dayLabel}
+        onClose={onClose}
+        onBack={panel === "custom" ? () => setPanel("list") : undefined}
+      />
+
+      {panel === "list" ? (
+        <>
+          <div className="ms-time-sheet-body">
+            {infoText ? (
+              <div className="ms-info" role="note">
+                <img
+                  className="ms-info-icon"
+                  src={infoIcon}
+                  width={20}
+                  height={20}
+                  alt=""
+                  aria-hidden
+                />
+                <div className="ms-info-copy">
+                  <p>{infoText}</p>
+                </div>
+              </div>
+            ) : null}
+
+            <div className="ms-time-sheet-current">
+              <span className="ms-time-sheet-current-label">Текущее время</span>
+              <span className="ms-time-sheet-current-value">{draft}</span>
+            </div>
+
+            <div className="ms-time-sheet-quick-block">
+              <p className="ms-time-sheet-quick-label">Быстрый выбор</p>
+              <div
+                className="ms-time-sheet-quick"
+                role="radiogroup"
+                aria-label="Быстрый выбор"
+              >
+                {quick.map((t) => (
+                  <Chip
+                    key={t}
+                    active={t === draft}
+                    className="ms-time-sheet-chip"
+                    onClick={() => setDraft(t)}
+                  >
+                    {t}
+                  </Chip>
+                ))}
+              </div>
+            </div>
+
+            <SheetAltAction
+              label="Выбрать другое время"
+              trailing={
+                <ChevronRightIcon className="ms-sheet-chevron-right" />
+              }
+              onClick={() => {
+                setCustomHours(Math.floor(timeToMinutes(draft) / 60));
+                setCustomMinutes(timeToMinutes(draft) % 60);
+                setPanel("custom");
+              }}
+            />
+          </div>
+          <SheetFooter>
+            <Button
+              disabled={!isTimeAllowed(draft, field, other)}
+              onClick={() => onPick(draft)}
+            >
+              Применить
+            </Button>
+          </SheetFooter>
+        </>
+      ) : (
+        <>
+          <div className="ms-sheet-custom-body">
+            <div className="ms-sheet-dual">
+              <label className="ms-sheet-segment">
+                <span className="ms-sheet-segment-label">Часы</span>
+                <span className="ms-sheet-segment-control-wrap">
+                  <select
+                    className="ms-sheet-segment-control"
+                    value={customHours}
+                    onChange={(e) => setCustomHours(Number(e.target.value))}
+                  >
+                    {HOUR_OPTS.map((h) => (
+                      <option key={h} value={h}>
+                        {h}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDownIcon className="ms-select-chevron" />
+                </span>
+              </label>
+              <label className="ms-sheet-segment">
+                <span className="ms-sheet-segment-label">Минуты</span>
+                <span className="ms-sheet-segment-control-wrap">
+                  <select
+                    className="ms-sheet-segment-control"
+                    value={customMinutes}
+                    onChange={(e) => setCustomMinutes(Number(e.target.value))}
+                  >
+                    {MINUTE_OPTS.map((m) => (
+                      <option key={m} value={m}>
+                        {m}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDownIcon className="ms-select-chevron" />
+                </span>
+              </label>
+            </div>
+          </div>
+          <SheetFooter>
+            <Button
+              disabled={!customValid}
+              onClick={() => {
+                if (!customValid) return;
+                onPick(customValue);
+              }}
+            >
+              Применить
+            </Button>
+          </SheetFooter>
+        </>
+      )}
     </BottomSheet>
   );
 }
