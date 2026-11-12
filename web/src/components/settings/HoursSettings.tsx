@@ -377,8 +377,8 @@ export function HoursSettings({ mode }: { mode: SettingsMode }) {
                 className={`ms-day-card ${row.enabled ? "is-on" : "is-off"}`}
               >
                 <div className="ms-day-row">
-                  <div className="ms-day-meta">
-                    <p className="ms-day-name">{day.label}</p>
+                  <p className="ms-day-name">{day.label}</p>
+                  <div className="ms-day-controls">
                     {row.enabled ? (
                       <span className="ms-day-badge" role="status">
                         <span className="ms-day-badge-dot" aria-hidden />
@@ -389,17 +389,17 @@ export function HoursSettings({ mode }: { mode: SettingsMode }) {
                         Выходной
                       </span>
                     )}
+                    <button
+                      type="button"
+                      className={`ms-switch ${row.enabled ? "is-on" : ""}`}
+                      role="switch"
+                      aria-checked={row.enabled}
+                      aria-label={`${day.label}: ${row.enabled ? "рабочий" : "выходной"}`}
+                      onClick={() => toggleDay(day.id)}
+                    >
+                      <span className="ms-switch-knob" />
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    className={`ms-switch ${row.enabled ? "is-on" : ""}`}
-                    role="switch"
-                    aria-checked={row.enabled}
-                    aria-label={`${day.label}: ${row.enabled ? "рабочий" : "выходной"}`}
-                    onClick={() => toggleDay(day.id)}
-                  >
-                    <span className="ms-switch-knob" />
-                  </button>
                 </div>
 
                 {row.enabled && (
