@@ -6,6 +6,7 @@ import actionEditIcon from "../../assets/onboarding/action-edit.svg";
 import actionTrashIcon from "../../assets/onboarding/action-trash.svg";
 import modalTrashIcon from "../../assets/onboarding/modal-trash.svg";
 import plusCircleIcon from "../../assets/onboarding/plus-circle.svg";
+import serviceSparkIcon from "../../assets/onboarding/service-spark.svg";
 import servicesEmptyIllu from "../../assets/onboarding/services-empty.svg";
 import timerIcon from "../../assets/onboarding/timer.svg";
 import { useBackButton } from "../../hooks/useBackButton";
@@ -17,7 +18,6 @@ import {
   loadMasterDraft,
   removeService,
   saveMasterDraft,
-  serviceInitials,
   type MasterService,
 } from "../../lib/masterDraft";
 import { Button, Modal } from "../../ui";
@@ -230,7 +230,13 @@ export function ServicesSettings({ mode }: { mode: SettingsMode }) {
             {services.map((s) => (
               <li key={s.id} className="ms-service-card">
                 <div className="ms-service-avatar" aria-hidden>
-                  {serviceInitials(s.title)}
+                  <img
+                    className="ms-service-spark"
+                    src={serviceSparkIcon}
+                    width={20}
+                    height={20}
+                    alt=""
+                  />
                 </div>
                 <div className="ms-service-meta">
                   <p className="ms-service-title">{s.title}</p>

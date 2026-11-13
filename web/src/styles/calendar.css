@@ -2069,7 +2069,7 @@ body:has(.ms-boot-splash),
 .ms-services {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 16px;
 }
 
 .ms-services-count {
@@ -2090,30 +2090,36 @@ body:has(.ms-boot-splash),
   gap: 12px;
 }
 
+/* Figma 21039:139486 — white elevated service cards */
 .ms-service-card {
   position: relative;
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 16px;
-  background: var(--ms-fill2);
+  background: #fff;
   border: 1px solid var(--ms-line-soft);
   border-radius: var(--ms-radius-card);
+  box-shadow: var(--ms-shadow-e1);
 }
 
 .ms-service-avatar {
   width: 44px;
   height: 44px;
   border-radius: var(--ms-radius-full);
-  background: var(--ms-purple-soft);
-  color: var(--ms-purple);
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: -0.13px;
+  background: #fff;
+  border: 1px solid var(--ms-line-soft);
+  box-shadow: var(--ms-shadow-e1);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
+}
+
+.ms-service-spark {
+  display: block;
+  width: 20px;
+  height: 20px;
 }
 
 .ms-service-meta {
