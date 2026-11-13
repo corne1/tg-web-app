@@ -46,7 +46,6 @@ import {
   SheetHeader,
   SheetItem,
   SheetList,
-  SheetSimpleHeader,
   cx,
 } from "../../ui";
 
@@ -58,6 +57,15 @@ type Sheet =
   | null;
 
 const TIME_OPTS = timeOptions(30);
+
+function dayHoursSecondary(row: DayHours): string {
+  return row.enabled ? `${row.start}–${row.end}` : "Выходной";
+}
+
+function applyCopyLabel(count: number): string {
+  if (count === 1) return "Применить к 1 дню";
+  return `Применить к ${count} дням`;
+}
 
 function CopyIcon() {
   return (
@@ -609,54 +617,59 @@ export function HoursSettings({ mode }: { mode: SettingsMode }) {
 
       <BottomSheet
         open={sheet?.kind === "copy-source"}
-        sheetClassName="ms-sheet-hours"
+        sheetClassName="ms-sheet-hours ms-sheet-copy"
         onClose={() => setSheet(null)}
       >
-        <SheetSimpleHeader
+        <SheetHeader
           title="Копировать часы"
-          lead="Из какого дня скопировать время?"
+          lead="Шаг 1 из 2 · Выбор источника"
+          onClose={() => setSheet(null)}
         />
-        <SheetList>
-          {enabledDays.map((day) => {
-            const row = hours[day.id];
-            const active = copySource === day.id;
-            return (
-              <li key={day.id}>
-                <SheetItem
-                  active={active}
-                  className="ms-sheet-item-row"
-                  onClick={() => setCopySource(day.id)}
-                >
-                  <span>
-                    {day.label}{" "}
-                    <span className="ms-muted">
-                      ({row.start}–{row.end})
+        <div className="ms-copy-body">
+          <p className="ms-copy-prompt">
+            Из какого дня скопировать рабочее время?
+          </p>
+          <SheetList>
+            {WEEKDAYS.map((day) => {
+              const row = hours[day.id];
+              const active = copySource === day.id;
+              return (
+                <li key={day.id}>
+                  <SheetItem
+                    active={active}
+                    className="ms-sheet-item-row"
+                    onClick={() => setCopySource(day.id)}
+                  >
+                    <span className="ms-sheet-item-stack">
+                      <span className="ms-sheet-item-primary">{day.label}</span>
+                      <span className="ms-sheet-item-secondary">
+                        {dayHoursSecondary(row)}
+                      </span>
                     </span>
-                  </span>
-                  <RadioMark checked={active} />
-                </SheetItem>
-              </li>
-            );
-          })}
-        </SheetList>
-        <Button
-          disabled={!copySource}
-          onClick={() => {
-            if (!copySource) return;
-            setCopyTargets([]);
-            setSheet({ kind: "copy-targets", source: copySource });
-          }}
-        >
-          Выбрать дни
-        </Button>
-        <Button variant="ghost" onClick={() => setSheet(null)}>
-          Отмена
-        </Button>
+                    <RadioMark checked={active} />
+                  </SheetItem>
+                </li>
+              );
+            })}
+          </SheetList>
+        </div>
+        <SheetFooter>
+          <Button
+            disabled={!copySource}
+            onClick={() => {
+              if (!copySource) return;
+              setCopyTargets([]);
+              setSheet({ kind: "copy-targets", source: copySource });
+            }}
+          >
+            Выбрать дни
+          </Button>
+        </SheetFooter>
       </BottomSheet>
 
       <BottomSheet
         open={sheet?.kind === "copy-targets"}
-        sheetClassName="ms-sheet-hours"
+        sheetClassName="ms-sheet-hours ms-sheet-copy"
         onClose={() => {
           setSheet(null);
           setCopyTargets([]);
@@ -664,52 +677,81 @@ export function HoursSettings({ mode }: { mode: SettingsMode }) {
       >
         {sheet?.kind === "copy-targets" ? (
           <>
-            <SheetSimpleHeader
+            <SheetHeader
               title="Копировать часы"
-              lead={`Куда скопировать время ${hours[sheet.source].start}–${hours[sheet.source].end}?`}
-            />
-            <SheetList>
-              {WEEKDAYS.filter((d) => d.id !== sheet.source).map((day) => {
-                const checked = copyTargets.includes(day.id);
-                return (
-                  <li key={day.id}>
-                    <SheetItem
-                      active={checked}
-                      className="ms-sheet-item-row"
-                      onClick={() =>
-                        setCopyTargets((prev) =>
-                          checked
-                            ? prev.filter((id) => id !== day.id)
-                            : [...prev, day.id],
-                        )
-                      }
-                    >
-                      <span>{day.label}</span>
-                      <span
-                        className={cx("ms-check", checked && "is-on")}
-                        aria-hidden
-                      />
-                    </SheetItem>
-                  </li>
-                );
-              })}
-            </SheetList>
-            <Button disabled={copyTargets.length === 0} onClick={applyCopy}>
-              {copyTargets.length === 0
-                ? "Выберите дни"
-                : copyTargets.length === 1
-                  ? "Применить к 1 дню"
-                  : `Применить к ${copyTargets.length} дням`}
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() => {
+              lead="Шаг 2 из 2 · Выбор дней"
+              onBack={() => setSheet({ kind: "copy-source" })}
+              onClose={() => {
                 setSheet(null);
                 setCopyTargets([]);
               }}
-            >
-              Отмена
-            </Button>
+            />
+            <div className="ms-copy-body">
+              <button
+                type="button"
+                className="ms-copy-source"
+                onClick={() => setSheet({ kind: "copy-source" })}
+              >
+                <span className="ms-copy-source-text">
+                  <span className="ms-copy-source-label">Источник</span>
+                  <span className="ms-copy-source-value">
+                    {
+                      WEEKDAYS.find((d) => d.id === sheet.source)?.label
+                    }{" "}
+                    {hours[sheet.source].start}–{hours[sheet.source].end}
+                  </span>
+                </span>
+                <ChevronRightIcon className="ms-sheet-chevron-right" />
+              </button>
+              <p className="ms-copy-prompt">На какие дни применить?</p>
+              <SheetList>
+                {WEEKDAYS.filter((d) => d.id !== sheet.source).map((day) => {
+                  const checked = copyTargets.includes(day.id);
+                  return (
+                    <li key={day.id}>
+                      <SheetItem
+                        active={checked}
+                        className="ms-sheet-item-row"
+                        onClick={() =>
+                          setCopyTargets((prev) =>
+                            checked
+                              ? prev.filter((id) => id !== day.id)
+                              : [...prev, day.id],
+                          )
+                        }
+                      >
+                        <span className="ms-sheet-item-stack">
+                          <span className="ms-sheet-item-primary">
+                            {day.label}
+                          </span>
+                          <span className="ms-sheet-item-secondary">
+                            {dayHoursSecondary(hours[day.id])}
+                          </span>
+                        </span>
+                        <span
+                          className={cx("ms-check", checked && "is-on")}
+                          aria-hidden
+                        />
+                      </SheetItem>
+                    </li>
+                  );
+                })}
+              </SheetList>
+            </div>
+            <SheetFooter>
+              <Button disabled={copyTargets.length === 0} onClick={applyCopy}>
+                {applyCopyLabel(copyTargets.length)}
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setSheet(null);
+                  setCopyTargets([]);
+                }}
+              >
+                Отмена
+              </Button>
+            </SheetFooter>
           </>
         ) : null}
       </BottomSheet>
