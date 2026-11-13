@@ -1481,6 +1481,56 @@ body:has(.ms-boot-splash),
   background: #fff;
 }
 
+/* Figma 21422:21596 — upload gallery dropzone */
+.ms-ob-upload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 20px 16px;
+  border-radius: 16px;
+  border: 1.5px dashed var(--ms-line);
+  background: #fff;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.ms-ob-upload-icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--ms-radius-full);
+  border: 1px solid var(--ms-line-soft);
+  background: var(--ms-soft);
+}
+
+.ms-ob-upload-icon {
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+
+.ms-ob-upload-text {
+  margin: 0;
+  max-width: 240px;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  color: var(--ms-muted);
+}
+
+.ms-ob-upload .ms-ob-upload-btn.ms-btn-primary {
+  width: auto;
+  min-width: 120px;
+  align-self: center;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
 .ms-form-stack {
   display: flex;
   flex-direction: column;

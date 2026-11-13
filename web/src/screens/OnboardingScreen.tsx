@@ -13,6 +13,7 @@ import {
 import { MsArrowRight } from "../components/master/MsArrowRight";
 import { cacheProfile } from "../lib/profileStorage";
 import avatarPlaceholder from "../assets/onboarding/avatar-placeholder.svg";
+import galleryIcon from "../assets/onboarding/gallery.svg";
 import infoIcon from "../assets/onboarding/info.svg";
 import {
   loadMasterAvatarDataUrl,
@@ -156,6 +157,12 @@ export function OnboardingScreen() {
   const selectUploadPhoto = useCallback(() => {
     setPhotoSource("upload");
     setError(null);
+    webApp?.HapticFeedback?.selectionChanged?.();
+  }, [webApp]);
+
+  const openGalleryPicker = useCallback(() => {
+    setPhotoSource("upload");
+    setError(null);
     fileRef.current?.click();
     webApp?.HapticFeedback?.selectionChanged?.();
   }, [webApp]);
@@ -240,6 +247,29 @@ export function OnboardingScreen() {
               </span>
             </button>
           </div>
+
+          {photoSource === "upload" ? (
+            <div className="ms-ob-upload">
+              <span className="ms-ob-upload-icon-wrap" aria-hidden>
+                <img
+                  className="ms-ob-upload-icon"
+                  src={galleryIcon}
+                  width={20}
+                  height={20}
+                  alt=""
+                />
+              </span>
+              <p className="ms-ob-upload-text">
+                Выберите фотографию из галереи устройства
+              </p>
+              <Button
+                className="ms-ob-upload-btn"
+                onClick={openGalleryPicker}
+              >
+                Выбрать
+              </Button>
+            </div>
+          ) : null}
         </section>
 
         <div className="ms-form-stack">
