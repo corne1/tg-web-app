@@ -1292,6 +1292,13 @@ body:has(.ms-boot-splash),
   margin-top: 0;
 }
 
+.ms-top.is-start,
+.ms-top-start {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
 .ms-top-spacer {
   width: 44px;
   height: 44px;
@@ -1371,9 +1378,107 @@ body:has(.ms-boot-splash),
   overscroll-behavior: contain;
 }
 
-/* Step 1 content frame: forms stack + preview, gap 24 (Figma 21016:102474) */
+/* Step 1 content frame (Figma 21422:23729) */
 .ms-body-step1 {
   gap: 24px;
+}
+
+/* Figma photo card — Avatar + radio sources */
+.ms-ob-photo-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  padding: 16px;
+  border-radius: var(--ms-radius-card);
+  background: var(--ms-soft);
+  box-sizing: border-box;
+}
+
+.ms-ob-photo-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.ms-ob-avatar {
+  display: block;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--ms-radius-full);
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--ms-fill3);
+}
+
+.ms-ob-photo-copy {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ms-ob-photo-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.16px;
+  line-height: 24px;
+  color: var(--ms-ink);
+}
+
+.ms-ob-photo-sub {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  color: var(--ms-muted);
+}
+
+.ms-ob-photo-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.ms-ob-photo-option {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin: 0;
+  padding: 6px 0;
+  border: none;
+  border-radius: var(--ms-radius-full);
+  background: transparent;
+  color: var(--ms-ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.ms-ob-photo-option-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+}
+
+/* Figma selected radio: primary fill + white inner */
+.ms-ob-photo-option .ms-radio.is-on {
+  border-color: transparent;
+  background: var(--ms-purple);
+}
+
+.ms-ob-photo-option .ms-radio.is-on::after {
+  inset: 5px;
+  background: #fff;
 }
 
 .ms-form-stack {
@@ -1515,14 +1620,14 @@ body:has(.ms-boot-splash),
   box-shadow: none;
 }
 
-/* Figma Alert / Outline / Info — radius 16, border-soft, padding/gap 12 */
+/* Figma Alert / Outline / Info — radius 16, border, padding/gap 12 */
 .ms-info {
   display: flex;
   align-items: flex-start;
   gap: 12px;
   padding: 12px;
   background: var(--ms-soft);
-  border: 1px solid var(--ms-line-soft);
+  border: 1px solid var(--ms-line);
   border-radius: 16px;
   box-sizing: border-box;
   color: var(--ms-ink);
@@ -1542,7 +1647,7 @@ body:has(.ms-boot-splash),
   font-weight: 400;
   letter-spacing: -0.14px;
   line-height: 20px;
-  color: var(--ms-muted);
+  color: var(--ms-ink);
 }
 
 .ms-info-icon {
