@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
 import avatarPlaceholder from "../../assets/onboarding/avatar-placeholder.svg";
 import clockIcon from "../../assets/cabinet/clock.svg";
-import serviceSparkIcon from "../../assets/onboarding/service-spark.svg";
 import { useServiceTypes } from "../../hooks/useServiceTypes";
+import { ServiceSparkIcon } from "./ServiceSparkIcon";
 import {
   formatDuration,
   formatPrice,
@@ -251,13 +251,7 @@ export function PlacePublishReview({
             {visibleServices.map((s) => (
               <li key={s.id} className="ms-service-card ms-review-service-card">
                 <div className="ms-service-avatar" aria-hidden>
-                  <img
-                    className="ms-service-spark"
-                    src={serviceSparkIcon}
-                    width={20}
-                    height={20}
-                    alt=""
-                  />
+                  <ServiceSparkIcon className="ms-service-spark" />
                 </div>
                 <div className="ms-service-meta">
                   <p className="ms-service-title">{s.title}</p>

@@ -6,7 +6,6 @@ import actionEditIcon from "../../assets/onboarding/action-edit.svg";
 import actionTrashIcon from "../../assets/onboarding/action-trash.svg";
 import modalTrashIcon from "../../assets/onboarding/modal-trash.svg";
 import plusCircleIcon from "../../assets/onboarding/plus-circle.svg";
-import serviceSparkIcon from "../../assets/onboarding/service-spark.svg";
 import servicesEmptyIllu from "../../assets/onboarding/services-empty.svg";
 import clockIcon from "../../assets/cabinet/clock.svg";
 import { useBackButton } from "../../hooks/useBackButton";
@@ -23,6 +22,7 @@ import {
 import { Button, Modal } from "../../ui";
 import { MasterSetupChrome } from "../master/MasterSetupChrome";
 import { MsArrowRight } from "../master/MsArrowRight";
+import { ServiceSparkIcon } from "../master/ServiceSparkIcon";
 import { SettingsPageShell } from "./SettingsPageShell";
 import type { SettingsMode } from "./settingsMode";
 
@@ -230,13 +230,7 @@ export function ServicesSettings({ mode }: { mode: SettingsMode }) {
             {services.map((s) => (
               <li key={s.id} className="ms-service-card">
                 <div className="ms-service-avatar" aria-hidden>
-                  <img
-                    className="ms-service-spark"
-                    src={serviceSparkIcon}
-                    width={20}
-                    height={20}
-                    alt=""
-                  />
+                  <ServiceSparkIcon className="ms-service-spark" />
                 </div>
                 <div className="ms-service-meta">
                   <p className="ms-service-title">{s.title}</p>

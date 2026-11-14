@@ -2119,6 +2119,8 @@ body:has(.ms-boot-splash),
   display: block;
   width: 20px;
   height: 20px;
+  color: var(--ms-muted);
+  flex: 0 0 auto;
 }
 
 .ms-service-meta {
