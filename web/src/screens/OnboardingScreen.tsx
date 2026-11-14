@@ -188,8 +188,10 @@ export function OnboardingScreen() {
             <span className="ms-progress-seg" />
           </div>
         </div>
+      </div>
 
-        <section className="ms-hero ms-hero-toolbar">
+      <div className="ms-body ms-body-step1">
+        <section className="ms-hero">
           <h2 className="ms-question">
             Как клиенты будут
             <br />
@@ -199,9 +201,7 @@ export function OnboardingScreen() {
             Эту информацию увидят на странице записи. Можно изменить в любой момент
           </p>
         </section>
-      </div>
 
-      <div className="ms-body ms-body-step1">
         <section className="ms-ob-photo-card" aria-label="Фото мастера">
           <div className="ms-ob-photo-head">
             <img
