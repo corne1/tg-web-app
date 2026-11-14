@@ -1,13 +1,13 @@
 import { useMemo, useState } from "react";
 import avatarPlaceholder from "../../assets/onboarding/avatar-placeholder.svg";
-import timerIcon from "../../assets/onboarding/timer.svg";
+import clockIcon from "../../assets/cabinet/clock.svg";
+import serviceSparkIcon from "../../assets/onboarding/service-spark.svg";
 import { useServiceTypes } from "../../hooks/useServiceTypes";
 import {
   formatDuration,
   formatPrice,
   needsStudioPlace,
   needsVisitPlace,
-  serviceInitials,
   type MasterDraft,
   type PlaceMode,
 } from "../../lib/masterDraft";
@@ -251,7 +251,13 @@ export function PlacePublishReview({
             {visibleServices.map((s) => (
               <li key={s.id} className="ms-service-card ms-review-service-card">
                 <div className="ms-service-avatar" aria-hidden>
-                  {serviceInitials(s.title)}
+                  <img
+                    className="ms-service-spark"
+                    src={serviceSparkIcon}
+                    width={20}
+                    height={20}
+                    alt=""
+                  />
                 </div>
                 <div className="ms-service-meta">
                   <p className="ms-service-title">{s.title}</p>
@@ -259,7 +265,7 @@ export function PlacePublishReview({
                     <span className="ms-service-duration">
                       <img
                         className="ms-service-timer"
-                        src={timerIcon}
+                        src={clockIcon}
                         width={16}
                         height={16}
                         alt=""
