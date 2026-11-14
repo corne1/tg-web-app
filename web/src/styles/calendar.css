@@ -2101,6 +2101,7 @@ body:has(.ms-boot-splash),
   border: 1px solid var(--ms-line-soft);
   border-radius: var(--ms-radius-card);
   box-shadow: none;
+  overflow: visible;
 }
 
 .ms-service-avatar {
@@ -2108,7 +2109,10 @@ body:has(.ms-boot-splash),
   height: 48px;
   border-radius: var(--ms-radius-full);
   background: #fff;
-  box-shadow: var(--ms-shadow-e1);
+  /* Figma Fill Icon elevation — soft lift + purple halo on fill2 */
+  box-shadow:
+    var(--ms-shadow-e1),
+    0 4px 16px rgba(98, 61, 245, 0.14);
   display: inline-flex;
   align-items: center;
   justify-content: center;
