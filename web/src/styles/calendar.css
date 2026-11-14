@@ -3734,6 +3734,20 @@ label.ms-sheet-item {
   font: inherit;
 }
 
+/* Figma 21091:28243 Lead Icon — white circle + filled glyph */
+.ms-place-lead {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--ms-radius-full);
+  background: #fff;
+  box-shadow: var(--ms-shadow-e1);
+  color: var(--ms-ink);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* Same Fast setting card Selected: primary/border, keep fill2 */
 .ms-place-card.is-active {
   border-color: var(--ms-purple-border);
