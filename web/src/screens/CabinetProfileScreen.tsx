@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchMe } from "../api";
-import avatarDemo from "../assets/cabinet/profile/avatar-demo.jpg";
+import { MasterAvatar } from "../components/master/MasterAvatar";
 import bellIcon from "../assets/cabinet/profile/bell.svg";
 import calendarClockIcon from "../assets/cabinet/profile/calendar-clock.svg";
 import coverDemo from "../assets/cabinet/profile/cover.jpg";
@@ -12,10 +12,7 @@ import settingsIcon from "../assets/cabinet/profile/settings.svg";
 import { MasterTabBar } from "../components/master/MasterTabBar";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
-import {
-  loadMasterAvatarDataUrl,
-  saveMasterAvatarDataUrl,
-} from "../lib/masterAvatar";
+import { saveMasterAvatarDataUrl } from "../lib/masterAvatar";
 import { useServiceTypes } from "../hooks/useServiceTypes";
 import { cacheProfile } from "../lib/profileStorage";
 import type { MasterProfile } from "../types";
@@ -97,9 +94,6 @@ export function CabinetProfileScreen() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<MasterProfile | null>(null);
   const { serviceTypes, metaFor } = useServiceTypes();
-  const [avatarSrc, setAvatarSrc] = useState(
-    () => loadMasterAvatarDataUrl() ?? avatarDemo,
-  );
 
   useEffect(() => {
     let cancelled = false;
@@ -108,13 +102,8 @@ export function CabinetProfileScreen() {
         if (cancelled || !me.profile) return;
         cacheProfile(me.profile);
         setProfile(me.profile);
-        const remote = me.profile.avatarUrl;
-        const local = loadMasterAvatarDataUrl();
-        if (remote) {
-          saveMasterAvatarDataUrl(remote);
-          setAvatarSrc(remote);
-        } else if (local) {
-          setAvatarSrc(local);
+        if (me.profile.avatarUrl) {
+          saveMasterAvatarDataUrl(me.profile.avatarUrl);
         }
       })
       .catch(() => undefined);
@@ -144,12 +133,11 @@ export function CabinetProfileScreen() {
           </div>
           <div className="ms-prof-identity">
             <div className="ms-prof-avatar-wrap">
-              <img
+              <MasterAvatar
                 className="ms-prof-avatar"
-                src={avatarSrc}
+                remote={profile?.avatarUrl}
                 width={100}
                 height={100}
-                alt=""
               />
             </div>
             <div className="ms-prof-identity-text">

@@ -12,12 +12,12 @@ import {
 } from "../lib/masterDraft";
 import { MsArrowRight } from "../components/master/MsArrowRight";
 import { cacheProfile } from "../lib/profileStorage";
-import avatarPlaceholder from "../assets/onboarding/avatar-placeholder.svg";
 import galleryIcon from "../assets/onboarding/gallery.svg";
 import infoIcon from "../assets/onboarding/info.svg";
 import {
   loadMasterAvatarDataUrl,
   readFileAsDataUrl,
+  resolveMasterAvatarSrc,
   saveMasterAvatarDataUrl,
 } from "../lib/masterAvatar";
 import { loadPublicAbout, savePublicAbout } from "../lib/publicProfile";
@@ -69,8 +69,7 @@ export function OnboardingScreen() {
   );
   const valid = Boolean(draft.name && draft.serviceTypeCode);
   void avatarTick;
-  const previewAvatar =
-    loadMasterAvatarDataUrl() || tgPhoto || avatarPlaceholder;
+  const previewAvatar = resolveMasterAvatarSrc(tgPhoto);
 
   const persistAvatar = useCallback(async (url: string) => {
     saveMasterAvatarDataUrl(url);
@@ -82,6 +81,14 @@ export function OnboardingScreen() {
       // keep local preview
     }
   }, []);
+
+  /** Ensure step-1 choice is stored before leaving the screen. */
+  const ensureAvatarPersisted = useCallback(async () => {
+    if (loadMasterAvatarDataUrl()) return;
+    if (photoSource === "telegram" && tgPhoto) {
+      await persistAvatar(tgPhoto);
+    }
+  }, [persistAvatar, photoSource, tgPhoto]);
 
   const persistLocal = useCallback(() => {
     const prev = loadMasterDraft();
@@ -112,6 +119,7 @@ export function OnboardingScreen() {
     setSaving(true);
     setError(null);
     try {
+      await ensureAvatarPersisted();
       await persistServer();
       webApp?.HapticFeedback?.impactOccurred("light");
       navigate("/onboarding/services");
@@ -120,7 +128,7 @@ export function OnboardingScreen() {
     } finally {
       setSaving(false);
     }
-  }, [navigate, persistServer, saving, valid, webApp]);
+  }, [ensureAvatarPersisted, navigate, persistServer, saving, valid, webApp]);
 
   const handleSaveExit = useCallback(async () => {
     persistLocal();
@@ -133,6 +141,7 @@ export function OnboardingScreen() {
     setSaving(true);
     setError(null);
     try {
+      await ensureAvatarPersisted();
       await persistServer();
       webApp?.HapticFeedback?.notificationOccurred("success");
       navigate("/");
@@ -141,7 +150,15 @@ export function OnboardingScreen() {
     } finally {
       setSaving(false);
     }
-  }, [navigate, persistLocal, persistServer, saving, valid, webApp]);
+  }, [
+    ensureAvatarPersisted,
+    navigate,
+    persistLocal,
+    persistServer,
+    saving,
+    valid,
+    webApp,
+  ]);
 
   const selectTelegramPhoto = useCallback(() => {
     setPhotoSource("telegram");

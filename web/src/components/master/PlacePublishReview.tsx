@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import avatarPlaceholder from "../../assets/onboarding/avatar-placeholder.svg";
+import { MasterAvatar } from "./MasterAvatar";
 import clockIcon from "../../assets/cabinet/clock.svg";
 import { useServiceTypes } from "../../hooks/useServiceTypes";
 import { ServiceSparkIcon } from "./ServiceSparkIcon";
@@ -220,14 +220,7 @@ export function PlacePublishReview({
           <StatusFilled />
         </header>
         <div className="ms-review-inset ms-review-profile">
-          <img
-            className="ms-avatar"
-            src={avatarPlaceholder}
-            width={48}
-            height={48}
-            alt=""
-            aria-hidden
-          />
+          <MasterAvatar className="ms-avatar" width={48} height={48} />
           <div className="ms-preview-meta">
             <p className="ms-preview-name">
               {displayName} — {displayTitle}

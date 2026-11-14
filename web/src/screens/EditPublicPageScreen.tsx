@@ -1,14 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchMe, saveMasterAvatar, saveMasterProfile } from "../api";
-import avatarDemo from "../assets/cabinet/profile/avatar-demo.jpg";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
 import { useServiceTypes } from "../hooks/useServiceTypes";
 import { useTelegram } from "../hooks/useTelegram";
 import {
-  loadMasterAvatarDataUrl,
   readFileAsDataUrl,
+  resolveMasterAvatarSrc,
   saveMasterAvatarDataUrl,
 } from "../lib/masterAvatar";
 import {
@@ -63,8 +62,8 @@ export function EditPublicPageScreen() {
   const [city, setCity] = useState(draft.city || "Москва");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [avatarSrc, setAvatarSrc] = useState(
-    () => loadMasterAvatarDataUrl() ?? avatarDemo,
+  const [avatarSrc, setAvatarSrc] = useState(() =>
+    resolveMasterAvatarSrc(),
   );
   const [photoSheet, setPhotoSheet] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
