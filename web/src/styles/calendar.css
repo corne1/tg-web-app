@@ -2117,8 +2117,8 @@ body:has(.ms-boot-splash),
 
 .ms-service-spark {
   display: block;
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   color: var(--ms-muted);
   flex: 0 0 auto;
 }

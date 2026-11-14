@@ -1,6 +1,6 @@
-<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Figma 21446:15581 — filled sparkles, scaled to Fill Icon 20 slot -->
-  <g transform="translate(10 10) scale(1.52) translate(-10.7 -8.15)">
+<svg width="24" height="24" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Figma 21446:15581 — filled sparkles, optically enlarged in avatar -->
+  <g transform="translate(10 10) scale(1.85) translate(-10.7 -8.15)">
     <path
       d="M9.5 3.2 10.55 7.15 14.5 8.2 10.55 9.25 9.5 13.2 8.45 9.25 4.5 8.2 8.45 7.15Z"
       fill="#5E636E"
