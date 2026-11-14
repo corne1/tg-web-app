@@ -8,7 +8,7 @@ import modalTrashIcon from "../../assets/onboarding/modal-trash.svg";
 import plusCircleIcon from "../../assets/onboarding/plus-circle.svg";
 import serviceSparkIcon from "../../assets/onboarding/service-spark.svg";
 import servicesEmptyIllu from "../../assets/onboarding/services-empty.svg";
-import timerIcon from "../../assets/onboarding/timer.svg";
+import clockIcon from "../../assets/cabinet/clock.svg";
 import { useBackButton } from "../../hooks/useBackButton";
 import { useMainButton } from "../../hooks/useMainButton";
 import { useTelegram } from "../../hooks/useTelegram";
@@ -244,7 +244,7 @@ export function ServicesSettings({ mode }: { mode: SettingsMode }) {
                     <span className="ms-service-duration">
                       <img
                         className="ms-service-timer"
-                        src={timerIcon}
+                        src={clockIcon}
                         width={16}
                         height={16}
                         alt=""

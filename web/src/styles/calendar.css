@@ -2090,25 +2090,24 @@ body:has(.ms-boot-splash),
   gap: 12px;
 }
 
-/* Figma 21039:139486 — white elevated service cards */
+/* Figma 21446:15581 File Upload - Avatar — fill2 card, Gray Fill Icon */
 .ms-service-card {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
   padding: 16px;
-  background: #fff;
+  background: var(--ms-fill2);
   border: 1px solid var(--ms-line-soft);
   border-radius: var(--ms-radius-card);
-  box-shadow: var(--ms-shadow-e1);
+  box-shadow: none;
 }
 
 .ms-service-avatar {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: var(--ms-radius-full);
   background: #fff;
-  border: 1px solid var(--ms-line-soft);
   box-shadow: var(--ms-shadow-e1);
   display: inline-flex;
   align-items: center;
