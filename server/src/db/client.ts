@@ -11,7 +11,7 @@ import {
 let client: Client | null = null;
 let migrated = false;
 
-const SCHEMA_VERSION = 2;
+const SCHEMA_VERSION = 3;
 
 function resolveDatabaseUrl(): string {
   if (config.databaseUrl) return config.databaseUrl;
@@ -136,6 +136,9 @@ function createIdealSchemaSql(): string[] {
       place_json TEXT,
       timezone TEXT NOT NULL DEFAULT 'Europe/Moscow',
       cancel_hours INTEGER NOT NULL DEFAULT 24 CHECK (cancel_hours >= 0),
+      client_cancel_enabled INTEGER NOT NULL DEFAULT 1 CHECK (client_cancel_enabled IN (0, 1)),
+      client_reschedule_enabled INTEGER NOT NULL DEFAULT 1 CHECK (client_reschedule_enabled IN (0, 1)),
+      reschedule_hours INTEGER NOT NULL DEFAULT 24 CHECK (reschedule_hours >= 0),
       status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'active')),
       onboarding_step INTEGER NOT NULL DEFAULT 1 CHECK (onboarding_step >= 1),
       onboarding_completed_at TEXT,
@@ -346,9 +349,10 @@ async function migrateToV2(db: Client): Promise<void> {
       sql: `INSERT INTO master_profiles (
         user_id, slug, name, service_type_code, city, schedule,
         working_hours_json, day_break_min, travel_buffer_min, place_json,
-        timezone, cancel_hours, status, onboarding_step, onboarding_completed_at,
+        timezone, cancel_hours, client_cancel_enabled, client_reschedule_enabled,
+        reschedule_hours, status, onboarding_step, onboarding_completed_at,
         avatar_url, about_text, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       args: [
         userId,
         String(row.slug ?? `m${userId}`),
@@ -362,6 +366,13 @@ async function migrateToV2(db: Client): Promise<void> {
         row.place_json != null ? String(row.place_json) : null,
         String(row.timezone ?? "Europe/Moscow"),
         Number(row.cancel_hours ?? 24),
+        row.client_cancel_enabled != null
+          ? Number(row.client_cancel_enabled) ? 1 : 0
+          : 1,
+        row.client_reschedule_enabled != null
+          ? Number(row.client_reschedule_enabled) ? 1 : 0
+          : 1,
+        Number(row.reschedule_hours ?? row.cancel_hours ?? 24),
         String(row.status ?? "draft") === "active" ? "active" : "draft",
         Number(row.onboarding_step ?? 1),
         row.onboarding_completed_at != null
@@ -577,7 +588,24 @@ async function migrateToV2(db: Client): Promise<void> {
   );
 
   await enableForeignKeys(db);
-  await setSchemaVersion(db, SCHEMA_VERSION);
+  await setSchemaVersion(db, 2);
+}
+
+/** Additive booking-rules columns on master_profiles (Figma 21455:21865). */
+async function migrateToV3(db: Client): Promise<void> {
+  await tryExec(
+    db,
+    `ALTER TABLE master_profiles ADD COLUMN client_cancel_enabled INTEGER NOT NULL DEFAULT 1`,
+  );
+  await tryExec(
+    db,
+    `ALTER TABLE master_profiles ADD COLUMN client_reschedule_enabled INTEGER NOT NULL DEFAULT 1`,
+  );
+  await tryExec(
+    db,
+    `ALTER TABLE master_profiles ADD COLUMN reschedule_hours INTEGER NOT NULL DEFAULT 24`,
+  );
+  await setSchemaVersion(db, 3);
 }
 
 async function migrateLegacyV0toV1Markers(db: Client): Promise<void> {
@@ -601,16 +629,18 @@ export async function migrate(): Promise<void> {
 
   let version = await getSchemaVersion(db);
 
-  // Fresh DB or pre-versioned DB: always land on ideal v2.
-  if (version < SCHEMA_VERSION) {
+  if (version < 2) {
     await migrateLegacyV0toV1Markers(db);
     await migrateToV2(db);
-    version = SCHEMA_VERSION;
-  } else {
-    // Idempotent seed / indexes for already-v2 databases.
-    await ensureIdealEmptySchema(db);
-    await seedServiceTypes(db);
+    version = 2;
   }
+  if (version < 3) {
+    await migrateToV3(db);
+    version = 3;
+  }
+
+  await ensureIdealEmptySchema(db);
+  await seedServiceTypes(db);
 
   void version;
   migrated = true;

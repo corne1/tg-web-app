@@ -160,6 +160,22 @@ export async function saveMasterHours(input: {
   return data.profile;
 }
 
+export async function saveMasterBookingRules(input: {
+  clientCancelEnabled?: boolean;
+  clientRescheduleEnabled?: boolean;
+  cancelHours?: number;
+  rescheduleHours?: number;
+}): Promise<MasterProfile> {
+  const data = await request<{ profile: MasterProfile }>(
+    "/api/master/booking-rules",
+    {
+      method: "PUT",
+      body: JSON.stringify(input),
+    },
+  );
+  return data.profile;
+}
+
 export async function saveMasterService(
   service: MasterServiceDto,
 ): Promise<MasterServiceDto> {

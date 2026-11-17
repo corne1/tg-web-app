@@ -55,6 +55,10 @@ function mapProfile(row: Record<string, unknown>): MasterProfileRow {
     place,
     timezone: String(row.timezone),
     cancel_hours: Number(row.cancel_hours),
+    client_cancel_enabled: Number(row.client_cancel_enabled ?? 1) !== 0,
+    client_reschedule_enabled:
+      Number(row.client_reschedule_enabled ?? 1) !== 0,
+    reschedule_hours: Number(row.reschedule_hours ?? row.cancel_hours ?? 24),
     status,
     onboarding_step: Number(row.onboarding_step ?? 1),
     onboarding_completed_at:
@@ -83,6 +87,9 @@ export type UpsertProfileInput = {
   place?: MasterPlace | null;
   timezone?: string;
   cancelHours?: number;
+  clientCancelEnabled?: boolean;
+  clientRescheduleEnabled?: boolean;
+  rescheduleHours?: number;
   serviceTypeCode?: string | null;
   city?: string;
   aboutText?: string | null;
@@ -148,6 +155,12 @@ export async function upsertProfile(
     const name = (input.name ?? prev?.name ?? "").trim() || "Мастер";
     const timezone = input.timezone ?? prev?.timezone ?? "Europe/Moscow";
     const cancelHours = input.cancelHours ?? prev?.cancel_hours ?? 24;
+    const clientCancelEnabled =
+      input.clientCancelEnabled ?? prev?.client_cancel_enabled ?? true;
+    const clientRescheduleEnabled =
+      input.clientRescheduleEnabled ?? prev?.client_reschedule_enabled ?? true;
+    const rescheduleHours =
+      input.rescheduleHours ?? prev?.reschedule_hours ?? cancelHours;
 
     let serviceTypeCode =
       input.serviceTypeCode !== undefined
@@ -247,9 +260,10 @@ export async function upsertProfile(
       sql: `INSERT INTO master_profiles (
         user_id, slug, name, service_type_code, city, schedule,
         working_hours_json, day_break_min, travel_buffer_min, place_json,
-        timezone, cancel_hours, status, onboarding_step, onboarding_completed_at,
+        timezone, cancel_hours, client_cancel_enabled, client_reschedule_enabled,
+        reschedule_hours, status, onboarding_step, onboarding_completed_at,
         about_text, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(user_id) DO UPDATE SET
         name = excluded.name,
         service_type_code = excluded.service_type_code,
@@ -261,6 +275,9 @@ export async function upsertProfile(
         place_json = excluded.place_json,
         timezone = excluded.timezone,
         cancel_hours = excluded.cancel_hours,
+        client_cancel_enabled = excluded.client_cancel_enabled,
+        client_reschedule_enabled = excluded.client_reschedule_enabled,
+        reschedule_hours = excluded.reschedule_hours,
         status = excluded.status,
         onboarding_step = excluded.onboarding_step,
         onboarding_completed_at = excluded.onboarding_completed_at,
@@ -279,6 +296,9 @@ export async function upsertProfile(
         placeJson,
         timezone,
         cancelHours,
+        clientCancelEnabled ? 1 : 0,
+        clientRescheduleEnabled ? 1 : 0,
+        rescheduleHours,
         status,
         onboardingStep,
         onboardingCompletedAt,
@@ -302,6 +322,9 @@ export async function upsertProfile(
       place,
       timezone,
       cancel_hours: cancelHours,
+      client_cancel_enabled: clientCancelEnabled,
+      client_reschedule_enabled: clientRescheduleEnabled,
+      reschedule_hours: rescheduleHours,
       status,
       onboarding_step: onboardingStep,
       onboarding_completed_at: onboardingCompletedAt,

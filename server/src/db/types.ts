@@ -52,6 +52,11 @@ export type MasterProfileRow = {
   place: MasterPlace | null;
   timezone: string;
   cancel_hours: number;
+  /** Client may cancel own booking within cancel_hours window. */
+  client_cancel_enabled: boolean;
+  /** Client may reschedule own booking within reschedule_hours window. */
+  client_reschedule_enabled: boolean;
+  reschedule_hours: number;
   status: MasterProfileStatus;
   onboarding_step: number;
   onboarding_completed_at: string | null;

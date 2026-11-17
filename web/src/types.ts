@@ -30,6 +30,9 @@ export interface MasterProfile {
   schedule: "weekday" | "weekend" | "manual";
   timezone?: string;
   cancelHours?: number;
+  clientCancelEnabled?: boolean;
+  clientRescheduleEnabled?: boolean;
+  rescheduleHours?: number;
   serviceTypeCode?: string | null;
   city?: string;
   status?: "draft" | "active";

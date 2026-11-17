@@ -5,10 +5,10 @@ import { MasterAvatar } from "../components/master/MasterAvatar";
 import bellIcon from "../assets/cabinet/profile/bell.svg";
 import calendarClockIcon from "../assets/cabinet/profile/calendar-clock.svg";
 import coverDemo from "../assets/cabinet/profile/cover.jpg";
+import fileTextIcon from "../assets/cabinet/profile/file-text.svg";
 import infoIcon from "../assets/cabinet/profile/info.svg";
 import mapPinIcon from "../assets/cabinet/profile/map-pin.svg";
 import scissorsIcon from "../assets/cabinet/profile/scissors.svg";
-import settingsIcon from "../assets/cabinet/profile/settings.svg";
 import { MasterTabBar } from "../components/master/MasterTabBar";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
@@ -48,16 +48,16 @@ const MENU_PRIMARY: MenuItem[] = [
 
 const MENU_SECONDARY: MenuItem[] = [
   {
+    id: "rules",
+    label: "Правила записи",
+    icon: fileTextIcon,
+    to: "/cabinet/profile/rules",
+  },
+  {
     id: "notifications",
     label: "Уведомления",
     icon: bellIcon,
     to: "/notifications",
-  },
-  {
-    id: "settings",
-    label: "Настройки",
-    icon: settingsIcon,
-    to: "/cabinet/profile/settings",
   },
   {
     id: "about",

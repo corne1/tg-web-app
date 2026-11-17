@@ -6,6 +6,7 @@ import { BackIcon, IconButton } from "../ui";
 
 const TITLES: Record<string, string> = {
   settings: "Настройки",
+  rules: "Правила записи",
   about: "О приложении",
 };
 

@@ -12,9 +12,14 @@ export function canCancelBooking(input: {
   startsAt: string;
   cancelHours: number;
   actorIsClient: boolean;
+  /** When false, client cannot cancel (master setting). */
+  enabled?: boolean;
   now?: Date;
 }): { ok: true } | { ok: false; reason: string } {
   if (!input.actorIsClient) return { ok: true };
+  if (input.enabled === false) {
+    return { ok: false, reason: "Client cancel disabled" };
+  }
   const left = hoursUntil(input.startsAt, input.now);
   if (left < input.cancelHours) {
     return {
@@ -28,8 +33,13 @@ export function canCancelBooking(input: {
 export function canRescheduleBooking(input: {
   startsAt: string;
   cancelHours: number;
+  /** When false, client cannot reschedule (master setting). */
+  enabled?: boolean;
   now?: Date;
 }): { ok: true } | { ok: false; reason: string } {
+  if (input.enabled === false) {
+    return { ok: false, reason: "Client reschedule disabled" };
+  }
   const left = hoursUntil(input.startsAt, input.now);
   if (left < input.cancelHours) {
     return {

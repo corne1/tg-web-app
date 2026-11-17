@@ -256,6 +256,73 @@ masterRouter.put("/hours", requireSession, async (req: AuthedRequest, res) => {
   }
 });
 
+const BOOKING_RULE_HOURS = new Set([1, 2, 6, 12, 24, 48, 72]);
+
+/** Persist cancel/reschedule rules (Figma 21455:21865). */
+masterRouter.put(
+  "/booking-rules",
+  requireSession,
+  async (req: AuthedRequest, res) => {
+    const tg = req.telegramUser!;
+    const body = req.body ?? {};
+    const clientCancelEnabled =
+      body.clientCancelEnabled === undefined
+        ? undefined
+        : Boolean(body.clientCancelEnabled);
+    const clientRescheduleEnabled =
+      body.clientRescheduleEnabled === undefined
+        ? undefined
+        : Boolean(body.clientRescheduleEnabled);
+    const cancelHoursRaw =
+      body.cancelHours === undefined || body.cancelHours === null
+        ? undefined
+        : Number(body.cancelHours);
+    const rescheduleHoursRaw =
+      body.rescheduleHours === undefined || body.rescheduleHours === null
+        ? undefined
+        : Number(body.rescheduleHours);
+
+    if (
+      cancelHoursRaw !== undefined &&
+      (!Number.isFinite(cancelHoursRaw) || !BOOKING_RULE_HOURS.has(cancelHoursRaw))
+    ) {
+      res.status(400).json({ error: "Invalid cancelHours" });
+      return;
+    }
+    if (
+      rescheduleHoursRaw !== undefined &&
+      (!Number.isFinite(rescheduleHoursRaw) ||
+        !BOOKING_RULE_HOURS.has(rescheduleHoursRaw))
+    ) {
+      res.status(400).json({ error: "Invalid rescheduleHours" });
+      return;
+    }
+
+    try {
+      await upsertUser(tg);
+      let profile = await getProfile(tg.id);
+      if (!profile) {
+        profile = await ensureMasterProfile(
+          tg.id,
+          [tg.first_name, tg.last_name].filter(Boolean).join(" "),
+        );
+      }
+      const next = await upsertProfile({
+        userId: tg.id,
+        name: profile.name,
+        clientCancelEnabled,
+        clientRescheduleEnabled,
+        cancelHours: cancelHoursRaw,
+        rescheduleHours: rescheduleHoursRaw,
+      });
+      res.json({ profile: serializeProfile(next) });
+    } catch (err) {
+      console.error("[master.booking-rules]", err);
+      res.status(500).json({ error: "Failed to save booking rules" });
+    }
+  },
+);
+
 masterRouter.get("/services", requireSession, async (req: AuthedRequest, res) => {
   const tg = req.telegramUser!;
   const services = await listServices(tg.id);

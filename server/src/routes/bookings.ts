@@ -243,8 +243,16 @@ bookingsRouter.post(
       return;
     }
     const profile = await getProfile(existing.master_id);
-    const cancelHours =
-      existing.master_id === tg.id ? 0 : (profile?.cancel_hours ?? 24);
+    const isMaster = existing.master_id === tg.id;
+    if (
+      !isMaster &&
+      profile &&
+      profile.client_cancel_enabled === false
+    ) {
+      res.status(400).json({ error: "Client cancel disabled" });
+      return;
+    }
+    const cancelHours = isMaster ? 0 : (profile?.cancel_hours ?? 24);
 
     try {
       const booking = await cancelBooking(id, tg.id, cancelHours);
@@ -301,12 +309,17 @@ bookingsRouter.post(
       return;
     }
 
+    if (profile.client_reschedule_enabled === false) {
+      res.status(400).json({ error: "Client reschedule disabled" });
+      return;
+    }
+
     try {
       const booking = await rescheduleBooking(
         id,
         tg.id,
         startsAt,
-        profile.cancel_hours,
+        profile.reschedule_hours ?? profile.cancel_hours,
       );
       res.json({
         booking: {
