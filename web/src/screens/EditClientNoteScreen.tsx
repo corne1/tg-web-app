@@ -18,6 +18,7 @@ import {
   Input,
   Modal,
   Textarea,
+  TEXTAREA_MAX_LEN,
 } from "../ui";
 
 /** Figma — «Редактирование заметки» next to create-note. */
@@ -157,6 +158,7 @@ export function EditClientNoteScreen() {
             <Field label="Текст заметки" as="label">
               <Textarea
                 rows={5}
+                maxLength={TEXTAREA_MAX_LEN}
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
                 placeholder="Запишите, что важно помнить об этом клиенте..."

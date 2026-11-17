@@ -10,7 +10,7 @@ import {
   patchClientDraft,
   readClientDraft,
 } from "../../lib/clientBookingDraft";
-import { Field, Input, Textarea, cx } from "../../ui";
+import { Field, Input, Textarea, TEXTAREA_MAX_LEN, cx } from "../../ui";
 
 function areaAllowsVisit(
   areas: string,
@@ -293,6 +293,7 @@ export function ClientAddressScreen() {
               onChange={(e) => setVisitNote(e.target.value)}
               placeholder="Как пройти, код калитки…"
               rows={3}
+              maxLength={TEXTAREA_MAX_LEN}
             />
           </Field>
         </div>

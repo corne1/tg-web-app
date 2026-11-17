@@ -3,6 +3,7 @@ import avatarPlaceholder from "../../assets/onboarding/avatar-placeholder.svg";
 import clockIcon from "../../assets/cabinet/clock.svg";
 import { useServiceTypes } from "../../hooks/useServiceTypes";
 import { ServiceSparkIcon } from "./ServiceSparkIcon";
+import { loadMasterAvatarDataUrl } from "../../lib/masterAvatar";
 import {
   formatDuration,
   formatPrice,
@@ -22,6 +23,8 @@ import {
 type Props = {
   draft: MasterDraft;
   placeMode: PlaceMode;
+  /** Optional override (e.g. after upload); falls back to local/TG cache. */
+  avatarUrl?: string | null;
   onEditProfile: () => void;
   onEditServices: () => void;
   onEditHours: () => void;
@@ -176,6 +179,7 @@ function EditButton({ onClick }: { onClick: () => void }) {
 export function PlacePublishReview({
   draft,
   placeMode,
+  avatarUrl,
   onEditProfile,
   onEditServices,
   onEditHours,
@@ -188,6 +192,8 @@ export function PlacePublishReview({
   const displayName = draft.name.trim() || "Мастер";
   const displayTitle = meta?.title ?? "";
   const displayChip = meta?.label ?? "";
+  const avatarSrc =
+    avatarUrl || loadMasterAvatarDataUrl() || avatarPlaceholder;
 
   const hourRows = useMemo(
     () => reviewWorkingDayRows(draft.hours),
@@ -222,7 +228,7 @@ export function PlacePublishReview({
         <div className="ms-review-inset ms-review-profile">
           <img
             className="ms-avatar"
-            src={avatarPlaceholder}
+            src={avatarSrc}
             width={48}
             height={48}
             alt=""

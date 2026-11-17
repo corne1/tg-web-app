@@ -66,3 +66,18 @@ export function CloseIcon() {
     </svg>
   );
 }
+
+/** Filled dismiss control for text fields (20×20). */
+export function InputClearIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden>
+      <circle cx="10" cy="10" r="8" fill="currentColor" />
+      <path
+        d="M7.25 7.25l5.5 5.5M12.75 7.25l-5.5 5.5"
+        stroke="#fff"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}

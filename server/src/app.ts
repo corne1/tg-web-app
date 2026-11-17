@@ -16,7 +16,8 @@ export function createApp() {
       credentials: true,
     }),
   );
-  app.use(express.json({ limit: "256kb" }));
+  // Avatars are stored as data-URLs; phone JPEGs need headroom after resize.
+  app.use(express.json({ limit: "1mb" }));
   app.use(parseCookies);
 
   // Ensure schema exists before handling requests (idempotent).

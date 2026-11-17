@@ -24,6 +24,10 @@ import { MasterSetupChrome } from "../master/MasterSetupChrome";
 import { MsArrowRight } from "../master/MsArrowRight";
 import { ServiceSparkIcon } from "../master/ServiceSparkIcon";
 import { SettingsPageShell } from "./SettingsPageShell";
+import {
+  isFromReview,
+  navigateToOnboardingReview,
+} from "../../lib/onboardingReviewEdit";
 import type { SettingsMode } from "./settingsMode";
 
 export type { SettingsMode };
@@ -44,6 +48,7 @@ function EmptyIllustration() {
 type LocState = {
   toast?: "added" | "deleted" | "saved";
   serviceTitle?: string;
+  fromReview?: boolean;
 } | null;
 
 const SERVICES_BASE: Record<SettingsMode, string> = {
@@ -58,6 +63,7 @@ export function ServicesSettings({ mode }: { mode: SettingsMode }) {
   const basePath = SERVICES_BASE[mode];
   const isSettings = mode === "settings";
   const { webApp } = useTelegram();
+  const [fromReview] = useState(() => isFromReview(location.state));
   const [services, setServices] = useState<MasterService[]>(
     () => loadMasterDraft().services,
   );
@@ -107,12 +113,23 @@ export function ServicesSettings({ mode }: { mode: SettingsMode }) {
       description: state.serviceTitle?.trim() || null,
       tone: "success",
     });
-    navigate(location.pathname, { replace: true, state: null });
-  }, [location.pathname, location.state, navigate, showToast]);
+    navigate(location.pathname, {
+      replace: true,
+      state: fromReview || state.fromReview ? { fromReview: true } : null,
+    });
+  }, [fromReview, location.pathname, location.state, navigate, showToast]);
 
   const goBack = useCallback(() => {
-    navigate(isSettings ? "/cabinet/profile" : "/onboarding");
-  }, [isSettings, navigate]);
+    if (isSettings) {
+      navigate("/cabinet/profile");
+      return;
+    }
+    if (fromReview) {
+      navigateToOnboardingReview(navigate);
+      return;
+    }
+    navigate("/onboarding");
+  }, [fromReview, isSettings, navigate]);
 
   const handleClose = useCallback(() => {
     if (isSettings) {
@@ -142,6 +159,11 @@ export function ServicesSettings({ mode }: { mode: SettingsMode }) {
       navigate("/cabinet/profile");
       return;
     }
+    if (fromReview) {
+      webApp?.HapticFeedback?.notificationOccurred("success");
+      navigateToOnboardingReview(navigate);
+      return;
+    }
     try {
       await setMasterOnboardingStep(2);
       webApp?.HapticFeedback?.impactOccurred("light");
@@ -151,17 +173,27 @@ export function ServicesSettings({ mode }: { mode: SettingsMode }) {
         tone: "danger",
       });
     }
-  }, [isSettings, navigate, persistLocal, services.length, showToast, webApp]);
+  }, [
+    fromReview,
+    isSettings,
+    navigate,
+    persistLocal,
+    services.length,
+    showToast,
+    webApp,
+  ]);
 
   const openForm = useCallback(
     (formMode: "new" | "edit" | "duplicate", id?: string) => {
       setMenuId(null);
-      if (formMode === "new") navigate(`${basePath}/new`);
-      else if (formMode === "edit" && id) navigate(`${basePath}/${id}/edit`);
+      const state = fromReview ? { fromReview: true } : undefined;
+      if (formMode === "new") navigate(`${basePath}/new`, { state });
+      else if (formMode === "edit" && id)
+        navigate(`${basePath}/${id}/edit`, { state });
       else if (formMode === "duplicate" && id)
-        navigate(`${basePath}/${id}/duplicate`);
+        navigate(`${basePath}/${id}/duplicate`, { state });
     },
-    [basePath, navigate],
+    [basePath, fromReview, navigate],
   );
 
   const confirmDelete = useCallback(async () => {
@@ -386,6 +418,10 @@ export function ServicesSettings({ mode }: { mode: SettingsMode }) {
     <Button disabled={!hasServices} onClick={() => void handlePrimary()}>
       Сохранить
     </Button>
+  ) : fromReview ? (
+    <Button disabled={!hasServices} onClick={() => void handlePrimary()}>
+      Сохранить
+    </Button>
   ) : (
     <>
       <p className="ms-next-hint">Следующий шаг — Рабочее время</p>
@@ -421,7 +457,6 @@ export function ServicesSettings({ mode }: { mode: SettingsMode }) {
       step={2}
       progressFilled={2}
       onBack={goBack}
-      onClose={handleClose}
       toast={toast}
       toastDescription={toastDescription}
       toastTone={toastTone}

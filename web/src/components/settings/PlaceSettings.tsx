@@ -5,7 +5,8 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { readReviewState } from "../../lib/onboardingReviewEdit";
 import {
   completeMasterOnboarding,
   fetchMe,
@@ -19,6 +20,7 @@ import { MsArrowRight } from "../master/MsArrowRight";
 import { PlacePublishReview } from "../master/PlacePublishReview";
 import { SettingsPageShell } from "./SettingsPageShell";
 import type { SettingsMode } from "./settingsMode";
+import { loadMasterAvatarDataUrl } from "../../lib/masterAvatar";
 import { useBackButton } from "../../hooks/useBackButton";
 import { useCitySearch } from "../../hooks/useCitySearch";
 import { useMainButton } from "../../hooks/useMainButton";
@@ -54,6 +56,7 @@ import {
   Input,
   RadioMark,
   Textarea,
+  TEXTAREA_MAX_LEN,
   cx,
 } from "../../ui";
 
@@ -183,11 +186,17 @@ function SectionHeading({
 
 export function PlaceSettings({ mode }: { mode: SettingsMode }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const isSettings = mode === "settings";
   const { webApp } = useTelegram();
   const initial = loadMasterDraft();
 
-  const [stage, setStage] = useState<PlaceStage>(1);
+  const [stage, setStage] = useState<PlaceStage>(() => {
+    const requested = readReviewState(location.state).placeStage;
+    return requested === 2 || requested === 3 ? requested : 1;
+  });
+  /** Editing place details via review «Изменить» — Save returns to stage 3. */
+  const [placeEditFromReview, setPlaceEditFromReview] = useState(false);
   const [placeMode, setPlaceMode] = useState<PlaceMode | null>(
     initial.placeMode,
   );
@@ -210,6 +219,9 @@ export function PlaceSettings({ mode }: { mode: SettingsMode }) {
   const [toast, setToast] = useState<string | null>(null);
   const [toastTone, setToastTone] = useState<"success" | "danger">("success");
   const [reviewDraft, setReviewDraft] = useState<MasterDraft>(initial);
+  const [reviewAvatarUrl, setReviewAvatarUrl] = useState<string | null>(() =>
+    loadMasterAvatarDataUrl(),
+  );
   const [travelBufferMin, setTravelBufferMin] = useState<number>(30);
 
   const cityQuery =
@@ -223,6 +235,15 @@ export function PlaceSettings({ mode }: { mode: SettingsMode }) {
     if (isSettings) return;
     void setMasterOnboardingStep(4).catch(() => undefined);
   }, [isSettings]);
+
+  // Land on review (or a requested stage) after editing another wizard step.
+  useEffect(() => {
+    const requested = readReviewState(location.state).placeStage;
+    if (requested !== 1 && requested !== 2 && requested !== 3) return;
+    setStage(requested);
+    setPlaceEditFromReview(false);
+    navigate(location.pathname, { replace: true, state: null });
+  }, [location.pathname, location.state, navigate]);
 
   useEffect(() => {
     let cancelled = false;
@@ -285,13 +306,26 @@ export function PlaceSettings({ mode }: { mode: SettingsMode }) {
       setActiveCityField(null);
       return;
     }
+    if (placeEditFromReview && stage === 1) {
+      persist();
+      setPlaceEditFromReview(false);
+      setStage(3);
+      return;
+    }
     if (stage > 1) {
       setStage((s) => prevPlaceStage(s));
       return;
     }
     persist();
     navigate(isSettings ? "/cabinet/profile" : "/onboarding/hours");
-  }, [activeCityField, isSettings, navigate, persist, stage]);
+  }, [
+    activeCityField,
+    isSettings,
+    navigate,
+    persist,
+    placeEditFromReview,
+    stage,
+  ]);
 
   const handleClose = useCallback(() => {
     persist();
@@ -408,6 +442,12 @@ export function PlaceSettings({ mode }: { mode: SettingsMode }) {
       if (!canContinueStage1) return;
       persist();
       webApp?.HapticFeedback?.impactOccurred("light");
+      if (placeEditFromReview && canContinueStage2) {
+        void syncPlaceToServer();
+        setPlaceEditFromReview(false);
+        setStage(3);
+        return;
+      }
       setStage(nextPlaceStage(1));
       return;
     }
@@ -421,6 +461,7 @@ export function PlaceSettings({ mode }: { mode: SettingsMode }) {
         return;
       }
       webApp?.HapticFeedback?.impactOccurred("light");
+      if (placeEditFromReview) setPlaceEditFromReview(false);
       setStage(nextPlaceStage(2));
       return;
     }
@@ -466,6 +507,7 @@ export function PlaceSettings({ mode }: { mode: SettingsMode }) {
     isSettings,
     navigate,
     persist,
+    placeEditFromReview,
     saving,
     showToast,
     stage,
@@ -484,28 +526,30 @@ export function PlaceSettings({ mode }: { mode: SettingsMode }) {
     if (stage !== 3) return;
     persist();
     setReviewDraft(loadMasterDraft());
+    setReviewAvatarUrl(loadMasterAvatarDataUrl());
   }, [persist, stage]);
 
   const editProfile = useCallback(() => {
     if (isSettings) return;
     persist();
-    navigate("/onboarding");
+    navigate("/onboarding", { state: { fromReview: true } });
   }, [isSettings, navigate, persist]);
 
   const editServices = useCallback(() => {
     if (isSettings) return;
     persist();
-    navigate("/onboarding/services");
+    navigate("/onboarding/services", { state: { fromReview: true } });
   }, [isSettings, navigate, persist]);
 
   const editHours = useCallback(() => {
     if (isSettings) return;
     persist();
-    navigate("/onboarding/hours");
+    navigate("/onboarding/hours", { state: { fromReview: true } });
   }, [isSettings, navigate, persist]);
 
   const editPlace = useCallback(() => {
     persist();
+    setPlaceEditFromReview(true);
     setStage(1);
   }, [persist]);
 
@@ -513,13 +557,15 @@ export function PlaceSettings({ mode }: { mode: SettingsMode }) {
   useMainButton({ text: "", visible: false, onClick: () => undefined });
 
   const primaryLabel =
-    isSettings && stage === 2
+    placeEditFromReview && stage < 3
       ? "Сохранить"
-      : stage === 3
-        ? saving
-          ? "Публикация…"
-          : "Опубликовать профиль"
-        : "Продолжить";
+      : isSettings && stage === 2
+        ? "Сохранить"
+        : stage === 3
+          ? saving
+            ? "Публикация…"
+            : "Опубликовать профиль"
+          : "Продолжить";
   const primaryDisabled =
     stage === 1
       ? !canContinueStage1
@@ -669,6 +715,7 @@ export function PlaceSettings({ mode }: { mode: SettingsMode }) {
           <Field label="Как найти вход?" as="label">
             <Textarea
               rows={3}
+              maxLength={TEXTAREA_MAX_LEN}
               placeholder="Этаж, номер кабинета, ориентир"
               value={studioPlace.comment}
               onChange={(e) => {
@@ -756,6 +803,7 @@ export function PlaceSettings({ mode }: { mode: SettingsMode }) {
         <Field label="Районы выезда" as="label">
           <Textarea
             rows={3}
+            maxLength={TEXTAREA_MAX_LEN}
             placeholder="Например, Хамовники, Арбат, Пресня"
             value={visitPlace.comment}
             onChange={(e) => {
@@ -837,7 +885,7 @@ export function PlaceSettings({ mode }: { mode: SettingsMode }) {
         onClick={() => void handleContinue()}
       >
         {primaryLabel}
-        {stage < 3 && <MsArrowRight />}
+        {stage < 3 && !placeEditFromReview && <MsArrowRight />}
       </Button>
       <Button variant="secondary" onClick={handleSaveExit}>
         Сохранить и выйти
@@ -925,6 +973,7 @@ export function PlaceSettings({ mode }: { mode: SettingsMode }) {
               visitPlace,
             }}
             placeMode={placeMode}
+            avatarUrl={reviewAvatarUrl}
             onEditProfile={editProfile}
             onEditServices={editServices}
             onEditHours={editHours}
@@ -956,7 +1005,6 @@ export function PlaceSettings({ mode }: { mode: SettingsMode }) {
       step={4}
       progressFilled={4}
       onBack={goBack}
-      onClose={handleClose}
       toast={toast}
       toastTone={toastTone}
       onToastDismiss={() => setToast(null)}

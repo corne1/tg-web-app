@@ -12,6 +12,7 @@ import {
   IconButton,
   Input,
   Textarea,
+  TEXTAREA_MAX_LEN,
 } from "../ui";
 
 /** Figma 21370:23881 — «Создание заметки». */
@@ -87,6 +88,7 @@ export function CreateClientNoteScreen() {
         <Field label="Текст заметки" as="label">
           <Textarea
             rows={5}
+            maxLength={TEXTAREA_MAX_LEN}
             value={body}
             onChange={(e) => setBody(e.target.value)}
             placeholder="Запишите, что важно помнить об этом клиенте..."

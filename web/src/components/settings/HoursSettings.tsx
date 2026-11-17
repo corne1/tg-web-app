@@ -1,10 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { saveMasterHours, setMasterOnboardingStep } from "../../api";
 import { MasterSetupChrome } from "../master/MasterSetupChrome";
 import { MsArrowRight } from "../master/MsArrowRight";
 import { SettingsPageShell } from "./SettingsPageShell";
 import type { SettingsMode } from "./settingsMode";
+import {
+  isFromReview,
+  navigateToOnboardingReview,
+} from "../../lib/onboardingReviewEdit";
 import { useBackButton } from "../../hooks/useBackButton";
 import { useMainButton } from "../../hooks/useMainButton";
 import { useTelegram } from "../../hooks/useTelegram";
@@ -91,8 +95,10 @@ function CopyIcon() {
 
 export function HoursSettings({ mode }: { mode: SettingsMode }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const isSettings = mode === "settings";
   const { webApp } = useTelegram();
+  const [fromReview] = useState(() => isFromReview(location.state));
   const initial = loadMasterDraft();
   const [hours, setHours] = useState<WorkingHours>(initial.hours);
   const [preset, setPreset] = useState<HoursPresetId | null>(
@@ -134,8 +140,16 @@ export function HoursSettings({ mode }: { mode: SettingsMode }) {
 
   const goBack = useCallback(() => {
     persist();
-    navigate(isSettings ? "/cabinet/profile" : "/onboarding/services");
-  }, [isSettings, navigate, persist]);
+    if (isSettings) {
+      navigate("/cabinet/profile");
+      return;
+    }
+    if (fromReview) {
+      navigateToOnboardingReview(navigate);
+      return;
+    }
+    navigate("/onboarding/services");
+  }, [fromReview, isSettings, navigate, persist]);
 
   const handleClose = useCallback(() => {
     persist();
@@ -174,10 +188,16 @@ export function HoursSettings({ mode }: { mode: SettingsMode }) {
       navigate("/cabinet/profile");
       return;
     }
+    if (fromReview) {
+      webApp?.HapticFeedback?.notificationOccurred("success");
+      navigateToOnboardingReview(navigate);
+      return;
+    }
     webApp?.HapticFeedback?.impactOccurred("light");
     navigate("/onboarding/place");
   }, [
     canContinue,
+    fromReview,
     isSettings,
     navigate,
     persist,
@@ -297,6 +317,10 @@ export function HoursSettings({ mode }: { mode: SettingsMode }) {
   useMainButton({ text: "", visible: false, onClick: () => undefined });
 
   const footer = isSettings ? (
+    <Button disabled={!canContinue} onClick={handleContinue}>
+      Сохранить
+    </Button>
+  ) : fromReview ? (
     <Button disabled={!canContinue} onClick={handleContinue}>
       Сохранить
     </Button>
@@ -780,7 +804,6 @@ export function HoursSettings({ mode }: { mode: SettingsMode }) {
       step={3}
       progressFilled={3}
       onBack={goBack}
-      onClose={handleClose}
       toast={toast}
       toastTone="success"
       onToastDismiss={dismissToast}

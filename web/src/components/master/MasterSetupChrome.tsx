@@ -10,7 +10,8 @@ type Props = {
   /** Hide wizard step label + progress (profile edit entry). */
   hideWizardChrome?: boolean;
   onBack: () => void;
-  onClose: () => void;
+  /** Omit in onboarding wizard — no header close control. */
+  onClose?: () => void;
   children: ReactNode;
   footer?: ReactNode;
   toast?: string | null;
@@ -56,9 +57,13 @@ export function MasterSetupChrome({
                 <h1 className="ms-top-title">{topTitle}</h1>
                 <p className="ms-top-sub">Шаг {step} из 4</p>
               </div>
-              <IconButton label="Закрыть" onClick={onClose}>
-                <CloseIcon />
-              </IconButton>
+              {onClose ? (
+                <IconButton label="Закрыть" onClick={onClose}>
+                  <CloseIcon />
+                </IconButton>
+              ) : (
+                <span className="ms-top-spacer" aria-hidden />
+              )}
             </header>
 
             <div className="ms-progress" aria-hidden>

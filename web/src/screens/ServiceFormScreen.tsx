@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { saveMasterService } from "../api";
+import { isFromReview } from "../lib/onboardingReviewEdit";
 import { MasterSetupChrome } from "../components/master/MasterSetupChrome";
 import {
   ServiceFormFields,
@@ -34,9 +35,11 @@ export function ServiceFormScreen({
   listPath?: string;
 }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { serviceId } = useParams();
   const { webApp } = useTelegram();
   const isSettings = listPath.startsWith("/cabinet/profile");
+  const [fromReview] = useState(() => isFromReview(location.state));
 
   const source = serviceId ? getService(serviceId) : null;
   const [form, setForm] = useState<ServiceFormState>(() => {
@@ -116,6 +119,7 @@ export function ServiceFormScreen({
         state: {
           toast: mode === "edit" ? "saved" : "added",
           serviceTitle: saved.title,
+          ...(fromReview ? { fromReview: true } : {}),
         },
       });
     } catch (err) {
@@ -124,7 +128,17 @@ export function ServiceFormScreen({
     } finally {
       setSaving(false);
     }
-  }, [form, listPath, mode, navigate, saving, source, validate, webApp]);
+  }, [
+    form,
+    fromReview,
+    listPath,
+    mode,
+    navigate,
+    saving,
+    source,
+    validate,
+    webApp,
+  ]);
 
   useBackButton(goBack);
   useMainButton({ text: "", visible: false, onClick: () => undefined });
@@ -186,7 +200,6 @@ export function ServiceFormScreen({
           progressFilled={2}
           topTitle={headings.title}
           onBack={goBack}
-          onClose={handleClose}
           footer={footer}
         >
           {fields}

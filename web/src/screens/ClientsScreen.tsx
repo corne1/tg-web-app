@@ -15,7 +15,7 @@ import {
   sortClientsAlphabetical,
   type BookingClient,
 } from "../lib/bookingClients";
-import { ChevronRightIcon, cx } from "../ui";
+import { ChevronRightIcon, cx, Input } from "../ui";
 
 function SearchIcon() {
   return (
@@ -100,8 +100,8 @@ export function ClientsScreen() {
         <label className="ms-field ms-cl-search-field">
           <span className="ms-nb-search">
             <SearchIcon />
-            <input
-              className="ms-input ms-nb-search-input"
+            <Input
+              className="ms-nb-search-input"
               type="search"
               placeholder="Имя или номер телефона"
               value={query}

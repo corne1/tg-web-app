@@ -1609,6 +1609,12 @@ body:has(.ms-boot-splash),
   padding: 0;
 }
 
+.ms-input-wrap {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
 .ms-input {
   width: 100%;
   min-height: 40px;
@@ -1624,6 +1630,35 @@ body:has(.ms-boot-splash),
   line-height: 20px;
   box-shadow: var(--ms-shadow-e1);
   transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.ms-input.has-clear {
+  padding-right: 40px;
+}
+
+.ms-input-clear {
+  appearance: none;
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ms-radius-full);
+  background: transparent;
+  color: var(--ms-tertiary);
+  cursor: pointer;
+}
+
+.ms-input-clear:active {
+  opacity: 0.75;
 }
 
 .ms-input.ms-input-search {
@@ -2581,6 +2616,22 @@ body:has(.ms-boot-splash),
   padding-right: 2.5rem;
 }
 
+.ms-input-affix .ms-input.has-clear {
+  padding-right: 4.25rem;
+}
+
+.ms-input-affix .ms-input-clear {
+  right: 2.15rem;
+}
+
+.ms-input-affix-prefix:not(.ms-input-affix-both) .ms-input.has-clear {
+  padding-right: 40px;
+}
+
+.ms-input-affix-prefix:not(.ms-input-affix-both) .ms-input-clear {
+  right: 8px;
+}
+
 .ms-input-affix .ms-input:disabled {
   color: var(--ms-tertiary);
   background: var(--ms-soft);
@@ -2628,12 +2679,15 @@ body:has(.ms-boot-splash),
 }
 
 .ms-char-count {
+  display: block;
   align-self: flex-end;
+  margin-top: 2px;
   font-size: 12px;
   font-weight: 500;
   letter-spacing: -0.12px;
   line-height: 16px;
   color: var(--ms-tertiary);
+  text-align: right;
 }
 
 .ms-sheet {
@@ -5141,6 +5195,11 @@ label.ms-sheet-item {
   width: 100%;
 }
 
+.ms-nb-search .ms-input-wrap {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 .ms-nb-search-input {
   flex: 1 1 auto;
   min-width: 0;
@@ -5150,6 +5209,19 @@ label.ms-sheet-item {
   background: transparent;
   border-radius: 0;
   min-height: 44px;
+}
+
+.ms-nb-search-input.has-clear {
+  padding-right: 36px;
+}
+
+.ms-nb-search .ms-input-clear {
+  right: 0;
+}
+
+.ms-input[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .ms-nb-search-input:focus {

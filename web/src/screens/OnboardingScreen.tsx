@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { saveMasterAvatar, saveMasterProfile } from "../api";
+import {
+  isFromReview,
+  navigateToOnboardingReview,
+} from "../lib/onboardingReviewEdit";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
 import { useServiceTypes } from "../hooks/useServiceTypes";
@@ -17,7 +21,7 @@ import galleryIcon from "../assets/onboarding/gallery.svg";
 import infoIcon from "../assets/onboarding/info.svg";
 import {
   loadMasterAvatarDataUrl,
-  readFileAsDataUrl,
+  prepareAvatarDataUrl,
   saveMasterAvatarDataUrl,
 } from "../lib/masterAvatar";
 import { loadPublicAbout, savePublicAbout } from "../lib/publicProfile";
@@ -29,6 +33,7 @@ import {
   Input,
   RadioMark,
   Textarea,
+  TEXTAREA_MAX_LEN,
 } from "../ui";
 
 type PhotoSource = "telegram" | "upload";
@@ -37,7 +42,9 @@ const ABOUT_PLACEHOLDER = "Расскажите о себе и своей раб
 
 export function OnboardingScreen() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { webApp } = useTelegram();
+  const [fromReview] = useState(() => isFromReview(location.state));
   const initial = loadMasterDraft();
   const tgPhoto = webApp?.initDataUnsafe?.user?.photo_url ?? null;
   const [name, setName] = useState(initial.name);
@@ -50,7 +57,9 @@ export function OnboardingScreen() {
   } = useServiceTypes();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [avatarTick, setAvatarTick] = useState(0);
+  const [previewAvatar, setPreviewAvatar] = useState(
+    () => loadMasterAvatarDataUrl() || tgPhoto || avatarPlaceholder,
+  );
   const [photoSource, setPhotoSource] = useState<PhotoSource>(() => {
     const local = loadMasterAvatarDataUrl();
     if (local && local !== tgPhoto && !local.startsWith("http")) return "upload";
@@ -63,23 +72,29 @@ export function OnboardingScreen() {
     if (catalogError) setError(catalogError);
   }, [catalogError]);
 
+  // Prefer freshly resolved TG photo when local cache is empty.
+  useEffect(() => {
+    if (loadMasterAvatarDataUrl()) return;
+    if (!tgPhoto) return;
+    setPreviewAvatar(tgPhoto);
+  }, [tgPhoto]);
+
   const draft = useMemo(
     () => ({ name: name.trim(), serviceTypeCode, city }),
     [name, serviceTypeCode, city],
   );
   const valid = Boolean(draft.name && draft.serviceTypeCode);
-  void avatarTick;
-  const previewAvatar =
-    loadMasterAvatarDataUrl() || tgPhoto || avatarPlaceholder;
 
   const persistAvatar = useCallback(async (url: string) => {
     saveMasterAvatarDataUrl(url);
-    setAvatarTick((n) => n + 1);
+    setPreviewAvatar(url);
     try {
       const profile = await saveMasterAvatar(url);
       cacheProfile(profile);
-    } catch {
-      // keep local preview
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Не удалось сохранить фото",
+      );
     }
   }, []);
 
@@ -113,6 +128,11 @@ export function OnboardingScreen() {
     setError(null);
     try {
       await persistServer();
+      if (fromReview) {
+        webApp?.HapticFeedback?.notificationOccurred("success");
+        navigateToOnboardingReview(navigate);
+        return;
+      }
       webApp?.HapticFeedback?.impactOccurred("light");
       navigate("/onboarding/services");
     } catch (err) {
@@ -120,7 +140,7 @@ export function OnboardingScreen() {
     } finally {
       setSaving(false);
     }
-  }, [navigate, persistServer, saving, valid, webApp]);
+  }, [fromReview, navigate, persistServer, saving, valid, webApp]);
 
   const handleSaveExit = useCallback(async () => {
     persistLocal();
@@ -321,6 +341,7 @@ export function OnboardingScreen() {
           <Field label="О мастере" as="label">
             <Textarea
               rows={5}
+              maxLength={TEXTAREA_MAX_LEN}
               value={about}
               onChange={(e) => setAbout(e.target.value)}
               placeholder={ABOUT_PLACEHOLDER}
@@ -330,23 +351,27 @@ export function OnboardingScreen() {
       </div>
 
       <footer className="ms-footer">
-        <p className="ms-next-hint">Следующий шаг — Услуги и цены</p>
+        {!fromReview ? (
+          <p className="ms-next-hint">Следующий шаг — Услуги и цены</p>
+        ) : null}
         {error && <p className="error">{error}</p>}
         <div className="ms-footer-actions">
           <Button
             disabled={!valid || saving}
             onClick={() => void handleContinue()}
           >
-            {saving ? "Сохранение…" : "Продолжить"}
-            <MsArrowRight />
+            {saving ? "Сохранение…" : fromReview ? "Сохранить" : "Продолжить"}
+            {!fromReview ? <MsArrowRight /> : null}
           </Button>
-          <Button
-            variant="secondary"
-            disabled={saving}
-            onClick={() => void handleSaveExit()}
-          >
-            Сохранить и выйти
-          </Button>
+          {!fromReview ? (
+            <Button
+              variant="secondary"
+              disabled={saving}
+              onClick={() => void handleSaveExit()}
+            >
+              Сохранить и выйти
+            </Button>
+          ) : null}
         </div>
       </footer>
 
@@ -360,8 +385,9 @@ export function OnboardingScreen() {
           e.target.value = "";
           if (!file) return;
           setPhotoSource("upload");
-          void readFileAsDataUrl(file)
+          void prepareAvatarDataUrl(file)
             .then(async (url) => {
+              setError(null);
               await persistAvatar(url);
             })
             .catch(() => setError("Не удалось загрузить фото"));

@@ -5,7 +5,13 @@ import {
 } from "../../../lib/masterDraft";
 import type { ServiceFormState } from "../../../lib/serviceFormState";
 import type { ServiceFormErrors } from "../../../lib/serviceFormValidation";
-import { Field, Input, SelectTrigger, Textarea } from "../../../ui";
+import {
+  Field,
+  Input,
+  SelectTrigger,
+  Textarea,
+  TEXTAREA_MAX_LEN,
+} from "../../../ui";
 import { ServicePriceBlock } from "./ServicePriceBlock";
 
 type Form = ServiceFormState;
@@ -89,12 +95,11 @@ export function ServiceFormFields({
       <Field label="Описание" as="label" optional>
         <Textarea
           rows={4}
-          maxLength={300}
+          maxLength={TEXTAREA_MAX_LEN}
           placeholder="Что входит в услугу"
           value={form.description}
           onChange={(e) => onChange({ description: e.target.value })}
         />
-        <span className="ms-char-count">{form.description.length}/300</span>
       </Field>
     </div>
   );

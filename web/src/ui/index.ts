@@ -20,10 +20,11 @@ export {
   ChevronDownIcon,
   ChevronRightIcon,
   CloseIcon,
+  InputClearIcon,
 } from "./icons";
 export { Input } from "./Input";
 export { Modal } from "./Modal";
 export { RadioInput, RadioMark, RadioOption } from "./Radio";
 export { SelectTrigger } from "./SelectTrigger";
 export { SheetHeader } from "./SheetHeader";
-export { Textarea } from "./Textarea";
+export { Textarea, TEXTAREA_MAX_LEN } from "./Textarea";

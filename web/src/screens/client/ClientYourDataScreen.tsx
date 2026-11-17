@@ -6,7 +6,7 @@ import { useBackButton } from "../../hooks/useBackButton";
 import { useMainButton } from "../../hooks/useMainButton";
 import { useTelegram } from "../../hooks/useTelegram";
 import { patchClientDraft, readClientDraft } from "../../lib/clientBookingDraft";
-import { Field, Input, Textarea, cx } from "../../ui";
+import { Field, Input, Textarea, TEXTAREA_MAX_LEN, cx } from "../../ui";
 
 export function ClientYourDataScreen() {
   const { masterId: masterKey = "" } = useParams();
@@ -89,6 +89,7 @@ export function ClientYourDataScreen() {
               onChange={(e) => setComment(e.target.value)}
               placeholder="Пожелания, детали…"
               rows={3}
+              maxLength={TEXTAREA_MAX_LEN}
             />
           </Field>
         </div>

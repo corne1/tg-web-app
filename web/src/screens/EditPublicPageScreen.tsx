@@ -8,7 +8,7 @@ import { useServiceTypes } from "../hooks/useServiceTypes";
 import { useTelegram } from "../hooks/useTelegram";
 import {
   loadMasterAvatarDataUrl,
-  readFileAsDataUrl,
+  prepareAvatarDataUrl,
   saveMasterAvatarDataUrl,
 } from "../lib/masterAvatar";
 import {
@@ -29,6 +29,7 @@ import {
   Input,
   SheetSimpleHeader,
   Textarea,
+  TEXTAREA_MAX_LEN,
 } from "../ui";
 
 const ABOUT_PLACEHOLDER =
@@ -107,8 +108,10 @@ export function EditPublicPageScreen() {
     try {
       const profile = await saveMasterAvatar(url);
       cacheProfile(profile);
-    } catch {
-      // local preview kept; server sync can retry later
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Не удалось сохранить фото",
+      );
     }
   }, []);
 
@@ -206,8 +209,9 @@ export function EditPublicPageScreen() {
               const file = e.target.files?.[0];
               e.target.value = "";
               if (!file) return;
-              void readFileAsDataUrl(file)
+              void prepareAvatarDataUrl(file)
                 .then(async (url) => {
+                  setError(null);
                   await persistAvatar(url);
                   setPhotoSheet(false);
                 })
@@ -247,6 +251,7 @@ export function EditPublicPageScreen() {
           <Field label="О мастере" as="label">
             <Textarea
               rows={4}
+              maxLength={TEXTAREA_MAX_LEN}
               value={about}
               onChange={(e) => setAbout(e.target.value)}
               placeholder={ABOUT_PLACEHOLDER}

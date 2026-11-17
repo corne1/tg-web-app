@@ -22,7 +22,7 @@ import {
   type BookingClient,
 } from "../lib/bookingClients";
 import { patchBookingDraft } from "../lib/bookingDraft";
-import { cx } from "../ui";
+import { cx, Input } from "../ui";
 
 function SearchIcon() {
   return (
@@ -235,8 +235,8 @@ export function NewBookingClientScreen() {
             <span className="ms-label">Клиент</span>
             <span className="ms-nb-search">
               <SearchIcon />
-              <input
-                className="ms-input ms-nb-search-input"
+              <Input
+                className="ms-nb-search-input"
                 type="search"
                 placeholder="Имя или номер телефона"
                 value={query}
