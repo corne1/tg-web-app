@@ -16,12 +16,12 @@ import {
 } from "../lib/masterDraft";
 import { MsArrowRight } from "../components/master/MsArrowRight";
 import { cacheProfile } from "../lib/profileStorage";
-import avatarPlaceholder from "../assets/onboarding/avatar-placeholder.svg";
 import galleryIcon from "../assets/onboarding/gallery.svg";
 import infoIcon from "../assets/onboarding/info.svg";
 import {
   loadMasterAvatarDataUrl,
   prepareAvatarDataUrl,
+  resolveMasterAvatarSrc,
   saveMasterAvatarDataUrl,
 } from "../lib/masterAvatar";
 import { loadPublicAbout, savePublicAbout } from "../lib/publicProfile";
@@ -57,8 +57,8 @@ export function OnboardingScreen() {
   } = useServiceTypes();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [previewAvatar, setPreviewAvatar] = useState(
-    () => loadMasterAvatarDataUrl() || tgPhoto || avatarPlaceholder,
+  const [previewAvatar, setPreviewAvatar] = useState(() =>
+    resolveMasterAvatarSrc(tgPhoto),
   );
   const [photoSource, setPhotoSource] = useState<PhotoSource>(() => {
     const local = loadMasterAvatarDataUrl();
@@ -98,6 +98,14 @@ export function OnboardingScreen() {
     }
   }, []);
 
+  /** Ensure step-1 choice is stored before leaving the screen. */
+  const ensureAvatarPersisted = useCallback(async () => {
+    if (loadMasterAvatarDataUrl()) return;
+    if (photoSource === "telegram" && tgPhoto) {
+      await persistAvatar(tgPhoto);
+    }
+  }, [persistAvatar, photoSource, tgPhoto]);
+
   const persistLocal = useCallback(() => {
     const prev = loadMasterDraft();
     saveMasterDraft({
@@ -127,6 +135,7 @@ export function OnboardingScreen() {
     setSaving(true);
     setError(null);
     try {
+      await ensureAvatarPersisted();
       await persistServer();
       if (fromReview) {
         webApp?.HapticFeedback?.notificationOccurred("success");
@@ -140,7 +149,15 @@ export function OnboardingScreen() {
     } finally {
       setSaving(false);
     }
-  }, [fromReview, navigate, persistServer, saving, valid, webApp]);
+  }, [
+    ensureAvatarPersisted,
+    fromReview,
+    navigate,
+    persistServer,
+    saving,
+    valid,
+    webApp,
+  ]);
 
   const handleSaveExit = useCallback(async () => {
     persistLocal();
@@ -153,6 +170,7 @@ export function OnboardingScreen() {
     setSaving(true);
     setError(null);
     try {
+      await ensureAvatarPersisted();
       await persistServer();
       webApp?.HapticFeedback?.notificationOccurred("success");
       navigate("/");
@@ -161,7 +179,15 @@ export function OnboardingScreen() {
     } finally {
       setSaving(false);
     }
-  }, [navigate, persistLocal, persistServer, saving, valid, webApp]);
+  }, [
+    ensureAvatarPersisted,
+    navigate,
+    persistLocal,
+    persistServer,
+    saving,
+    valid,
+    webApp,
+  ]);
 
   const selectTelegramPhoto = useCallback(() => {
     setPhotoSource("telegram");
@@ -208,8 +234,10 @@ export function OnboardingScreen() {
             <span className="ms-progress-seg" />
           </div>
         </div>
+      </div>
 
-        <section className="ms-hero ms-hero-toolbar">
+      <div className="ms-body ms-body-step1">
+        <section className="ms-hero">
           <h2 className="ms-question">
             Как клиенты будут
             <br />
@@ -219,9 +247,7 @@ export function OnboardingScreen() {
             Эту информацию увидят на странице записи. Можно изменить в любой момент
           </p>
         </section>
-      </div>
 
-      <div className="ms-body ms-body-step1">
         <section className="ms-ob-photo-card" aria-label="Фото мастера">
           <div className="ms-ob-photo-head">
             <img

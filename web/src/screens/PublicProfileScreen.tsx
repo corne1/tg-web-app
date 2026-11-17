@@ -3,12 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { fetchMe } from "../api";
 import copyIcon from "../assets/onboarding/action-copy.svg";
 import editIcon from "../assets/onboarding/action-edit.svg";
-import avatarDemo from "../assets/cabinet/profile/avatar-demo.jpg";
+import { MasterAvatar } from "../components/master/MasterAvatar";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
 import { useServiceTypes } from "../hooks/useServiceTypes";
 import { useTelegram } from "../hooks/useTelegram";
-import { loadMasterAvatarDataUrl } from "../lib/masterAvatar";
+import { saveMasterAvatarDataUrl } from "../lib/masterAvatar";
 import { cacheProfile } from "../lib/profileStorage";
 import type { MasterProfile } from "../types";
 import { BackIcon, Button, ChevronRightIcon, IconButton } from "../ui";
@@ -67,6 +67,9 @@ export function PublicProfileScreen() {
         if (cancelled || !me.profile) return;
         cacheProfile(me.profile);
         setProfile(me.profile);
+        if (me.profile.avatarUrl) {
+          saveMasterAvatarDataUrl(me.profile.avatarUrl);
+        }
       })
       .catch(() => undefined);
     return () => {
@@ -85,10 +88,6 @@ export function PublicProfileScreen() {
   }, [metaFor, profile?.serviceTypeCode, serviceTypes]);
   const published =
     profile?.status === "active" || Boolean(profile?.onboardingComplete);
-  const avatarSrc =
-    loadMasterAvatarDataUrl() ||
-    profile?.avatarUrl ||
-    avatarDemo;
 
   const goBack = useCallback(
     () => navigate("/cabinet/profile"),
@@ -163,12 +162,11 @@ export function PublicProfileScreen() {
 
       <div className="ms-body ms-cab-body ms-pub-body">
         <div className="ms-pub-hero">
-          <img
+          <MasterAvatar
             className="ms-pub-avatar"
-            src={avatarSrc}
+            remote={profile?.avatarUrl}
             width={88}
             height={88}
-            alt=""
           />
           <h2 className="ms-pub-name">{profile?.name?.trim() || "Мастер"}</h2>
           <p className="ms-pub-role">{title}</p>

@@ -1,9 +1,8 @@
 import { useMemo, useState } from "react";
-import avatarPlaceholder from "../../assets/onboarding/avatar-placeholder.svg";
+import { MasterAvatar } from "./MasterAvatar";
 import clockIcon from "../../assets/cabinet/clock.svg";
 import { useServiceTypes } from "../../hooks/useServiceTypes";
 import { ServiceSparkIcon } from "./ServiceSparkIcon";
-import { loadMasterAvatarDataUrl } from "../../lib/masterAvatar";
 import {
   formatDuration,
   formatPrice,
@@ -192,8 +191,6 @@ export function PlacePublishReview({
   const displayName = draft.name.trim() || "Мастер";
   const displayTitle = meta?.title ?? "";
   const displayChip = meta?.label ?? "";
-  const avatarSrc =
-    avatarUrl || loadMasterAvatarDataUrl() || avatarPlaceholder;
 
   const hourRows = useMemo(
     () => reviewWorkingDayRows(draft.hours),
@@ -226,13 +223,11 @@ export function PlacePublishReview({
           <StatusFilled />
         </header>
         <div className="ms-review-inset ms-review-profile">
-          <img
+          <MasterAvatar
             className="ms-avatar"
-            src={avatarSrc}
+            remote={avatarUrl}
             width={48}
             height={48}
-            alt=""
-            aria-hidden
           />
           <div className="ms-preview-meta">
             <p className="ms-preview-name">

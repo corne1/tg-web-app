@@ -1,10 +1,12 @@
+import avatarPlaceholder from "../assets/onboarding/avatar-placeholder.svg";
+
 const AVATAR_KEY = "pomni.masterAvatarDataUrl.v1";
 
 /** Keep under server `express.json` + DB avatar URL budget. */
 const MAX_EDGE_PX = 512;
 const JPEG_QUALITY = 0.82;
 
-/** Local preview until server photo upload exists (Blur #16). */
+/** Local copy of the photo chosen on onboarding step 1. */
 export function loadMasterAvatarDataUrl(): string | null {
   try {
     return localStorage.getItem(AVATAR_KEY);
@@ -23,6 +25,19 @@ export function saveMasterAvatarDataUrl(dataUrl: string | null): void {
   } catch {
     // quota / private mode — caller should keep in-memory preview
   }
+}
+
+/**
+ * Own master photo (onboarding choice): local → server → placeholder.
+ * Pass `remote` from `profile.avatarUrl` when available.
+ */
+export function resolveMasterAvatarSrc(remote?: string | null): string {
+  return loadMasterAvatarDataUrl() || remote || avatarPlaceholder;
+}
+
+/** Public/client view of a master — only server URL (no localStorage). */
+export function resolvePublicMasterAvatarSrc(remote?: string | null): string {
+  return remote || avatarPlaceholder;
 }
 
 export function readFileAsDataUrl(file: File): Promise<string> {
@@ -44,7 +59,10 @@ export async function prepareAvatarDataUrl(file: File): Promise<string> {
 
   try {
     const bitmap = await createImageBitmap(file);
-    const scale = Math.min(1, MAX_EDGE_PX / Math.max(bitmap.width, bitmap.height));
+    const scale = Math.min(
+      1,
+      MAX_EDGE_PX / Math.max(bitmap.width, bitmap.height),
+    );
     const w = Math.max(1, Math.round(bitmap.width * scale));
     const h = Math.max(1, Math.round(bitmap.height * scale));
     const canvas = document.createElement("canvas");

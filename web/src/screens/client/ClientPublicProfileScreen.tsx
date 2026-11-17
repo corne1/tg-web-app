@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import coverDemo from "../../assets/cabinet/profile/cover.jpg";
-import avatarDemo from "../../assets/cabinet/profile/avatar-demo.jpg";
 import clockPurpleIcon from "../../assets/cabinet/clock-purple.svg";
 import houseIcon from "../../assets/client/house.svg";
 import serviceSparkIcon from "../../assets/client/service-spark.svg";
@@ -16,6 +15,7 @@ import {
   studioAddressLine,
 } from "../../lib/clientBookingDraft";
 import { loadClientMaster } from "../../lib/clientMaster";
+import { resolvePublicMasterAvatarSrc } from "../../lib/masterAvatar";
 import { useServiceTypes } from "../../hooks/useServiceTypes";
 import type { PublicMaster } from "../../types";
 import { cx } from "../../ui";
@@ -126,7 +126,7 @@ export function ClientPublicProfileScreen() {
           <div className="ms-prof-avatar-wrap">
             <img
               className="ms-prof-avatar"
-              src={master.avatarUrl || avatarDemo}
+              src={resolvePublicMasterAvatarSrc(master.avatarUrl)}
               width={100}
               height={100}
               alt=""
