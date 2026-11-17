@@ -37,6 +37,7 @@ import { ClientPublicProfileScreen } from "./screens/client/ClientPublicProfileS
 import { ClientServicesScreen } from "./screens/client/ClientServicesScreen";
 import { ClientSuccessScreen } from "./screens/client/ClientSuccessScreen";
 import { ClientYourDataScreen } from "./screens/client/ClientYourDataScreen";
+import { AboutAppScreen } from "./screens/AboutAppScreen";
 import { BookingRulesScreen } from "./screens/BookingRulesScreen";
 import { CabinetProfileScreen } from "./screens/CabinetProfileScreen";
 import { EditPublicPageScreen } from "./screens/EditPublicPageScreen";
@@ -376,6 +377,10 @@ export function App() {
             <Route
               path="/cabinet/profile/rules"
               element={<BookingRulesScreen />}
+            />
+            <Route
+              path="/cabinet/profile/about"
+              element={<AboutAppScreen />}
             />
             <Route
               path="/cabinet/profile/:stubKey"

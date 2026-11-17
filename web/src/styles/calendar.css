@@ -8090,6 +8090,48 @@ label.ms-sheet-item {
   padding: 0 16px 20px;
 }
 
+/* Figma 21446:21072 — О приложении */
+.ms-about {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 8px 0 24px;
+}
+
+.ms-about-card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  border-radius: 20px;
+  background: var(--ms-soft);
+  overflow: hidden;
+}
+
+.ms-about-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.ms-about-label {
+  color: var(--ms-ink);
+  font-size: 16px;
+  font-weight: 400;
+  letter-spacing: -0.16px;
+  line-height: 24px;
+}
+
+.ms-about-value {
+  color: var(--ms-muted);
+  font-size: 16px;
+  font-weight: 400;
+  letter-spacing: -0.16px;
+  line-height: 24px;
+  text-align: right;
+}
+
 /* Figma 21455:21865 — Правила записи */
 .ms-rules {
   display: flex;

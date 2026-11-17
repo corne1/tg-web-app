@@ -6,8 +6,6 @@ import { BackIcon, IconButton } from "../ui";
 
 const TITLES: Record<string, string> = {
   settings: "Настройки",
-  rules: "Правила записи",
-  about: "О приложении",
 };
 
 /** Lightweight placeholder until dedicated Figma screens are wired. */
