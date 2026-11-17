@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { MasterAvatar } from "./MasterAvatar";
 import clockIcon from "../../assets/cabinet/clock.svg";
 import { useServiceTypes } from "../../hooks/useServiceTypes";
+import { PlaceModeIcon } from "./PlaceModeIcon";
 import { ServiceSparkIcon } from "./ServiceSparkIcon";
 import {
   formatDuration,
@@ -112,46 +113,6 @@ function ChevronDown() {
   );
 }
 
-function IconHouseSmall() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden>
-      <path
-        d="M4 9.5 10 4.5l6 5V16a1.2 1.2 0 0 1-1.2 1.2H5.2A1.2 1.2 0 0 1 4 16V9.5Z"
-        stroke="#623DF5"
-        strokeWidth="1.4"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M8 17.2V12h4v5.2"
-        stroke="#623DF5"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function IconCarSmall() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden>
-      <path
-        d="M4.5 12h11l-1-4.2A1.6 1.6 0 0 0 13 6.5H7A1.6 1.6 0 0 0 5.5 7.8L4.5 12Z"
-        stroke="#623DF5"
-        strokeWidth="1.4"
-        strokeLinejoin="round"
-      />
-      <circle cx="7" cy="14" r="1.2" fill="#623DF5" />
-      <circle cx="13" cy="14" r="1.2" fill="#623DF5" />
-      <path
-        d="M4.5 12H3.5M15.5 12H16.5"
-        stroke="#623DF5"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
 
 function IconEyeOff() {
   return (
@@ -329,7 +290,7 @@ export function PlacePublishReview({
         <div className="ms-review-inset ms-review-place-panel">
           {needsStudioPlace(placeMode) && studioLine && (
             <div className="ms-review-place-row">
-              <IconHouseSmall />
+              <PlaceModeIcon mode="studio" className="ms-review-place-icon" />
               <div className="ms-review-place-text">
                 <p className="ms-review-place-title">Кабинет</p>
                 <p className="ms-review-place-sub">{studioLine}</p>
@@ -338,7 +299,7 @@ export function PlacePublishReview({
           )}
           {needsVisitPlace(placeMode) && (
             <div className="ms-review-place-row">
-              <IconCarSmall />
+              <PlaceModeIcon mode="visit" className="ms-review-place-icon" />
               <div className="ms-review-place-text">
                 <p className="ms-review-place-title">Выезд к клиенту</p>
                 <p className="ms-review-place-sub">

@@ -3815,6 +3815,19 @@ label.ms-sheet-item {
   justify-content: center;
 }
 
+/* Place mode glyphs (cabinet / car / pin) — tinted via currentColor */
+.ms-place-mode-icon {
+  display: inline-block;
+  flex: 0 0 auto;
+  background: currentColor;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
 /* Same Fast setting card Selected: primary/border, keep fill2 */
 .ms-place-card.is-active {
   border-color: var(--ms-purple-border);
@@ -4315,6 +4328,11 @@ label.ms-sheet-item {
   gap: 10px;
   padding: 12px 0;
   border-bottom: 1px solid var(--ms-line-soft);
+}
+
+.ms-review-place-icon {
+  color: var(--ms-purple);
+  margin-top: 2px;
 }
 
 .ms-review-place-row:last-of-type {
@@ -7678,6 +7696,10 @@ label.ms-sheet-item {
   background: #fff;
 }
 
+.ms-client-place-card .ms-service-avatar {
+  color: #9196a1;
+}
+
 .ms-client-place-title {
   margin: 0 0 4px;
   font-size: 16px;
@@ -7712,6 +7734,11 @@ label.ms-sheet-item {
   background: #fff;
   text-align: left;
   cursor: pointer;
+}
+
+.ms-client-place-option-icon {
+  color: var(--ms-purple);
+  margin-top: 2px;
 }
 
 .ms-client-place-option.is-on {

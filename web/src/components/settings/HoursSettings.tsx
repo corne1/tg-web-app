@@ -889,9 +889,11 @@ function TimeSheet({
     setCustomMinutes(timeToMinutes(value) % 60);
   }, [value, field]);
 
+  // Keep the chip window on the opened time. Rebuilding it from `draft`
+  // shifts every label on tap, so the pressed time is replaced by a neighbor.
   const quick = useMemo(
-    () => quickTimeChoices(draft, field, other),
-    [draft, field, other],
+    () => quickTimeChoices(value, field, other),
+    [value, field, other],
   );
 
   const customValue = minutesToTime(customHours * 60 + customMinutes);
@@ -985,11 +987,14 @@ function TimeSheet({
         <>
           <div className="ms-sheet-custom-body">
             <div className="ms-sheet-dual">
-              <label className="ms-sheet-segment">
-                <span className="ms-sheet-segment-label">Часы</span>
+              <div className="ms-sheet-segment">
+                <span className="ms-sheet-segment-label" id="ms-time-hours-label">
+                  Часы
+                </span>
                 <span className="ms-sheet-segment-control-wrap">
                   <select
                     className="ms-sheet-segment-control"
+                    aria-labelledby="ms-time-hours-label"
                     value={customHours}
                     onChange={(e) => setCustomHours(Number(e.target.value))}
                   >
@@ -1001,12 +1006,15 @@ function TimeSheet({
                   </select>
                   <ChevronDownIcon className="ms-select-chevron" />
                 </span>
-              </label>
-              <label className="ms-sheet-segment">
-                <span className="ms-sheet-segment-label">Минуты</span>
+              </div>
+              <div className="ms-sheet-segment">
+                <span className="ms-sheet-segment-label" id="ms-time-minutes-label">
+                  Минуты
+                </span>
                 <span className="ms-sheet-segment-control-wrap">
                   <select
                     className="ms-sheet-segment-control"
+                    aria-labelledby="ms-time-minutes-label"
                     value={customMinutes}
                     onChange={(e) => setCustomMinutes(Number(e.target.value))}
                   >
@@ -1018,7 +1026,7 @@ function TimeSheet({
                   </select>
                   <ChevronDownIcon className="ms-select-chevron" />
                 </span>
-              </label>
+              </div>
             </div>
           </div>
           <SheetFooter>

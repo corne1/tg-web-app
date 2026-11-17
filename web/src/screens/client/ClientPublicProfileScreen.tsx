@@ -2,8 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import coverDemo from "../../assets/cabinet/profile/cover.jpg";
 import clockPurpleIcon from "../../assets/cabinet/clock-purple.svg";
-import houseIcon from "../../assets/client/house.svg";
 import { ClientFlowShell } from "../../components/client/ClientFlowShell";
+import { PlaceModeIcon } from "../../components/master/PlaceModeIcon";
 import { ServiceSparkIcon } from "../../components/master/ServiceSparkIcon";
 import { useBackButton } from "../../hooks/useBackButton";
 import { useMainButton } from "../../hooks/useMainButton";
@@ -198,7 +198,7 @@ export function ClientPublicProfileScreen() {
             {master.place.studio ? (
               <div className="ms-client-place-card">
                 <div className="ms-service-avatar" aria-hidden>
-                  <img src={houseIcon} width={20} height={20} alt="" />
+                  <PlaceModeIcon mode="studio" />
                 </div>
                 <div>
                   <p className="ms-client-place-title">В кабинете у мастера</p>
@@ -211,7 +211,7 @@ export function ClientPublicProfileScreen() {
             {master.place.visit && !master.place.studio ? (
               <div className="ms-client-place-card">
                 <div className="ms-service-avatar" aria-hidden>
-                  <img src={houseIcon} width={20} height={20} alt="" />
+                  <PlaceModeIcon mode="visit" />
                 </div>
                 <div>
                   <p className="ms-client-place-title">С выездом к вам</p>

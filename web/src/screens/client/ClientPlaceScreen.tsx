@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import carIcon from "../../assets/client/car.svg";
-import houseIcon from "../../assets/client/house.svg";
 import { ClientFlowShell } from "../../components/client/ClientFlowShell";
 import { MsArrowRight } from "../../components/master/MsArrowRight";
+import { PlaceModeIcon } from "../../components/master/PlaceModeIcon";
 import { useBackButton } from "../../hooks/useBackButton";
 import { useMainButton } from "../../hooks/useMainButton";
 import {
@@ -98,7 +97,11 @@ export function ClientPlaceScreen() {
               )}
               onClick={() => setChoice("studio")}
             >
-              <img src={houseIcon} width={24} height={24} alt="" aria-hidden />
+              <PlaceModeIcon
+                mode="studio"
+                size={24}
+                className="ms-client-place-option-icon"
+              />
               <span className="ms-client-place-option-copy">
                 <span className="ms-client-place-option-title">В кабинете</span>
                 {studioLine ? (
@@ -125,7 +128,11 @@ export function ClientPlaceScreen() {
               )}
               onClick={() => setChoice("visit")}
             >
-              <img src={carIcon} width={24} height={24} alt="" aria-hidden />
+              <PlaceModeIcon
+                mode="visit"
+                size={24}
+                className="ms-client-place-option-icon"
+              />
               <span className="ms-client-place-option-copy">
                 <span className="ms-client-place-option-title">
                   С выездом к вам
