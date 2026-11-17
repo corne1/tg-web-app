@@ -66,15 +66,6 @@ export function ServiceFormScreen({
 
   const goBack = useCallback(() => navigate(listPath), [listPath, navigate]);
 
-  const handleClose = useCallback(() => {
-    if (isSettings) {
-      navigate("/cabinet/profile");
-      return;
-    }
-    webApp?.close?.();
-    navigate("/");
-  }, [isSettings, navigate, webApp]);
-
   const patchForm = useCallback((patch: Partial<ServiceFormState>) => {
     setForm((f) => ({ ...f, ...patch }));
   }, []);
@@ -187,9 +178,16 @@ export function ServiceFormScreen({
     <>
       {isSettings ? (
         <SettingsPageShell
-          title={headings.title}
+          title={
+            mode === "edit"
+              ? "Редактировать услугу"
+              : mode === "duplicate"
+                ? "Дублирование услуги"
+                : "Создание услуги"
+          }
+          lead="Укажите основные параметры"
+          titlePlacement="page"
           onBack={goBack}
-          onClose={handleClose}
           footer={footer}
         >
           {fields}

@@ -4127,6 +4127,98 @@ label.ms-sheet-item {
   color: var(--ms-muted);
 }
 
+/* Cabinet place hub — Figma 21446:19094 */
+.ms-place-hub {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.ms-place-hub-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  margin: 0;
+  padding: 16px;
+  border: none;
+  border-radius: 20px;
+  background: var(--ms-soft);
+  text-align: left;
+  cursor: pointer;
+  box-sizing: border-box;
+  font: inherit;
+  color: inherit;
+}
+
+.ms-place-hub-card:active {
+  opacity: 0.92;
+}
+
+.ms-place-hub-copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.ms-place-hub-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+
+.ms-place-hub-title {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.16px;
+  line-height: 24px;
+  color: var(--ms-ink);
+}
+
+.ms-place-hub-badge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--ms-radius-full);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: -0.12px;
+  line-height: 16px;
+}
+
+.ms-place-hub-badge.is-ok {
+  background: #e8f8ef;
+  color: #1b7a45;
+}
+
+.ms-place-hub-badge.is-empty {
+  background: #eef0f3;
+  color: var(--ms-muted);
+}
+
+.ms-place-hub-sub {
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  color: var(--ms-muted);
+}
+
+.ms-place-hub-note {
+  margin-top: 4px;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: -0.13px;
+  line-height: 18px;
+  color: var(--ms-muted);
+}
+
 /* Step 4 / Этап 3 — publish checklist «Проверьте профиль»
    Figma: Project!! / 21131:46821 «Шаг 4. Место приёма и публикация. Начало» */
 .ms-review {
@@ -6190,6 +6282,11 @@ label.ms-sheet-item {
   padding: calc(12px + env(safe-area-inset-top, 0px)) 8px 8px;
 }
 
+.ms-bd-toolbar.is-page {
+  justify-content: flex-start;
+  padding-bottom: 4px;
+}
+
 .ms-bd-toolbar-title {
   margin: 0;
   flex: 1;
@@ -6199,6 +6296,32 @@ label.ms-sheet-item {
   letter-spacing: -0.17px;
   line-height: 24px;
   color: var(--ms-ink);
+}
+
+/* Figma cabinet settings: large title under back-only bar (Мои услуги / Правила…) */
+.ms-page-head {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 0 4px;
+}
+
+.ms-page-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.24px;
+  line-height: 32px;
+  color: var(--ms-ink);
+}
+
+.ms-page-lead {
+  margin: 0;
+  color: var(--ms-muted);
+  font-size: 16px;
+  font-weight: 400;
+  letter-spacing: -0.16px;
+  line-height: 24px;
 }
 
 .ms-bd-body {

@@ -151,16 +151,6 @@ export function HoursSettings({ mode }: { mode: SettingsMode }) {
     navigate("/onboarding/services");
   }, [fromReview, isSettings, navigate, persist]);
 
-  const handleClose = useCallback(() => {
-    persist();
-    if (isSettings) {
-      navigate("/cabinet/profile");
-      return;
-    }
-    webApp?.close?.();
-    navigate("/");
-  }, [isSettings, navigate, persist, webApp]);
-
   const canContinue = hasEnabledWorkingDay(hours);
 
   const syncHoursToServer = useCallback(
@@ -339,57 +329,61 @@ export function HoursSettings({ mode }: { mode: SettingsMode }) {
 
   const body = (
     <>
-      <section className="ms-hero">
-        <h2 className="ms-question">Когда вы принимаете клиентов?</h2>
-        <p className="ms-lead">
-          Выберите рабочие дни и часы. График можно будет изменить позже.
-        </p>
-      </section>
+      {isSettings ? null : (
+        <section className="ms-hero">
+          <h2 className="ms-question">Когда вы принимаете клиентов?</h2>
+          <p className="ms-lead">
+            Выберите рабочие дни и часы. График можно будет изменить позже.
+          </p>
+        </section>
+      )}
 
-      <section className="ms-hours-section">
-        <h3 className="ms-hours-section-title">Быстрая настройка</h3>
-        <div className="ms-preset-list">
-          {HOURS_PRESETS.map((p) => {
-            const active = preset === p.id;
-            return (
-              <button
-                key={p.id}
-                type="button"
-                className={cx("ms-preset-card", active && "is-active")}
-                onClick={() => applyPreset(p.id)}
-                aria-pressed={active}
-              >
-                <span className="ms-preset-text">
-                  <span className="ms-preset-title">{p.title}</span>
-                  <span className="ms-preset-meta">
-                    <span className="ms-preset-meta-row">
-                      <img
-                        src={clockIcon}
-                        width={20}
-                        height={20}
-                        alt=""
-                        aria-hidden
-                      />
-                      <span>{p.hoursLabel}</span>
-                    </span>
-                    <span className="ms-preset-meta-row">
-                      <img
-                        src={calendarIcon}
-                        width={20}
-                        height={20}
-                        alt=""
-                        aria-hidden
-                      />
-                      <span>{p.offLabel}</span>
+      {isSettings ? null : (
+        <section className="ms-hours-section">
+          <h3 className="ms-hours-section-title">Быстрая настройка</h3>
+          <div className="ms-preset-list">
+            {HOURS_PRESETS.map((p) => {
+              const active = preset === p.id;
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  className={cx("ms-preset-card", active && "is-active")}
+                  onClick={() => applyPreset(p.id)}
+                  aria-pressed={active}
+                >
+                  <span className="ms-preset-text">
+                    <span className="ms-preset-title">{p.title}</span>
+                    <span className="ms-preset-meta">
+                      <span className="ms-preset-meta-row">
+                        <img
+                          src={clockIcon}
+                          width={20}
+                          height={20}
+                          alt=""
+                          aria-hidden
+                        />
+                        <span>{p.hoursLabel}</span>
+                      </span>
+                      <span className="ms-preset-meta-row">
+                        <img
+                          src={calendarIcon}
+                          width={20}
+                          height={20}
+                          alt=""
+                          aria-hidden
+                        />
+                        <span>{p.offLabel}</span>
+                      </span>
                     </span>
                   </span>
-                </span>
-                <RadioMark checked={active} />
-              </button>
-            );
-          })}
-        </div>
-      </section>
+                  <RadioMark checked={active} />
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       <section className="ms-hours-section">
         <div className="ms-hours-section-head">
@@ -787,8 +781,9 @@ export function HoursSettings({ mode }: { mode: SettingsMode }) {
     return (
       <SettingsPageShell
         title="Рабочее время"
+        lead="Выберите рабочие дни и часы. График можно будет изменить позже."
+        titlePlacement="page"
         onBack={goBack}
-        onClose={handleClose}
         toast={toast}
         toastTone="success"
         onToastDismiss={dismissToast}

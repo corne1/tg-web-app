@@ -27,6 +27,7 @@ import { useCitySearch } from "../../hooks/useCitySearch";
 import { useMainButton } from "../../hooks/useMainButton";
 import { useTelegram } from "../../hooks/useTelegram";
 import {
+  isPlaceDetailsValid,
   loadMasterDraft,
   needsStudioPlace,
   needsVisitPlace,
@@ -46,8 +47,12 @@ import {
   nextPlaceStage,
   placeStage2Copy,
   prevPlaceStage,
+  reviewAddressVisibilityNote,
   type PlaceStage,
 } from "../../lib/placeStepFlow";
+
+/** Cabinet «Место приёма» views (Figma 21446:19094 hub + format + detail). */
+type CabinetPlaceView = "hub" | "format" | "studio" | "visit";
 import { cacheProfile } from "../../lib/profileStorage";
 import {
   Button,
@@ -186,6 +191,9 @@ export function PlaceSettings({ mode }: { mode: SettingsMode }) {
     loadMasterAvatarDataUrl(),
   );
   const [travelBufferMin, setTravelBufferMin] = useState<number>(30);
+  const [cabinetView, setCabinetView] = useState<CabinetPlaceView>(() =>
+    mode === "settings" ? (initial.placeMode ? "hub" : "format") : "hub",
+  );
 
   const cityQuery =
     activeCityField === "visit" ? visitCityQuery : studioCityQuery;
@@ -269,6 +277,19 @@ export function PlaceSettings({ mode }: { mode: SettingsMode }) {
       setActiveCityField(null);
       return;
     }
+    if (isSettings) {
+      if (cabinetView === "studio" || cabinetView === "visit") {
+        setCabinetView("hub");
+        return;
+      }
+      if (cabinetView === "format") {
+        setCabinetView(placeMode ? "hub" : "format");
+        if (placeMode) return;
+      }
+      persist();
+      navigate("/cabinet/profile");
+      return;
+    }
     if (placeEditFromReview && stage === 1) {
       persist();
       setPlaceEditFromReview(false);
@@ -280,25 +301,17 @@ export function PlaceSettings({ mode }: { mode: SettingsMode }) {
       return;
     }
     persist();
-    navigate(isSettings ? "/cabinet/profile" : "/onboarding/hours");
+    navigate("/onboarding/hours");
   }, [
     activeCityField,
+    cabinetView,
     isSettings,
     navigate,
     persist,
     placeEditFromReview,
+    placeMode,
     stage,
   ]);
-
-  const handleClose = useCallback(() => {
-    persist();
-    if (isSettings) {
-      navigate("/cabinet/profile");
-      return;
-    }
-    webApp?.close?.();
-    navigate("/");
-  }, [isSettings, navigate, persist, webApp]);
 
   const showToast = useCallback(
     (message: string, tone: "success" | "danger" = "success") => {
@@ -833,13 +846,221 @@ export function PlaceSettings({ mode }: { mode: SettingsMode }) {
     );
   };
 
+  const formatList = (
+    <>
+      <div
+        className="ms-place-list"
+        role="radiogroup"
+        aria-label="Формат приёма"
+      >
+        {PLACE_OPTIONS.map((opt) => {
+          const active = placeMode === opt.id;
+          return (
+            <button
+              key={opt.id}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              className={`ms-place-card ${active ? "is-active" : ""}`}
+              onClick={() => {
+                setPlaceMode(opt.id);
+                persist(opt.id);
+                webApp?.HapticFeedback?.selectionChanged?.();
+              }}
+            >
+              <PlaceIcon mode={opt.id} />
+              <span className="ms-place-text">
+                <span className="ms-place-title">{opt.title}</span>
+                <span className="ms-place-sub">{opt.subtitle}</span>
+              </span>
+              <RadioMark checked={active} />
+            </button>
+          );
+        })}
+      </div>
+    </>
+  );
+
+  const studioConfigured = isPlaceDetailsValid(studioPlace, true);
+  const visitConfigured =
+    placeMode === "both"
+      ? Boolean(studioPlace.city.trim() || visitPlace.city.trim())
+      : isPlaceDetailsValid(visitPlace, false);
+  const studioLine = [studioPlace.city.trim(), studioPlace.address.trim()]
+    .filter(Boolean)
+    .join(", ");
+  const visitLine = [
+    visitPlace.city.trim() ||
+      (placeMode === "both" ? studioPlace.city.trim() : ""),
+    visitPlace.comment.trim()
+      ? `районы: ${visitPlace.comment.trim()}`
+      : "",
+  ]
+    .filter(Boolean)
+    .join(", ");
+
+  const handleCabinetPrimary = useCallback(async () => {
+    if (cabinetView === "hub") {
+      setCabinetView("format");
+      return;
+    }
+    if (cabinetView === "format") {
+      if (!placeMode) return;
+      persist();
+      webApp?.HapticFeedback?.impactOccurred("light");
+      if (needsStudioPlace(placeMode) && !isPlaceDetailsValid(studioPlace, true)) {
+        setCabinetView("studio");
+        return;
+      }
+      if (
+        needsVisitPlace(placeMode) &&
+        placeMode !== "both" &&
+        !isPlaceDetailsValid(visitPlace, false)
+      ) {
+        setCabinetView("visit");
+        return;
+      }
+      void syncPlaceToServer();
+      setCabinetView("hub");
+      showToast("Сохранено");
+      return;
+    }
+    if (cabinetView === "studio") {
+      if (!isPlaceDetailsValid(studioPlace, true)) return;
+      persist();
+      void syncPlaceToServer();
+      webApp?.HapticFeedback?.notificationOccurred("success");
+      if (needsVisitPlace(placeMode) && placeMode !== "both" && !visitConfigured) {
+        setCabinetView("visit");
+        return;
+      }
+      setCabinetView("hub");
+      showToast("Сохранено");
+      return;
+    }
+    if (cabinetView === "visit") {
+      if (placeMode !== "both" && !isPlaceDetailsValid(visitPlace, false)) return;
+      persist();
+      void syncPlaceToServer();
+      webApp?.HapticFeedback?.notificationOccurred("success");
+      setCabinetView("hub");
+      showToast("Сохранено");
+    }
+  }, [
+    cabinetView,
+    persist,
+    placeMode,
+    showToast,
+    studioPlace,
+    syncPlaceToServer,
+    visitConfigured,
+    visitPlace,
+    webApp,
+  ]);
+
+  const cabinetFooterDisabled =
+    cabinetView === "format"
+      ? !placeMode
+      : cabinetView === "studio"
+        ? !studioConfigured
+        : cabinetView === "visit"
+          ? placeMode !== "both" && !isPlaceDetailsValid(visitPlace, false)
+          : false;
+
+  const cabinetFooterLabel =
+    cabinetView === "hub" ? "Изменить формат работы" : "Сохранить";
+
+  const cabinetShellTitle =
+    cabinetView === "studio"
+      ? "Кабинет"
+      : cabinetView === "visit"
+        ? "Выезд к клиенту"
+        : cabinetView === "format"
+          ? "Где вы принимаете клиентов?"
+          : "Место приёма";
+
+  const cabinetShellLead =
+    cabinetView === "format"
+      ? "Укажите формат приёма, чтобы клиенты понимали, где проходит встреча"
+      : cabinetView === "hub"
+        ? "Адрес кабинета и районы выезда"
+        : undefined;
+
+  const cabinetBody =
+    cabinetView === "hub" ? (
+      <div className="ms-place-hub">
+        {placeMode && needsStudioPlace(placeMode) ? (
+          <button
+            type="button"
+            className="ms-place-hub-card"
+            onClick={() => setCabinetView("studio")}
+          >
+            <PlaceIcon mode="studio" />
+            <span className="ms-place-hub-copy">
+              <span className="ms-place-hub-title-row">
+                <span className="ms-place-hub-title">Кабинет</span>
+                <span
+                  className={cx(
+                    "ms-place-hub-badge",
+                    studioConfigured ? "is-ok" : "is-empty",
+                  )}
+                >
+                  {studioConfigured ? "Настроено" : "Пусто"}
+                </span>
+              </span>
+              <span className="ms-place-hub-sub">
+                {studioConfigured ? studioLine : "Адрес не указан"}
+              </span>
+              {studioConfigured ? (
+                <span className="ms-place-hub-note">
+                  {reviewAddressVisibilityNote(studioPlace.addressVisibility)}
+                </span>
+              ) : null}
+            </span>
+          </button>
+        ) : null}
+        {placeMode && needsVisitPlace(placeMode) ? (
+          <button
+            type="button"
+            className="ms-place-hub-card"
+            onClick={() => setCabinetView("visit")}
+          >
+            <PlaceIcon mode="visit" />
+            <span className="ms-place-hub-copy">
+              <span className="ms-place-hub-title-row">
+                <span className="ms-place-hub-title">Выезд к клиенту</span>
+                <span
+                  className={cx(
+                    "ms-place-hub-badge",
+                    visitConfigured ? "is-ok" : "is-empty",
+                  )}
+                >
+                  {visitConfigured ? "Настроено" : "Пусто"}
+                </span>
+              </span>
+              <span className="ms-place-hub-sub">
+                {visitConfigured
+                  ? visitLine || "Районы не указаны"
+                  : "Районы не указаны"}
+              </span>
+            </span>
+          </button>
+        ) : null}
+      </div>
+    ) : cabinetView === "format" ? (
+      formatList
+    ) : cabinetView === "studio" ? (
+      renderStudioBlock()
+    ) : (
+      renderVisitBlock()
+    );
+
   const footer = isSettings ? (
     <Button
-      disabled={primaryDisabled}
-      onClick={() => void handleContinue()}
+      disabled={cabinetFooterDisabled}
+      onClick={() => void handleCabinetPrimary()}
     >
-      {primaryLabel}
-      {stage === 1 ? <MsArrowRight /> : null}
+      {cabinetFooterLabel}
     </Button>
   ) : (
     <>
@@ -869,36 +1090,7 @@ export function PlaceSettings({ mode }: { mode: SettingsMode }) {
           <p className="ms-stage-label">
             Этап 1 <span>/ 3</span>
           </p>
-          <div
-            className="ms-place-list"
-            role="radiogroup"
-            aria-label="Формат приёма"
-          >
-            {PLACE_OPTIONS.map((opt) => {
-              const active = placeMode === opt.id;
-              return (
-                <button
-                  key={opt.id}
-                  type="button"
-                  role="radio"
-                  aria-checked={active}
-                  className={`ms-place-card ${active ? "is-active" : ""}`}
-                  onClick={() => {
-                    setPlaceMode(opt.id);
-                    persist(opt.id);
-                    webApp?.HapticFeedback?.selectionChanged?.();
-                  }}
-                >
-                  <PlaceIcon mode={opt.id} />
-                  <span className="ms-place-text">
-                    <span className="ms-place-title">{opt.title}</span>
-                    <span className="ms-place-sub">{opt.subtitle}</span>
-                  </span>
-                  <RadioMark checked={active} />
-                </button>
-              );
-            })}
-          </div>
+          {formatList}
         </>
       )}
 
@@ -950,15 +1142,16 @@ export function PlaceSettings({ mode }: { mode: SettingsMode }) {
   if (isSettings) {
     return (
       <SettingsPageShell
-        title="Место приёма"
+        title={cabinetShellTitle}
+        lead={cabinetShellLead}
+        titlePlacement="page"
         onBack={goBack}
-        onClose={handleClose}
         toast={toast}
         toastTone={toastTone}
         onToastDismiss={() => setToast(null)}
         footer={footer}
       >
-        {body}
+        {cabinetBody}
       </SettingsPageShell>
     );
   }

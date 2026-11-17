@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchMe, saveMasterBookingRules } from "../api";
 import { SettingsPageShell } from "../components/settings/SettingsPageShell";
@@ -46,8 +46,8 @@ export function BookingRulesScreen() {
   const [rescheduleHours, setRescheduleHours] = useState<HourOption>(24);
   const [sheet, setSheet] = useState<SheetKind>(null);
   const [draftHours, setDraftHours] = useState<HourOption>(24);
-  const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const persistSeq = useRef(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -82,19 +82,18 @@ export function BookingRulesScreen() {
       cancelHours?: number;
       rescheduleHours?: number;
     }) => {
-      if (saving) return;
-      setSaving(true);
+      const seq = ++persistSeq.current;
       try {
         const profile = await saveMasterBookingRules(patch);
+        if (seq !== persistSeq.current) return;
         cacheProfile(profile);
         setToast("Сохранено");
       } catch {
+        if (seq !== persistSeq.current) return;
         setToast("Не удалось сохранить");
-      } finally {
-        setSaving(false);
       }
     },
-    [saving],
+    [],
   );
 
   const openSheet = (kind: Exclude<SheetKind, null>) => {
@@ -124,6 +123,7 @@ export function BookingRulesScreen() {
   return (
     <SettingsPageShell
       title="Правила записи"
+      titlePlacement="page"
       onBack={goBack}
       toast={toast}
       toastTone={toast === "Сохранено" ? "success" : "danger"}
@@ -146,7 +146,6 @@ export function BookingRulesScreen() {
                 role="switch"
                 aria-checked={cancelEnabled}
                 aria-label="Самостоятельная отмена"
-                disabled={saving}
                 onClick={() => {
                   const next = !cancelEnabled;
                   setCancelEnabled(next);
@@ -162,7 +161,6 @@ export function BookingRulesScreen() {
                 <button
                   type="button"
                   className="ms-rules-link"
-                  disabled={saving}
                   onClick={() => openSheet("cancel")}
                 >
                   <span className="ms-rules-copy">
@@ -196,7 +194,6 @@ export function BookingRulesScreen() {
                 role="switch"
                 aria-checked={rescheduleEnabled}
                 aria-label="Самостоятельный перенос"
-                disabled={saving}
                 onClick={() => {
                   const next = !rescheduleEnabled;
                   setRescheduleEnabled(next);
@@ -212,7 +209,6 @@ export function BookingRulesScreen() {
                 <button
                   type="button"
                   className="ms-rules-link"
-                  disabled={saving}
                   onClick={() => openSheet("reschedule")}
                 >
                   <span className="ms-rules-copy">

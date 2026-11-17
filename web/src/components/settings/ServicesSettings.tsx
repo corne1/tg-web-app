@@ -131,15 +131,6 @@ export function ServicesSettings({ mode }: { mode: SettingsMode }) {
     navigate("/onboarding");
   }, [fromReview, isSettings, navigate]);
 
-  const handleClose = useCallback(() => {
-    if (isSettings) {
-      navigate("/cabinet/profile");
-      return;
-    }
-    webApp?.close?.();
-    navigate("/");
-  }, [isSettings, navigate, webApp]);
-
   const persistLocal = useCallback(() => {
     const draft = loadMasterDraft();
     saveMasterDraft({ ...draft, services });
@@ -227,33 +218,45 @@ export function ServicesSettings({ mode }: { mode: SettingsMode }) {
   }, []);
   const hasServices = services.length > 0;
 
+  const hero = isSettings ? null : (
+    <section className="ms-hero">
+      <h2 className="ms-question">Какие услуги вы предлагаете?</h2>
+      <p className="ms-lead">
+        Добавьте услуги, чтобы клиенты могли выбирать подходящую при записи.
+      </p>
+    </section>
+  );
+
+  const addButton = (
+    <Button variant={isSettings ? "primary" : "outline"} onClick={() => openForm("new")}>
+      <img
+        className="ms-btn-plus-icon"
+        src={plusCircleIcon}
+        width={20}
+        height={20}
+        alt=""
+        aria-hidden
+      />
+      {hasServices ? "Добавить услугу" : "Добавить первую услугу"}
+    </Button>
+  );
+
   const body = (
     <>
-      <section className="ms-hero">
-        <h2 className="ms-question">Какие услуги вы предлагаете?</h2>
-        <p className="ms-lead">
-          Добавьте услуги, чтобы клиенты могли выбирать подходящую при записи.
-        </p>
-      </section>
+      {hero}
 
       {!hasServices ? (
         <div className="ms-empty">
           <EmptyIllustration />
-          <p className="ms-empty-title">Здесь появятся ваши услуги</p>
-          <p className="ms-empty-text">
-            Начните с одной основной услуги. Остальные можно добавить позже.
+          <p className="ms-empty-title">
+            {isSettings ? "У вас пока нет услуг" : "Здесь появятся ваши услуги"}
           </p>
-          <Button variant="outline" onClick={() => openForm("new")}>
-            <img
-              className="ms-btn-plus-icon"
-              src={plusCircleIcon}
-              width={20}
-              height={20}
-              alt=""
-              aria-hidden
-            />
-            Добавить первую услугу
-          </Button>
+          <p className="ms-empty-text">
+            {isSettings
+              ? "Добавьте услуги, чтобы клиенты могли ознакомиться с ними и записаться к вам."
+              : "Начните с одной основной услуги. Остальные можно добавить позже."}
+          </p>
+          {isSettings ? null : addButton}
         </div>
       ) : (
         <div className="ms-services">
@@ -355,17 +358,7 @@ export function ServicesSettings({ mode }: { mode: SettingsMode }) {
               </li>
             ))}
           </ul>
-          <Button variant="outline" onClick={() => openForm("new")}>
-            <img
-              className="ms-btn-plus-icon"
-              src={plusCircleIcon}
-              width={20}
-              height={20}
-              alt=""
-              aria-hidden
-            />
-            Добавить услугу
-          </Button>
+          {isSettings ? null : addButton}
         </div>
       )}
 
@@ -415,9 +408,7 @@ export function ServicesSettings({ mode }: { mode: SettingsMode }) {
   );
 
   const footer = isSettings ? (
-    <Button disabled={!hasServices} onClick={() => void handlePrimary()}>
-      Сохранить
-    </Button>
+    addButton
   ) : fromReview ? (
     <Button disabled={!hasServices} onClick={() => void handlePrimary()}>
       Сохранить
@@ -439,8 +430,9 @@ export function ServicesSettings({ mode }: { mode: SettingsMode }) {
     return (
       <SettingsPageShell
         title="Мои услуги"
+        lead="Услуги, которые вы предлагаете клиентам"
+        titlePlacement="page"
         onBack={goBack}
-        onClose={handleClose}
         toast={toast}
         toastDescription={toastDescription}
         toastTone={toastTone}
