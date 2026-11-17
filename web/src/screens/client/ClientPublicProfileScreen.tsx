@@ -3,8 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import coverDemo from "../../assets/cabinet/profile/cover.jpg";
 import clockPurpleIcon from "../../assets/cabinet/clock-purple.svg";
 import houseIcon from "../../assets/client/house.svg";
-import serviceSparkIcon from "../../assets/client/service-spark.svg";
 import { ClientFlowShell } from "../../components/client/ClientFlowShell";
+import { ServiceSparkIcon } from "../../components/master/ServiceSparkIcon";
 import { useBackButton } from "../../hooks/useBackButton";
 import { useMainButton } from "../../hooks/useMainButton";
 import { useTelegram } from "../../hooks/useTelegram";
@@ -141,26 +141,21 @@ export function ClientPublicProfileScreen() {
 
       <div className="ms-client-profile-content">
         {master.about?.trim() ? (
-          <section className="ms-client-section">
+          <section className="ms-client-block">
             <h2 className="ms-client-section-title">О мастере</h2>
             <p className="ms-client-about">{master.about.trim()}</p>
           </section>
         ) : null}
 
         {services.length > 0 ? (
-          <section className="ms-client-section">
+          <section className="ms-client-block">
             <h2 className="ms-client-section-title">Услуги</h2>
             <ul className="ms-client-svc-preview">
               {visibleServices.map((s) => (
                 <li key={s.id} className="ms-client-svc-row">
-                  <img
-                    className="ms-client-svc-icon"
-                    src={serviceSparkIcon}
-                    width={48}
-                    height={48}
-                    alt=""
-                    aria-hidden
-                  />
+                  <div className="ms-service-avatar" aria-hidden>
+                    <ServiceSparkIcon className="ms-service-spark" />
+                  </div>
                   <div className="ms-client-svc-copy">
                     <span className="ms-client-svc-name">{s.title}</span>
                     <span className="ms-client-svc-meta">
@@ -172,9 +167,13 @@ export function ClientPublicProfileScreen() {
                         aria-hidden
                       />
                       <span>
-                        {formatDuration(s.durationMin)}
-                        <span aria-hidden> • </span>
-                        {formatPrice(s)}
+                        <span className="ms-client-svc-duration">
+                          {formatDuration(s.durationMin)}
+                          <span aria-hidden> • </span>
+                        </span>
+                        <span className="ms-client-svc-price">
+                          {formatPrice(s)}
+                        </span>
                       </span>
                     </span>
                   </div>
@@ -194,11 +193,13 @@ export function ClientPublicProfileScreen() {
         ) : null}
 
         {master.place && (master.place.studio || master.place.visit) ? (
-          <section className="ms-client-section">
+          <section className="ms-client-block">
             <h2 className="ms-client-section-title">Место приёма</h2>
             {master.place.studio ? (
               <div className="ms-client-place-card">
-                <img src={houseIcon} width={24} height={24} alt="" aria-hidden />
+                <div className="ms-service-avatar" aria-hidden>
+                  <img src={houseIcon} width={20} height={20} alt="" />
+                </div>
                 <div>
                   <p className="ms-client-place-title">В кабинете у мастера</p>
                   {placeLine ? (
@@ -209,7 +210,9 @@ export function ClientPublicProfileScreen() {
             ) : null}
             {master.place.visit && !master.place.studio ? (
               <div className="ms-client-place-card">
-                <img src={houseIcon} width={24} height={24} alt="" aria-hidden />
+                <div className="ms-service-avatar" aria-hidden>
+                  <img src={houseIcon} width={20} height={20} alt="" />
+                </div>
                 <div>
                   <p className="ms-client-place-title">С выездом к вам</p>
                   <p className="ms-client-place-sub">

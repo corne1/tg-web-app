@@ -2140,18 +2140,26 @@ body:has(.ms-boot-splash),
 }
 
 .ms-service-avatar {
+  position: relative;
   width: 48px;
   height: 48px;
   border-radius: var(--ms-radius-full);
   background: #fff;
-  /* Figma Fill Icon elevation — soft lift + purple halo on fill2 */
-  box-shadow:
-    var(--ms-shadow-e1),
-    0 4px 16px rgba(98, 61, 245, 0.14);
+  /* Figma Fill Icon — purple soft elevation */
+  box-shadow: 0 3px 4px 0 rgba(153, 129, 248, 0.32);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
+}
+
+.ms-service-avatar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 2px 0 0 rgba(255, 255, 255, 0.32);
+  pointer-events: none;
 }
 
 .ms-service-spark {
@@ -7537,16 +7545,41 @@ label.ms-sheet-item {
 .ms-client-profile-content {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
   padding: 8px 0 16px;
 }
 
+/* Figma 21416:130604 — grey section cards */
+.ms-client-block {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 20px;
+  background: var(--ms-soft);
+}
+
 .ms-client-section-title {
-  margin: 0 0 12px;
-  font-size: 17px;
+  margin: 0;
+  font-size: 16px;
   font-weight: 600;
-  letter-spacing: -0.17px;
+  letter-spacing: -0.16px;
+  line-height: 24px;
   color: var(--ms-ink);
+}
+
+.ms-client-block:has(> .ms-client-about) {
+  gap: 12px;
+}
+
+.ms-client-about {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  color: var(--ms-ink);
+  white-space: pre-wrap;
 }
 
 .ms-client-svc-preview {
@@ -7555,7 +7588,7 @@ label.ms-sheet-item {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .ms-client-svc-row {
@@ -7563,30 +7596,34 @@ label.ms-sheet-item {
   flex-direction: row;
   align-items: center;
   gap: 12px;
-  padding: 12px 14px;
-  border: 1px solid var(--ms-line);
-  border-radius: var(--ms-radius-md, 14px);
-  background: var(--ms-fill-soft, #fff);
+  padding: 16px;
+  border: 1px solid var(--ms-line-soft);
+  border-radius: 20px;
+  background: #fff;
 }
 
 .ms-client-svc-icon,
 .ms-nb-svc-icon {
   flex-shrink: 0;
-  width: 48px;
-  height: 48px;
+  width: 20px;
+  height: 20px;
   display: block;
 }
 
 .ms-client-svc-copy {
   display: flex;
+  flex: 1;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
   min-width: 0;
+  padding-top: 2px;
 }
 
 .ms-client-svc-name {
-  font-size: 15px;
-  font-weight: 560;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.14px;
+  line-height: 20px;
   color: var(--ms-ink);
 }
 
@@ -7594,9 +7631,21 @@ label.ms-sheet-item {
 .ms-nb-svc-meta {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 13px;
+  gap: 4px;
+  font-size: 14px;
+  letter-spacing: -0.14px;
+  line-height: 20px;
   color: var(--ms-muted);
+}
+
+.ms-client-svc-duration {
+  font-weight: 400;
+  color: var(--ms-muted);
+}
+
+.ms-client-svc-price {
+  font-weight: 500;
+  color: var(--ms-ink);
 }
 
 .ms-client-link-btn {
@@ -7610,30 +7659,38 @@ label.ms-sheet-item {
   cursor: pointer;
 }
 
-.ms-client-section .ms-review-show-all {
-  margin-top: 10px;
+.ms-client-block .ms-review-show-all {
+  margin-top: 0;
+  min-height: 44px;
+  padding: 10px 12px;
+  font-size: 16px;
+  letter-spacing: -0.16px;
+  line-height: 24px;
 }
 
 .ms-client-place-card {
   display: flex;
   gap: 12px;
-  align-items: flex-start;
-  padding: 14px;
-  border: 1px solid var(--ms-line);
-  border-radius: var(--ms-radius-md, 14px);
+  align-items: center;
+  padding: 16px;
+  border: 1px solid var(--ms-line-soft);
+  border-radius: 20px;
   background: #fff;
 }
 
 .ms-client-place-title {
   margin: 0 0 4px;
-  font-size: 15px;
-  font-weight: 560;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.16px;
+  line-height: 24px;
   color: var(--ms-ink);
 }
 
 .ms-client-place-sub {
   margin: 0;
   font-size: 13px;
+  letter-spacing: -0.13px;
   line-height: 18px;
   color: var(--ms-muted);
 }
@@ -7851,13 +7908,6 @@ label.ms-sheet-item {
 .ms-client-success .ms-client-summary {
   text-align: left;
   margin-top: 8px;
-}
-
-.ms-client-about {
-  margin: 0;
-  font-size: 15px;
-  line-height: 22px;
-  color: var(--ms-ink);
 }
 
 .ms-client-day-chips {

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import clockPurpleIcon from "../../assets/cabinet/clock-purple.svg";
-import serviceSparkIcon from "../../assets/client/service-spark.svg";
+import { ServiceSparkIcon } from "../../components/master/ServiceSparkIcon";
 import { ClientFlowShell } from "../../components/client/ClientFlowShell";
 import { MsArrowRight } from "../../components/master/MsArrowRight";
 import { useBackButton } from "../../hooks/useBackButton";
@@ -151,14 +151,9 @@ export function ClientServicesScreen() {
                 className={cx("ms-nb-svc", on && "is-on")}
                 onClick={() => toggle(svc.id)}
               >
-                <img
-                  className="ms-nb-svc-icon"
-                  src={serviceSparkIcon}
-                  width={48}
-                  height={48}
-                  alt=""
-                  aria-hidden
-                />
+                <div className="ms-service-avatar" aria-hidden>
+                  <ServiceSparkIcon className="ms-service-spark" />
+                </div>
                 <span className="ms-nb-svc-copy">
                   <span className="ms-nb-svc-title">{svc.title}</span>
                   <span className="ms-nb-svc-meta">
