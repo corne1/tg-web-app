@@ -101,7 +101,7 @@ const monFri = applyHoursPreset("mon-fri");
 const workRows = reviewWorkingDayRows(monFri);
 assert(workRows.length === 5, "mon-fri work days");
 assert(workRows[0].label === "Понедельник", "first work label");
-assert(workRows[0].range === "10:00–19:00", "work range");
+assert(workRows[0].range === "10:00–18:00", "work range");
 assert(reviewDaysOffShort(monFri) === "Сб, Вс", "days off short");
 assert(
   reviewAddressVisibilityNote("after_booking").includes("после подтверждения"),

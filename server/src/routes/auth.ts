@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { config } from "../config.js";
 import { upsertUser } from "../db/users.js";
+import { e2eAuthEnabled, e2eSecretMatches } from "../lib/e2eAuth.js";
 import { createSessionToken } from "../session.js";
 import { AuthError, validateInitData } from "../telegramAuth.js";
 
@@ -36,4 +37,39 @@ authRouter.post("/telegram", async (req, res) => {
     console.error("[auth]", err);
     res.status(500).json({ error: "Auth failed" });
   }
+});
+
+/**
+ * Session for Playwright. Absent unless E2E_SECRET is set on a non-production process.
+ * Body: { secret, userId, firstName }
+ */
+authRouter.post("/e2e", async (req, res) => {
+  if (!e2eAuthEnabled()) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+
+  const expected = process.env.E2E_SECRET ?? "";
+  const provided = String(req.body?.secret ?? "");
+  if (!e2eSecretMatches(provided, expected)) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+
+  const id = Number(req.body?.userId);
+  const firstName = String(req.body?.firstName ?? "").trim();
+  if (!Number.isInteger(id) || id <= 0 || !firstName) {
+    res.status(400).json({ error: "userId and firstName required" });
+    return;
+  }
+
+  const user = {
+    id,
+    first_name: firstName,
+    username: `e2e_${id}`,
+    language_code: "ru",
+  };
+  const stored = await upsertUser(user);
+  const token = await createSessionToken(user);
+  res.json({ token, user: stored });
 });

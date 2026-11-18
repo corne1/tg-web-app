@@ -12,9 +12,11 @@
     "build": "npm run build -w web && npm run build -w server",
     "start": "npm run start -w server",
     "bot:menu": "npm run bot:menu -w server",
-    "deploy": "npx vercel --prod"
+    "deploy": "npx vercel --prod",
+    "test:e2e": "playwright test --config e2e/playwright.config.ts"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.1",
     "@vercel/node": "^5.3.6",
     "concurrently": "^9.1.2"
   }

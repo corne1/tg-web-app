@@ -66,7 +66,16 @@ async function fetchRussiaCities(): Promise<CityHit[]> {
   return collectCities(root.areas ?? []);
 }
 
+const E2E_CITY_CATALOG: CityHit[] = [
+  { name: "Москва", region: null },
+  { name: "Санкт-Петербург", region: null },
+  { name: "Казань", region: "Татарстан" },
+];
+
 export async function getRussiaCities(): Promise<CityHit[]> {
+  if (process.env.E2E_CITIES === "1" && !process.env.VERCEL) {
+    return E2E_CITY_CATALOG;
+  }
   const now = Date.now();
   if (cache && now - cache.loadedAt < CACHE_TTL_MS) {
     return cache.cities;

@@ -9,6 +9,9 @@ build/
 *.db
 .vite/
 coverage/
+/test-results/
+/playwright-report/
+/blob-report/
 .vercel/
 .vercel
 .env*
