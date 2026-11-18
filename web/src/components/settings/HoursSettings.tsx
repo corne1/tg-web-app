@@ -781,7 +781,7 @@ export function HoursSettings({ mode }: { mode: SettingsMode }) {
     return (
       <SettingsPageShell
         title="Рабочее время"
-        lead="Выберите рабочие дни и часы. График можно будет изменить позже."
+        lead="Настройте дни и часы, когда вы принимаете клиентов."
         titlePlacement="page"
         onBack={goBack}
         toast={toast}

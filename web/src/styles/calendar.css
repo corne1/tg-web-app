@@ -4785,6 +4785,14 @@ label.ms-sheet-item {
   padding: 24px 0 16px;
 }
 
+/* Cabinet settings (Мои услуги / время / место / правила): keep 16px side gutters.
+   Do not reuse .ms-cab-body — that zeroes horizontal padding for schedule full-bleed. */
+.ms-settings-body {
+  gap: 24px;
+  padding: 8px 16px 16px;
+  box-sizing: border-box;
+}
+
 .ms-cab-panel {
   display: flex;
   flex-direction: column;
@@ -6320,7 +6328,7 @@ label.ms-sheet-item {
 
 .ms-bd-toolbar.is-page {
   justify-content: flex-start;
-  padding-bottom: 4px;
+  padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 4px;
 }
 
 .ms-bd-toolbar-title {

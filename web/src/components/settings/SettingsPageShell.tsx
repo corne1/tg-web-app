@@ -58,7 +58,7 @@ export function SettingsPageShell({
           <span className="ms-cc-toolbar-spacer" aria-hidden />
         ) : null}
       </header>
-      <div className="ms-body ms-cab-body">
+      <div className="ms-body ms-settings-body">
         {pageTitle ? (
           <section className="ms-page-head">
             <h1 className="ms-page-title">{title}</h1>
