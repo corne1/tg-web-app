@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import coverDemo from "../../assets/cabinet/profile/cover.jpg";
 import clockPurpleIcon from "../../assets/cabinet/clock-purple.svg";
 import { ClientFlowShell } from "../../components/client/ClientFlowShell";
@@ -15,17 +15,20 @@ import {
   studioAddressLine,
 } from "../../lib/clientBookingDraft";
 import { loadClientMaster } from "../../lib/clientMaster";
+import { isClientPreview } from "../../lib/clientPreview";
 import { resolvePublicMasterAvatarSrc } from "../../lib/masterAvatar";
 import { useServiceTypes } from "../../hooks/useServiceTypes";
 import type { PublicMaster } from "../../types";
-import { cx } from "../../ui";
+import { BackIcon, IconButton, cx } from "../../ui";
 
 const SERVICES_PREVIEW = 3;
 
 export function ClientPublicProfileScreen() {
   const { masterId: masterKey = "" } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { webApp } = useTelegram();
+  const preview = isClientPreview(location.state) ? location.state : null;
   const [master, setMaster] = useState<PublicMaster | null>(null);
   const { serviceTypes, metaFor } = useServiceTypes();
   const [error, setError] = useState<string | null>(null);
@@ -63,10 +66,19 @@ export function ClientPublicProfileScreen() {
     ? services
     : services.slice(0, SERVICES_PREVIEW);
   const placeLine = studioAddressLine(master?.place ?? null);
-  const canBook = Boolean(master?.bookingEnabled) && services.length > 0;
+  const canBook =
+    !preview && Boolean(master?.bookingEnabled) && services.length > 0;
+
+  const leavePreview = useCallback(() => {
+    if (preview) {
+      navigate(preview.previewBackTo);
+      return;
+    }
+    webApp?.close?.();
+  }, [navigate, preview, webApp]);
 
   const goBook = useCallback(() => {
-    if (!master || !canBook) return;
+    if (preview || !master || !canBook) return;
     webApp?.HapticFeedback?.impactOccurred("light");
     patchClientDraft({
       serviceIds: [],
@@ -77,9 +89,9 @@ export function ClientPublicProfileScreen() {
       bookingId: null,
     });
     navigate(`/client/${encodeURIComponent(masterKey)}/services`);
-  }, [canBook, master, masterKey, navigate, webApp]);
+  }, [canBook, master, masterKey, navigate, preview, webApp]);
 
-  useBackButton(() => webApp?.close?.());
+  useBackButton(leavePreview);
   useMainButton({ text: "", visible: false, onClick: () => undefined });
 
   if (loading) {
@@ -98,30 +110,51 @@ export function ClientPublicProfileScreen() {
     );
   }
 
-  const bookLabel = !master.bookingEnabled
-    ? "Онлайн-запись недоступна"
-    : services.length === 0
-      ? "Нет доступных услуг"
-      : "Записаться";
+  const bookLabel = preview
+    ? "Записаться"
+    : !master.bookingEnabled
+      ? "Онлайн-запись недоступна"
+      : services.length === 0
+        ? "Нет доступных услуг"
+        : "Записаться";
 
   return (
     <ClientFlowShell
       hideHeader
       footer={
-        <button
-          type="button"
-          className={cx("ms-btn", "ms-btn-primary", "ms-client-cta")}
-          disabled={!canBook}
-          onClick={goBook}
-        >
-          {bookLabel}
-        </button>
+        <div className={cx("ms-client-cta-wrap", preview && "is-preview")}>
+          {preview ? (
+            <p className="ms-client-preview-hint">
+              Кнопка демонстрационная, неактивна
+            </p>
+          ) : null}
+          <button
+            type="button"
+            className={cx("ms-btn", "ms-btn-primary", "ms-client-cta")}
+            disabled={!canBook}
+            aria-disabled={!canBook}
+            onClick={goBook}
+          >
+            {bookLabel}
+          </button>
+        </div>
       }
     >
       <section className="ms-prof-hero ms-client-hero">
         <div className="ms-prof-cover" aria-hidden>
           <img src={coverDemo} alt="" />
         </div>
+        {preview ? (
+          <div className="ms-client-preview-back">
+            <IconButton
+              label="Назад"
+              className="ms-client-preview-back-btn"
+              onClick={leavePreview}
+            >
+              <BackIcon />
+            </IconButton>
+          </div>
+        ) : null}
         <div className="ms-prof-identity">
           <div className="ms-prof-avatar-wrap">
             <img

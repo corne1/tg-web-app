@@ -8,6 +8,7 @@ import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
 import { useServiceTypes } from "../hooks/useServiceTypes";
 import { useTelegram } from "../hooks/useTelegram";
+import { clientPreviewState } from "../lib/clientPreview";
 import { saveMasterAvatarDataUrl } from "../lib/masterAvatar";
 import { cacheProfile } from "../lib/profileStorage";
 import type { MasterProfile } from "../types";
@@ -130,16 +131,13 @@ export function PublicProfileScreen() {
   }, [bookingLink, webApp]);
 
   const viewAsClient = useCallback(() => {
-    if (profile?.userId != null) {
-      navigate(`/client/${profile.userId}`);
-      return;
-    }
-    if (bookingLink && webApp?.openTelegramLink) {
-      webApp.openTelegramLink(bookingLink);
-      return;
-    }
-    if (bookingLink) window.open(bookingLink, "_blank", "noopener,noreferrer");
-  }, [bookingLink, navigate, profile?.userId, webApp]);
+    const masterKey = profile?.slug ?? profile?.userId;
+    if (masterKey == null || masterKey === "") return;
+    webApp?.HapticFeedback?.impactOccurred("light");
+    navigate(`/client/${encodeURIComponent(String(masterKey))}`, {
+      state: clientPreviewState("/cabinet/profile/public"),
+    });
+  }, [navigate, profile?.slug, profile?.userId, webApp]);
 
   useBackButton(goBack);
   useMainButton({ text: "", visible: false, onClick: () => undefined });
@@ -216,7 +214,7 @@ export function PublicProfileScreen() {
           type="button"
           className="ms-success-preview ms-pub-preview"
           onClick={viewAsClient}
-          disabled={!bookingLink && profile?.userId == null}
+          disabled={!(profile?.slug || profile?.userId)}
         >
           <span className="ms-success-preview-text">
             <span className="ms-success-preview-title">

@@ -7707,6 +7707,46 @@ label.ms-sheet-item {
   width: 100%;
 }
 
+.ms-client-cta-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.ms-client-cta-wrap.is-preview .ms-client-cta:disabled,
+.ms-client-cta-wrap.is-preview .ms-client-cta[aria-disabled="true"] {
+  opacity: 0.5;
+}
+
+/* Figma 21422:18810 — demo caption above inactive Book CTA */
+.ms-client-preview-hint {
+  margin: 0;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  color: var(--ms-muted);
+}
+
+.ms-client-preview-back {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 2;
+}
+
+.ms-client-preview-back-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--ms-radius-full);
+  border: 1px solid var(--ms-line-soft);
+  background: #fff;
+  color: var(--ms-ink);
+  box-shadow: var(--ms-shadow-e1);
+}
+
 .ms-client-muted {
   margin: 24px 16px;
   color: var(--ms-muted);
@@ -7723,6 +7763,7 @@ label.ms-sheet-item {
 }
 
 .ms-client-hero {
+  position: relative;
   margin: 0;
   width: 100%;
 }

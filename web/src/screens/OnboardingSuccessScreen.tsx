@@ -6,6 +6,7 @@ import { MsArrowRight } from "../components/master/MsArrowRight";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
 import { useTelegram } from "../hooks/useTelegram";
+import { clientPreviewState } from "../lib/clientPreview";
 import {
   cacheProfile,
   isOnboardingDone,
@@ -184,19 +185,13 @@ export function OnboardingSuccessScreen() {
   }, [bookingLink, webApp]);
 
   const viewAsClient = useCallback(() => {
-    const masterId = profile?.userId;
-    if (masterId != null) {
-      navigate(`/client/${masterId}`);
-      return;
-    }
-    if (bookingLink && webApp?.openTelegramLink) {
-      webApp.openTelegramLink(bookingLink);
-      return;
-    }
-    if (bookingLink) {
-      window.open(bookingLink, "_blank", "noopener,noreferrer");
-    }
-  }, [bookingLink, navigate, profile?.userId, webApp]);
+    const masterKey = profile?.slug ?? profile?.userId;
+    if (masterKey == null || masterKey === "") return;
+    webApp?.HapticFeedback?.impactOccurred("light");
+    navigate(`/client/${encodeURIComponent(String(masterKey))}`, {
+      state: clientPreviewState("/onboarding/success"),
+    });
+  }, [navigate, profile?.slug, profile?.userId, webApp]);
 
   useBackButton(goSchedule);
   useMainButton({ text: "", visible: false, onClick: () => undefined });
@@ -253,7 +248,7 @@ export function OnboardingSuccessScreen() {
           type="button"
           className="ms-success-preview"
           onClick={viewAsClient}
-          disabled={!bookingLink && profile?.userId == null}
+          disabled={!(profile?.slug || profile?.userId)}
         >
           <span className="ms-success-preview-text">
             <span className="ms-success-preview-title">
