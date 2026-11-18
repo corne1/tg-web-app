@@ -130,100 +130,96 @@ export function BookingRulesScreen() {
       onToastDismiss={() => setToast(null)}
     >
       <div className="ms-rules">
-        <section className="ms-rules-section">
-          <h2 className="ms-rules-section-title">Отмена записи</h2>
-          <div className="ms-rules-card">
-            <div className="ms-rules-row">
-              <div className="ms-rules-copy">
-                <p className="ms-rules-label">Самостоятельная отмена</p>
-                <p className="ms-rules-lead">
-                  Клиент сможет отменить запись самостоятельно
-                </p>
-              </div>
+        <section className="ms-rules-card">
+          <h2 className="ms-rules-card-caption">Отмена записи</h2>
+          <div className="ms-rules-row">
+            <div className="ms-rules-copy">
+              <p className="ms-rules-label">Самостоятельная отмена</p>
+              <p className="ms-rules-lead">
+                Клиент сможет отменить запись самостоятельно
+              </p>
+            </div>
+            <button
+              type="button"
+              className={cx("ms-switch", cancelEnabled && "is-on")}
+              role="switch"
+              aria-checked={cancelEnabled}
+              aria-label="Самостоятельная отмена"
+              onClick={() => {
+                const next = !cancelEnabled;
+                setCancelEnabled(next);
+                void persist({ clientCancelEnabled: next });
+              }}
+            >
+              <span className="ms-switch-knob" />
+            </button>
+          </div>
+          {cancelEnabled ? (
+            <>
+              <hr className="ms-rules-rule" />
               <button
                 type="button"
-                className={cx("ms-switch", cancelEnabled && "is-on")}
-                role="switch"
-                aria-checked={cancelEnabled}
-                aria-label="Самостоятельная отмена"
-                onClick={() => {
-                  const next = !cancelEnabled;
-                  setCancelEnabled(next);
-                  void persist({ clientCancelEnabled: next });
-                }}
+                className="ms-rules-link"
+                onClick={() => openSheet("cancel")}
               >
-                <span className="ms-switch-knob" />
-              </button>
-            </div>
-            {cancelEnabled ? (
-              <>
-                <hr className="ms-rules-rule" />
-                <button
-                  type="button"
-                  className="ms-rules-link"
-                  onClick={() => openSheet("cancel")}
-                >
-                  <span className="ms-rules-copy">
-                    <span className="ms-rules-label">
-                      Отменять не позднее чем за
-                    </span>
-                    <span className="ms-rules-value">
-                      {ruHoursLabel(cancelHours)}
-                    </span>
+                <span className="ms-rules-copy">
+                  <span className="ms-rules-label">
+                    Отменять не позднее чем за
                   </span>
-                  <ChevronRightIcon />
-                </button>
-              </>
-            ) : null}
-          </div>
+                  <span className="ms-rules-value">
+                    {ruHoursLabel(cancelHours)}
+                  </span>
+                </span>
+                <ChevronRightIcon />
+              </button>
+            </>
+          ) : null}
         </section>
 
-        <section className="ms-rules-section">
-          <h2 className="ms-rules-section-title">Перенос записи</h2>
-          <div className="ms-rules-card">
-            <div className="ms-rules-row">
-              <div className="ms-rules-copy">
-                <p className="ms-rules-label">Самостоятельный перенос</p>
-                <p className="ms-rules-lead">
-                  Клиент сможет сам перенести запись на другое время
-                </p>
-              </div>
+        <section className="ms-rules-card">
+          <h2 className="ms-rules-card-caption">Перенос записи</h2>
+          <div className="ms-rules-row">
+            <div className="ms-rules-copy">
+              <p className="ms-rules-label">Самостоятельный перенос</p>
+              <p className="ms-rules-lead">
+                Клиент сможет сам перенести запись на другое время
+              </p>
+            </div>
+            <button
+              type="button"
+              className={cx("ms-switch", rescheduleEnabled && "is-on")}
+              role="switch"
+              aria-checked={rescheduleEnabled}
+              aria-label="Самостоятельный перенос"
+              onClick={() => {
+                const next = !rescheduleEnabled;
+                setRescheduleEnabled(next);
+                void persist({ clientRescheduleEnabled: next });
+              }}
+            >
+              <span className="ms-switch-knob" />
+            </button>
+          </div>
+          {rescheduleEnabled ? (
+            <>
+              <hr className="ms-rules-rule" />
               <button
                 type="button"
-                className={cx("ms-switch", rescheduleEnabled && "is-on")}
-                role="switch"
-                aria-checked={rescheduleEnabled}
-                aria-label="Самостоятельный перенос"
-                onClick={() => {
-                  const next = !rescheduleEnabled;
-                  setRescheduleEnabled(next);
-                  void persist({ clientRescheduleEnabled: next });
-                }}
+                className="ms-rules-link"
+                onClick={() => openSheet("reschedule")}
               >
-                <span className="ms-switch-knob" />
-              </button>
-            </div>
-            {rescheduleEnabled ? (
-              <>
-                <hr className="ms-rules-rule" />
-                <button
-                  type="button"
-                  className="ms-rules-link"
-                  onClick={() => openSheet("reschedule")}
-                >
-                  <span className="ms-rules-copy">
-                    <span className="ms-rules-label">
-                      Перенести не позднее чем за
-                    </span>
-                    <span className="ms-rules-value">
-                      {ruHoursLabel(rescheduleHours)}
-                    </span>
+                <span className="ms-rules-copy">
+                  <span className="ms-rules-label">
+                    Перенести не позднее чем за
                   </span>
-                  <ChevronRightIcon />
-                </button>
-              </>
-            ) : null}
-          </div>
+                  <span className="ms-rules-value">
+                    {ruHoursLabel(rescheduleHours)}
+                  </span>
+                </span>
+                <ChevronRightIcon />
+              </button>
+            </>
+          ) : null}
         </section>
       </div>
 
