@@ -2715,7 +2715,10 @@ body:has(.ms-boot-splash),
   max-height: min(92dvh, 640px);
   padding: 0 0 calc(env(safe-area-inset-bottom, 0px));
   gap: 0;
-  overflow: hidden;
+  /* auto: short Telegram viewports must still reach 2nd quick-chip row */
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .ms-sheet-picker.is-compact {
@@ -3631,6 +3634,12 @@ label.ms-sheet-item {
   -webkit-overflow-scrolling: touch;
 }
 
+/* Parent has overflow-y:auto → flex min-size becomes 0; keep blocks from
+   collapsing so the 2×3 «Быстрый выбор» grid is not covered by alt-action. */
+.ms-time-sheet-body > * {
+  flex-shrink: 0;
+}
+
 .ms-time-sheet-current {
   display: flex;
   flex-direction: column;
@@ -3677,6 +3686,7 @@ label.ms-sheet-item {
 .ms-time-sheet-quick {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(44px, auto));
   gap: 8px;
 }
 
@@ -3688,6 +3698,7 @@ label.ms-sheet-item {
   min-height: 44px;
   padding: 10px 8px;
   text-align: center;
+  box-sizing: border-box;
 }
 
 .ms-sheet-lead {
