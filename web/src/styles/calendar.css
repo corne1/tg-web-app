@@ -3801,7 +3801,7 @@ label.ms-sheet-item {
   font: inherit;
 }
 
-/* Figma 21091:28243 Lead Icon — white circle + filled glyph */
+/* Figma 21091:28243 Lead Icon — white circle + filled glyph (#9196A1) */
 .ms-place-lead {
   flex: 0 0 auto;
   width: 40px;
@@ -3809,17 +3809,17 @@ label.ms-sheet-item {
   border-radius: var(--ms-radius-full);
   background: #fff;
   box-shadow: var(--ms-shadow-e1);
-  color: var(--ms-ink);
+  color: var(--ms-tertiary); /* text/text-tertiary — matches cabinet/car/twice.svg */
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 
-/* Place mode glyphs (cabinet / car / pin) — inline SVG, currentColor fill */
+/* Place mode glyphs (cabinet / car / twice) — inline SVG, currentColor fill */
 .ms-place-mode-icon {
   display: block;
   flex: 0 0 auto;
-  color: inherit;
+  color: var(--ms-tertiary);
 }
 
 /* Same Fast setting card Selected: primary/border, keep fill2 */
