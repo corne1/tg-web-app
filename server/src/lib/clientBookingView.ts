@@ -44,20 +44,22 @@ export function serializeClientBooking(
       })
     : { ok: false as const, reason: "cancelled" };
 
-  const cancelBlockedReason = !cancelCheck.ok
-    ? cancelCheck.reason === "cancelled"
-      ? "Запись уже отменена"
-      : cancelCheck.reason === "Client cancel disabled"
-        ? "Самостоятельная отмена отключена мастером. Свяжитесь с мастером."
-        : `Самостоятельная отмена недоступна менее чем за ${ruHoursLabel(cancelHours)} до визита. Свяжитесь с мастером.`
-    : null;
-  const rescheduleBlockedReason = !rescheduleCheck.ok
-    ? rescheduleCheck.reason === "cancelled"
-      ? "Запись уже отменена"
-      : rescheduleCheck.reason === "Client reschedule disabled"
-        ? "Самостоятельный перенос отключён мастером. Свяжитесь с мастером."
-        : `Самостоятельный перенос недоступен менее чем за ${ruHoursLabel(rescheduleHours)} до визита. Свяжитесь с мастером.`
-    : null;
+  const cancelBlockedReason =
+    cancelCheck.ok === false
+      ? cancelCheck.reason === "cancelled"
+        ? "Запись уже отменена"
+        : cancelCheck.reason === "Client cancel disabled"
+          ? "Самостоятельная отмена отключена мастером. Свяжитесь с мастером."
+          : `Самостоятельная отмена недоступна менее чем за ${ruHoursLabel(cancelHours)} до визита. Свяжитесь с мастером.`
+      : null;
+  const rescheduleBlockedReason =
+    rescheduleCheck.ok === false
+      ? rescheduleCheck.reason === "cancelled"
+        ? "Запись уже отменена"
+        : rescheduleCheck.reason === "Client reschedule disabled"
+          ? "Самостоятельный перенос отключён мастером. Свяжитесь с мастером."
+          : `Самостоятельный перенос недоступен менее чем за ${ruHoursLabel(rescheduleHours)} до визита. Свяжитесь с мастером.`
+      : null;
 
   const accessToken = booking.access_token;
   const titles = bookingServiceTitles(booking);

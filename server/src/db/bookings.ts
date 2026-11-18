@@ -459,7 +459,7 @@ export async function cancelBooking(
       cancelHours,
       actorIsClient: booking.client_id === actorId,
     });
-    if (!cancelCheck.ok) {
+    if (cancelCheck.ok === false) {
       throw new BookingRuleError(cancelCheck.reason);
     }
 
@@ -501,7 +501,7 @@ export async function rescheduleBooking(
       startsAt: booking.starts_at,
       cancelHours,
     });
-    if (!rescheduleCheck.ok) {
+    if (rescheduleCheck.ok === false) {
       throw new BookingRuleError(rescheduleCheck.reason);
     }
 

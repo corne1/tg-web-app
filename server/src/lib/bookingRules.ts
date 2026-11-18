@@ -3,6 +3,8 @@
  * Used by db/bookings and unit tests.
  */
 
+export type RuleCheck = { ok: true } | { ok: false; reason: string };
+
 export function hoursUntil(startsAtIso: string, now = new Date()): number {
   return (new Date(startsAtIso).getTime() - now.getTime()) / (1000 * 60 * 60);
 }
@@ -15,7 +17,7 @@ export function canCancelBooking(input: {
   /** When false, client cannot cancel (master setting). */
   enabled?: boolean;
   now?: Date;
-}): { ok: true } | { ok: false; reason: string } {
+}): RuleCheck {
   if (!input.actorIsClient) return { ok: true };
   if (input.enabled === false) {
     return { ok: false, reason: "Client cancel disabled" };
@@ -36,7 +38,7 @@ export function canRescheduleBooking(input: {
   /** When false, client cannot reschedule (master setting). */
   enabled?: boolean;
   now?: Date;
-}): { ok: true } | { ok: false; reason: string } {
+}): RuleCheck {
   if (input.enabled === false) {
     return { ok: false, reason: "Client reschedule disabled" };
   }
