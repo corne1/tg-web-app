@@ -4785,11 +4785,11 @@ label.ms-sheet-item {
   padding: 24px 0 16px;
 }
 
-/* Cabinet settings (Мои услуги / время / место / правила): keep 16px side gutters.
-   Do not reuse .ms-cab-body — that zeroes horizontal padding for schedule full-bleed. */
+/* Cabinet settings (Мои услуги / время / место / правила).
+   Figma 21445:15471 Toolbar: 24px under back, 16px sides; do not reuse .ms-cab-body. */
 .ms-settings-body {
   gap: 24px;
-  padding: 8px 16px 16px;
+  padding: 24px 16px 16px;
   box-sizing: border-box;
 }
 
@@ -5295,6 +5295,7 @@ label.ms-sheet-item {
   text-decoration: none;
   color: var(--ms-ink);
   background: transparent;
+  transition: color 160ms ease;
 }
 
 .ms-tabbar-item.is-active {
@@ -5308,6 +5309,11 @@ label.ms-sheet-item {
   height: 24px;
   align-items: center;
   justify-content: center;
+  transition: transform 160ms ease;
+}
+
+.ms-tabbar-item.is-active .ms-tabbar-icon {
+  transform: scale(1.06);
 }
 
 .ms-tabbar-label {
@@ -5316,6 +5322,17 @@ label.ms-sheet-item {
   letter-spacing: -0.12px;
   line-height: 14px;
   text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ms-tabbar-item,
+  .ms-tabbar-icon {
+    transition: none;
+  }
+
+  .ms-tabbar-item.is-active .ms-tabbar-icon {
+    transform: none;
+  }
 }
 
 /* New booking — step 1 select client (Figma 21213:141883) */
@@ -6328,7 +6345,8 @@ label.ms-sheet-item {
 
 .ms-bd-toolbar.is-page {
   justify-content: flex-start;
-  padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 4px;
+  /* Figma 21445:15471 Fast setting card/Toolbar — back row only; title sits in body */
+  padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 0;
 }
 
 .ms-bd-toolbar-title {
@@ -6342,19 +6360,19 @@ label.ms-sheet-item {
   color: var(--ms-ink);
 }
 
-/* Figma cabinet settings: Heading 5/Semibold 24/32 under back-only bar (21446:21074) */
+/* Figma 21445:15471 Title and Subtitle — Heading 5 (Bold/700) 24/32 + Body 16/Regular 16/24 */
 .ms-page-head {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 4px 0 8px;
+  padding: 0;
 }
 
 .ms-page-title {
   margin: 0;
   font-family: inherit;
   font-size: 24px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: -0.24px;
   line-height: 32px;
   color: var(--ms-ink);
