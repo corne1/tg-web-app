@@ -7687,10 +7687,16 @@ label.ms-sheet-item {
   border: 0;
 }
 
-/* Client booking funnel (Figma «òç ê ôëîó êëèåíòà») */
+/* Client booking funnel */
 .ms-client-flow .ms-client-body {
   gap: 16px;
   padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+}
+
+/* Public profile: cover flush to top/sides; section cards inset */
+.ms-client-flow .ms-client-body:has(> .ms-client-hero) {
+  gap: 0;
+  padding: 0 0 calc(24px + env(safe-area-inset-bottom, 0px));
 }
 
 .ms-client-footer {
@@ -7717,14 +7723,23 @@ label.ms-sheet-item {
 }
 
 .ms-client-hero {
-  margin: 0 -16px;
+  margin: 0;
+  width: 100%;
+}
+
+.ms-client-hero .ms-prof-cover {
+  width: 100%;
+  height: 158px;
+  border-radius: 0;
+  border-bottom: none;
 }
 
 .ms-client-profile-content {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 8px 0 16px;
+  padding: 24px 16px 16px;
+  box-sizing: border-box;
 }
 
 /* Figma 21416:130604 â€” grey section cards */
