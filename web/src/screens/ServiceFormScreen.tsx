@@ -64,7 +64,12 @@ export function ServiceFormScreen({
     return { title: "Новая услуга", cta: "Создать услугу" };
   }, [mode]);
 
-  const goBack = useCallback(() => navigate(listPath), [listPath, navigate]);
+  const goBack = useCallback(() => {
+    navigate(
+      listPath,
+      fromReview ? { state: { fromReview: true } } : undefined,
+    );
+  }, [fromReview, listPath, navigate]);
 
   const patchForm = useCallback((patch: Partial<ServiceFormState>) => {
     setForm((f) => ({ ...f, ...patch }));

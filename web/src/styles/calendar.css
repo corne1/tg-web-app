@@ -2528,7 +2528,7 @@ body:has(.ms-boot-splash),
 }
 
 .ms-input-affix-prefix .ms-input {
-  padding-left: 36px;
+  padding-left: 40px;
 }
 
 .ms-prefix {
@@ -2542,7 +2542,8 @@ body:has(.ms-boot-splash),
   letter-spacing: -0.14px;
   line-height: 20px;
   pointer-events: none;
-  z-index: 1;
+  /* Above .ms-input-wrap (Input always wraps the native field). */
+  z-index: 2;
 }
 
 .ms-input-affix.is-disabled,
@@ -2620,23 +2621,33 @@ body:has(.ms-boot-splash),
   width: 100%;
 }
 
-.ms-input-affix .ms-input {
-  padding-right: 2.5rem;
-}
-
-.ms-input-affix .ms-input.has-clear {
-  padding-right: 4.25rem;
-}
-
-.ms-input-affix .ms-input-clear {
-  right: 2.15rem;
-}
-
-.ms-input-affix-prefix:not(.ms-input-affix-both) .ms-input.has-clear {
+/* Trailing ₽ / lock only — do not pad every prefixed field. */
+.ms-input-affix:has(> .ms-affix:not(.ms-affix-icon)) .ms-input,
+.ms-input-affix:has(> .ms-affix-end) .ms-input {
   padding-right: 40px;
 }
 
-.ms-input-affix-prefix:not(.ms-input-affix-both) .ms-input-clear {
+.ms-input-affix:has(> .ms-affix:not(.ms-affix-icon)) .ms-input.has-clear,
+.ms-input-affix:has(> .ms-affix-end) .ms-input.has-clear {
+  padding-right: 68px;
+}
+
+.ms-input-affix:has(> .ms-affix:not(.ms-affix-icon)) .ms-input-clear,
+.ms-input-affix:has(> .ms-affix-end) .ms-input-clear {
+  right: 36px;
+}
+
+.ms-input-affix-prefix:not(.ms-input-affix-both):not(
+    :has(> .ms-affix:not(.ms-affix-icon))
+  )
+  .ms-input.has-clear {
+  padding-right: 40px;
+}
+
+.ms-input-affix-prefix:not(.ms-input-affix-both):not(
+    :has(> .ms-affix:not(.ms-affix-icon))
+  )
+  .ms-input-clear {
   right: 8px;
 }
 
@@ -2657,6 +2668,8 @@ body:has(.ms-boot-splash),
   letter-spacing: -0.14px;
   line-height: 20px;
   pointer-events: none;
+  /* Above .ms-input-wrap so search/lock glyphs stay visible. */
+  z-index: 2;
 }
 
 .ms-textarea {
@@ -3904,6 +3917,13 @@ label.ms-sheet-item {
   color: var(--ms-ink);
 }
 
+.ms-place-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
 .ms-place-card-form {
   display: flex;
   flex-direction: column;
@@ -3912,6 +3932,7 @@ label.ms-sheet-item {
   border-radius: var(--ms-radius-card);
   background: var(--ms-fill2);
   border: 1px solid var(--ms-line-soft);
+  min-width: 0;
 }
 
 .ms-place-visibility {
@@ -3974,12 +3995,22 @@ label.ms-sheet-item {
 .ms-input-affix-prefix .ms-affix-icon {
   left: 12px;
   right: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
   color: var(--ms-tertiary);
 }
 
 .ms-input-affix-both .ms-affix-end {
   right: 12px;
   left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
   color: var(--ms-tertiary);
 }
 

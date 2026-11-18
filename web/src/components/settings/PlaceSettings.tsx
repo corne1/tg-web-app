@@ -6,7 +6,11 @@ import {
   type ReactNode,
 } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { readReviewState } from "../../lib/onboardingReviewEdit";
+import {
+  clearFromReview,
+  markFromReview,
+  readReviewState,
+} from "../../lib/onboardingReviewEdit";
 import {
   completeMasterOnboarding,
   fetchMe,
@@ -213,6 +217,7 @@ export function PlaceSettings({ mode }: { mode: SettingsMode }) {
     if (requested !== 1 && requested !== 2 && requested !== 3) return;
     setStage(requested);
     setPlaceEditFromReview(false);
+    if (requested === 3) clearFromReview();
     navigate(location.pathname, { replace: true, state: null });
   }, [location.pathname, location.state, navigate]);
 
@@ -290,9 +295,11 @@ export function PlaceSettings({ mode }: { mode: SettingsMode }) {
       navigate("/cabinet/profile");
       return;
     }
-    if (placeEditFromReview && stage === 1) {
+    // Review «Редактировать» (место): back returns to review, not prior wizard stage.
+    if (placeEditFromReview && stage < 3) {
       persist();
       setPlaceEditFromReview(false);
+      clearFromReview();
       setStage(3);
       return;
     }
@@ -418,10 +425,16 @@ export function PlaceSettings({ mode }: { mode: SettingsMode }) {
       if (!canContinueStage1) return;
       persist();
       webApp?.HapticFeedback?.impactOccurred("light");
-      if (placeEditFromReview && canContinueStage2) {
-        void syncPlaceToServer();
-        setPlaceEditFromReview(false);
-        setStage(3);
+      if (placeEditFromReview) {
+        // Same place block only: finish details if needed, else back to review.
+        if (canContinueStage2) {
+          void syncPlaceToServer();
+          setPlaceEditFromReview(false);
+          clearFromReview();
+          setStage(3);
+        } else {
+          setStage(2);
+        }
         return;
       }
       setStage(nextPlaceStage(1));
@@ -436,8 +449,14 @@ export function PlaceSettings({ mode }: { mode: SettingsMode }) {
         navigate("/cabinet/profile");
         return;
       }
+      if (placeEditFromReview) {
+        webApp?.HapticFeedback?.notificationOccurred("success");
+        setPlaceEditFromReview(false);
+        clearFromReview();
+        setStage(3);
+        return;
+      }
       webApp?.HapticFeedback?.impactOccurred("light");
-      if (placeEditFromReview) setPlaceEditFromReview(false);
       setStage(nextPlaceStage(2));
       return;
     }
@@ -508,26 +527,31 @@ export function PlaceSettings({ mode }: { mode: SettingsMode }) {
   const editProfile = useCallback(() => {
     if (isSettings) return;
     persist();
+    markFromReview();
     navigate("/onboarding", { state: { fromReview: true } });
   }, [isSettings, navigate, persist]);
 
   const editServices = useCallback(() => {
     if (isSettings) return;
     persist();
+    markFromReview();
     navigate("/onboarding/services", { state: { fromReview: true } });
   }, [isSettings, navigate, persist]);
 
   const editHours = useCallback(() => {
     if (isSettings) return;
     persist();
+    markFromReview();
     navigate("/onboarding/hours", { state: { fromReview: true } });
   }, [isSettings, navigate, persist]);
 
   const editPlace = useCallback(() => {
     persist();
+    markFromReview();
     setPlaceEditFromReview(true);
-    setStage(1);
-  }, [persist]);
+    // Open place details (stage 2); format only if mode not chosen yet.
+    setStage(placeMode ? 2 : 1);
+  }, [persist, placeMode]);
 
   useBackButton(goBack);
   useMainButton({ text: "", visible: false, onClick: () => undefined });
@@ -755,11 +779,11 @@ export function PlaceSettings({ mode }: { mode: SettingsMode }) {
             title="Приём в кабинете или студии"
           />
         )}
-        {wrapInCard ? (
-          <div className="ms-place-card-form">{fields}</div>
-        ) : (
-          fields
-        )}
+        <div
+          className={wrapInCard ? "ms-place-card-form" : "ms-place-fields"}
+        >
+          {fields}
+        </div>
       </section>
     );
   };
@@ -837,11 +861,11 @@ export function PlaceSettings({ mode }: { mode: SettingsMode }) {
         {placeMode === "both" && (
           <SectionHeading icon="visit" title="Выезд к клиенту" />
         )}
-        {wrapInCard ? (
-          <div className="ms-place-card-form">{fields}</div>
-        ) : (
-          fields
-        )}
+        <div
+          className={wrapInCard ? "ms-place-card-form" : "ms-place-fields"}
+        >
+          {fields}
+        </div>
       </section>
     );
   };
