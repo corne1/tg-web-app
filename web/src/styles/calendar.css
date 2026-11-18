@@ -6298,18 +6298,19 @@ label.ms-sheet-item {
   color: var(--ms-ink);
 }
 
-/* Figma cabinet settings: large title under back-only bar (Мои услуги / Правила…) */
+/* Figma cabinet settings: Heading 5/Semibold 24/32 under back-only bar (21446:21074) */
 .ms-page-head {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 4px 0 4px;
+  padding: 4px 0 8px;
 }
 
 .ms-page-title {
   margin: 0;
+  font-family: inherit;
   font-size: 24px;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: -0.24px;
   line-height: 32px;
   color: var(--ms-ink);
@@ -8218,7 +8219,7 @@ label.ms-sheet-item {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 8px 0 24px;
+  padding: 0 0 24px;
 }
 
 .ms-about-card {
@@ -8260,7 +8261,7 @@ label.ms-sheet-item {
   display: flex;
   flex-direction: column;
   gap: 24px;
-  padding: 8px 0 24px;
+  padding: 0 0 24px;
 }
 
 .ms-rules-section {

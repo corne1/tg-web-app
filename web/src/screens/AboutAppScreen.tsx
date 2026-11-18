@@ -18,7 +18,7 @@ export function AboutAppScreen() {
   useMainButton({ text: "", visible: false, onClick: () => undefined });
 
   return (
-    <SettingsPageShell title="О приложении" onBack={goBack}>
+    <SettingsPageShell title="О приложении" titlePlacement="page" onBack={goBack}>
       <div className="ms-about">
         <div className="ms-about-card">
           <div className="ms-about-row">

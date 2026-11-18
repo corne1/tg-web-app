@@ -168,15 +168,16 @@ export function EditPublicPageScreen() {
   return (
     <>
     <div className="master-setup ms-cabinet ms-edit">
-      <header className="ms-bd-toolbar">
+      <header className="ms-bd-toolbar is-page">
         <IconButton label="Назад" onClick={goBack}>
           <BackIcon />
         </IconButton>
-        <h1 className="ms-bd-toolbar-title">Редактировать страницу</h1>
-        <span className="ms-cc-toolbar-spacer" aria-hidden />
       </header>
 
       <div className="ms-body ms-edit-body">
+        <section className="ms-page-head">
+          <h1 className="ms-page-title">Редактировать страницу</h1>
+        </section>
         <div className="ms-edit-photo">
           <button
             type="button"

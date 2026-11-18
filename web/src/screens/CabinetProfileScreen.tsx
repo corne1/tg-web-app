@@ -44,15 +44,16 @@ const MENU_PRIMARY: MenuItem[] = [
     icon: mapPinIcon,
     to: "/cabinet/profile/place",
   },
-];
-
-const MENU_SECONDARY: MenuItem[] = [
   {
     id: "rules",
     label: "Правила записи",
     icon: fileTextIcon,
     to: "/cabinet/profile/rules",
   },
+];
+
+/** Figma 21412:90397 — second menu block under place/rules. */
+const MENU_SECONDARY: MenuItem[] = [
   {
     id: "notifications",
     label: "Уведомления",

@@ -6,7 +6,7 @@ import { MsToast } from "../master/MsToast";
 export function SettingsPageShell({
   title,
   lead,
-  titlePlacement = "toolbar",
+  titlePlacement = "page",
   onBack,
   onClose,
   children,
@@ -20,8 +20,8 @@ export function SettingsPageShell({
   /** Shown under page title when `titlePlacement="page"`. */
   lead?: string;
   /**
-   * `toolbar` — centered title in top bar (Уведомления / О приложении).
-   * `page` — back-only bar + large title (+ optional lead) in body (Мои услуги / Правила…).
+   * `page` (default) — back-only bar + Heading 5 title in body (Figma cabinet settings).
+   * `toolbar` — centered title in top bar (legacy).
    */
   titlePlacement?: "toolbar" | "page";
   onBack: () => void;

@@ -57,7 +57,7 @@ export function NotificationsScreen() {
   };
 
   return (
-    <SettingsPageShell title="Уведомления" onBack={goBack}>
+    <SettingsPageShell title="Уведомления" titlePlacement="page" onBack={goBack}>
       <div className="ms-rules">
         <section className="ms-rules-section">
           <h2 className="ms-rules-section-title">Уведомления о записях</h2>
