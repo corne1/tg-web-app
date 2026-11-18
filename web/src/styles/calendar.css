@@ -8289,6 +8289,17 @@ label.ms-sheet-item {
   overflow: hidden;
 }
 
+/* Figma 21446:20001 — gray caption inside soft card, above first row */
+.ms-rules-card-caption {
+  margin: 0;
+  padding: 14px 16px 0;
+  color: var(--ms-muted);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+}
+
 .ms-rules-row {
   display: flex;
   align-items: center;

@@ -59,54 +59,50 @@ export function NotificationsScreen() {
   return (
     <SettingsPageShell title="Уведомления" titlePlacement="page" onBack={goBack}>
       <div className="ms-rules">
-        <section className="ms-rules-section">
-          <h2 className="ms-rules-section-title">Уведомления о записях</h2>
-          <div className="ms-rules-card">
-            {BOOKING_ROWS.map((row, index) => (
-              <div key={row.key}>
-                {index > 0 ? <hr className="ms-rules-rule" /> : null}
-                <div className="ms-rules-row">
-                  <div className="ms-rules-copy">
-                    <p className="ms-rules-label">{row.label}</p>
-                    <p className="ms-rules-lead">{row.lead}</p>
-                  </div>
-                  <button
-                    type="button"
-                    className={cx("ms-switch", prefs[row.key] && "is-on")}
-                    role="switch"
-                    aria-checked={prefs[row.key]}
-                    aria-label={row.label}
-                    onClick={() => toggle(row.key)}
-                  >
-                    <span className="ms-switch-knob" />
-                  </button>
+        <section className="ms-rules-card">
+          <h2 className="ms-rules-card-caption">Уведомления о записях</h2>
+          {BOOKING_ROWS.map((row, index) => (
+            <div key={row.key}>
+              {index > 0 ? <hr className="ms-rules-rule" /> : null}
+              <div className="ms-rules-row">
+                <div className="ms-rules-copy">
+                  <p className="ms-rules-label">{row.label}</p>
+                  <p className="ms-rules-lead">{row.lead}</p>
                 </div>
+                <button
+                  type="button"
+                  className={cx("ms-switch", prefs[row.key] && "is-on")}
+                  role="switch"
+                  aria-checked={prefs[row.key]}
+                  aria-label={row.label}
+                  onClick={() => toggle(row.key)}
+                >
+                  <span className="ms-switch-knob" />
+                </button>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </section>
 
-        <section className="ms-rules-section">
-          <h2 className="ms-rules-section-title">Напоминания</h2>
-          <div className="ms-rules-card">
-            <div className="ms-rules-row">
-              <div className="ms-rules-copy">
-                <p className="ms-rules-label">О предстоящих записях</p>
-                <p className="ms-rules-lead">
-                  Напоминать перед началом визита за 1 час
-                </p>
-              </div>
-              <button
-                type="button"
-                className={cx("ms-switch", prefs.upcomingReminder && "is-on")}
-                role="switch"
-                aria-checked={prefs.upcomingReminder}
-                aria-label="О предстоящих записях"
-                onClick={() => toggle("upcomingReminder")}
-              >
-                <span className="ms-switch-knob" />
-              </button>
+        <section className="ms-rules-card">
+          <h2 className="ms-rules-card-caption">Напоминания</h2>
+          <div className="ms-rules-row">
+            <div className="ms-rules-copy">
+              <p className="ms-rules-label">О предстоящих записях</p>
+              <p className="ms-rules-lead">
+                Напоминать перед началом визита за 1 час
+              </p>
             </div>
+            <button
+              type="button"
+              className={cx("ms-switch", prefs.upcomingReminder && "is-on")}
+              role="switch"
+              aria-checked={prefs.upcomingReminder}
+              aria-label="О предстоящих записях"
+              onClick={() => toggle("upcomingReminder")}
+            >
+              <span className="ms-switch-knob" />
+            </button>
           </div>
         </section>
       </div>
