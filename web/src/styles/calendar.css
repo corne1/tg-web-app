@@ -3815,17 +3815,11 @@ label.ms-sheet-item {
   justify-content: center;
 }
 
-/* Place mode glyphs (cabinet / car / pin) — tinted via currentColor */
+/* Place mode glyphs (cabinet / car / pin) — inline SVG, currentColor fill */
 .ms-place-mode-icon {
-  display: inline-block;
+  display: block;
   flex: 0 0 auto;
-  background: currentColor;
-  -webkit-mask-size: contain;
-  mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  mask-position: center;
+  color: inherit;
 }
 
 /* Same Fast setting card Selected: primary/border, keep fill2 */
