@@ -30,6 +30,93 @@ test("master publishes a page clients can open", async ({ page }) => {
   await expect(page.getByText("Кнопка демонстрационная, неактивна")).toBeVisible();
 });
 
+test("time sheet shows both quick-choice rows", async ({ page }) => {
+  const masterId = uniqueUserId();
+  await login(page, { id: masterId, firstName: "Мастер Часы" });
+  await page.getByPlaceholder("Анна").fill("Мастер Часы");
+  await page.getByRole("radio", { name: "Маникюр", exact: true }).click();
+  await page.getByRole("button", { name: "Продолжить", exact: true }).click();
+  await page.getByRole("button", { name: "Добавить первую услугу" }).click();
+  await page.getByPlaceholder("Маникюр с покрытием").fill("Маникюр");
+  await page.getByPlaceholder("2500").first().fill("2500");
+  await page.getByRole("button", { name: "Создать услугу" }).click();
+  await page.getByRole("button", { name: "Продолжить", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Когда вы принимаете клиентов?" }),
+  ).toBeVisible();
+
+  const sheets = [
+    ["10:00", "Начало рабочего дня"],
+    ["18:00", "Окончание рабочего дня"],
+  ] as const;
+
+  for (const height of [874, 520]) {
+    await page.setViewportSize({ width: 402, height });
+    for (const [time, heading] of sheets) {
+      await page.getByRole("button", { name: time, exact: true }).first().click();
+      await expect(page.getByRole("heading", { name: heading })).toBeVisible();
+      await page.evaluate(() =>
+        Promise.all(
+          document.getAnimations().map((a) => a.finished.catch(() => undefined)),
+        ),
+      );
+      const report = await page.evaluate((viewport) => {
+        const root = document.querySelector(".ms-sheet-root");
+        const chips = [...document.querySelectorAll(".ms-time-sheet-chip")].map((el) => {
+          const r = el.getBoundingClientRect();
+          let visible = r.height;
+          let node = el.parentElement;
+          while (node && node !== document.documentElement) {
+            const oy = getComputedStyle(node).overflowY;
+            if (oy === "auto" || oy === "hidden" || oy === "scroll" || oy === "clip") {
+              const b = node.getBoundingClientRect();
+              visible = Math.min(
+                visible,
+                Math.max(0, Math.min(r.bottom, b.bottom) - Math.max(r.top, b.top)),
+              );
+            }
+            node = node.parentElement;
+          }
+          const inViewport = Math.max(
+            0,
+            Math.min(r.bottom, viewport) - Math.max(r.top, 0),
+          );
+          const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+          return {
+            t: (el.textContent ?? "").trim(),
+            h: r.height,
+            visible,
+            inViewport,
+            hit: hit instanceof Element ? hit.className : "",
+          };
+        });
+        return {
+          parent: root?.parentElement?.tagName ?? "",
+          insideSetupBody: Boolean(root?.closest(".ms-body")),
+          opacity: root
+            ? getComputedStyle(root.querySelector(".ms-sheet") as Element).opacity
+            : "",
+          chips,
+        };
+      }, height);
+      expect(report.parent, heading).toBe("BODY");
+      expect(report.insideSetupBody, heading).toBe(false);
+      expect(report.opacity, heading).toBe("1");
+      expect(report.chips, heading).toHaveLength(6);
+      for (const chip of report.chips) {
+        expect(chip.visible, `${heading} ${chip.t}`).toBeGreaterThan(chip.h - 1);
+        expect(chip.inViewport, `${heading} ${chip.t}`).toBeGreaterThan(chip.h - 1);
+        expect(chip.hit, `${heading} ${chip.t}`).toContain("ms-time-sheet-chip");
+      }
+      if (height === 874 && heading === "Окончание рабочего дня") {
+        await page.screenshot({ path: "test-results/time-sheet-page.png" });
+      }
+      await page.getByRole("dialog").getByRole("button", { name: "Закрыть" }).click();
+      await expect(page.getByRole("heading", { name: heading })).toBeHidden();
+    }
+  }
+});
+
 test("schedule calendar sheet picks a date", async ({ page }) => {
   const masterId = uniqueUserId();
   await login(page, { id: masterId, firstName: "Мастер Даты" });

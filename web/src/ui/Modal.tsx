@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { cx } from "./cx";
 
 export function Modal({
@@ -16,7 +17,7 @@ export function Modal({
 }) {
   if (!open) return null;
 
-  return (
+  return createPortal(
     <div className="ms-modal-root" role="presentation">
       <button
         type="button"
@@ -33,6 +34,7 @@ export function Modal({
       >
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

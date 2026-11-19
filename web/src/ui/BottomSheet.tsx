@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import { type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { cx } from "./cx";
 
 export function BottomSheet({
@@ -17,7 +18,11 @@ export function BottomSheet({
 }) {
   if (!open) return null;
 
-  return (
+  // Portaled to body. The sheet used to render inside .ms-body (overflow:auto).
+  // iOS clips position:fixed to that box, so the second «Быстрый выбор» row
+  // sat under the page footer. A transformed ancestor (page enter animation)
+  // makes the same clip happen in Chromium.
+  return createPortal(
     <div className="ms-sheet-root" role="presentation">
       <button
         type="button"
@@ -37,7 +42,8 @@ export function BottomSheet({
       >
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
