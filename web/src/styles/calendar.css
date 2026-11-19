@@ -1490,23 +1490,34 @@ body:has(.ms-boot-splash),
   gap: 24px;
 }
 
-/* Figma photo card — Avatar + radio sources */
+/* Figma 21569:19254 — avatar + camera, no source radios. */
 .ms-ob-photo-card {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  width: 100%;
-  padding: 16px;
-  border-radius: var(--ms-radius-card);
-  background: var(--ms-soft);
-  box-sizing: border-box;
-}
-
-.ms-ob-photo-head {
+  appearance: none;
   display: flex;
   align-items: center;
   gap: 16px;
-  min-width: 0;
+  width: 100%;
+  margin: 0;
+  padding: 16px;
+  border: none;
+  border-radius: var(--ms-radius-card);
+  background: var(--ms-soft);
+  box-sizing: border-box;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+
+.ms-ob-photo-card:active {
+  background: var(--ms-fill3);
+}
+
+.ms-ob-avatar-wrap {
+  position: relative;
+  flex: 0 0 64px;
+  width: 64px;
+  height: 64px;
 }
 
 .ms-ob-avatar {
@@ -1515,8 +1526,20 @@ body:has(.ms-boot-splash),
   height: 64px;
   border-radius: var(--ms-radius-full);
   object-fit: cover;
-  flex-shrink: 0;
   background: var(--ms-fill3);
+}
+
+.ms-ob-cam {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--ms-radius-full);
+  background: var(--ms-purple);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .ms-ob-photo-copy {
@@ -1543,99 +1566,6 @@ body:has(.ms-boot-splash),
   letter-spacing: -0.14px;
   line-height: 20px;
   color: var(--ms-muted);
-}
-
-.ms-ob-photo-options {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  width: 100%;
-}
-
-.ms-ob-photo-option {
-  appearance: none;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  margin: 0;
-  padding: 6px 0;
-  border: none;
-  border-radius: var(--ms-radius-full);
-  background: transparent;
-  color: var(--ms-ink);
-  text-align: left;
-  cursor: pointer;
-}
-
-.ms-ob-photo-option-label {
-  flex: 1 1 auto;
-  min-width: 0;
-  font-size: 14px;
-  font-weight: 500;
-  letter-spacing: -0.14px;
-  line-height: 20px;
-}
-
-/* Figma selected radio: primary fill + white inner */
-.ms-ob-photo-option .ms-radio.is-on {
-  border-color: transparent;
-  background: var(--ms-purple);
-}
-
-.ms-ob-photo-option .ms-radio.is-on::after {
-  inset: 5px;
-  background: #fff;
-}
-
-/* Figma 21422:21596 — upload gallery dropzone */
-.ms-ob-upload {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  padding: 20px 16px;
-  border-radius: 16px;
-  border: 1.5px dashed var(--ms-line);
-  background: #fff;
-  box-sizing: border-box;
-  text-align: center;
-}
-
-.ms-ob-upload-icon-wrap {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: var(--ms-radius-full);
-  border: 1px solid var(--ms-line-soft);
-  background: var(--ms-soft);
-}
-
-.ms-ob-upload-icon {
-  display: block;
-  width: 20px;
-  height: 20px;
-}
-
-.ms-ob-upload-text {
-  margin: 0;
-  max-width: 240px;
-  font-size: 14px;
-  font-weight: 400;
-  letter-spacing: -0.14px;
-  line-height: 20px;
-  color: var(--ms-muted);
-}
-
-.ms-ob-upload .ms-ob-upload-btn.ms-btn-primary {
-  width: auto;
-  min-width: 120px;
-  align-self: center;
-  padding-left: 20px;
-  padding-right: 20px;
 }
 
 .ms-form-stack {
@@ -7969,13 +7899,6 @@ label.ms-sheet-item {
   letter-spacing: -0.14px;
   line-height: 20px;
   color: var(--ms-muted);
-}
-
-.ms-edit-photo-sheet {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 8px 16px 24px;
 }
 
 .ms-visually-hidden {

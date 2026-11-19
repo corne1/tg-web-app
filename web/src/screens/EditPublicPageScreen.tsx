@@ -19,14 +19,12 @@ import { cacheProfile } from "../lib/profileStorage";
 import { loadPublicAbout, savePublicAbout } from "../lib/publicProfile";
 import {
   BackIcon,
-  BottomSheet,
   Button,
   Chip,
   ChipGroup,
   Field,
   IconButton,
   Input,
-  SheetSimpleHeader,
   Textarea,
   TEXTAREA_MAX_LEN,
 } from "../ui";
@@ -66,7 +64,6 @@ export function EditPublicPageScreen() {
   const [avatarSrc, setAvatarSrc] = useState(() =>
     resolveMasterAvatarSrc(),
   );
-  const [photoSheet, setPhotoSheet] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -156,17 +153,7 @@ export function EditPublicPageScreen() {
 
   const valid = Boolean(name.trim() && serviceTypeCode);
 
-  const applyTgPhoto = useCallback(() => {
-    const url = webApp?.initDataUnsafe?.user?.photo_url;
-    if (!url) {
-      setError("В Telegram нет фото профиля");
-      return;
-    }
-    void persistAvatar(url).then(() => setPhotoSheet(false));
-  }, [persistAvatar, webApp]);
-
   return (
-    <>
     <div className="master-setup ms-cabinet ms-edit">
       <header className="ms-bd-toolbar is-page">
         <IconButton label="Назад" onClick={goBack}>
@@ -183,7 +170,7 @@ export function EditPublicPageScreen() {
             type="button"
             className="ms-edit-avatar-btn"
             aria-label="Изменить фото"
-            onClick={() => setPhotoSheet(true)}
+            onClick={() => fileRef.current?.click()}
           >
             <img
               className="ms-edit-avatar"
@@ -213,7 +200,6 @@ export function EditPublicPageScreen() {
                 .then(async (url) => {
                   setError(null);
                   await persistAvatar(url);
-                  setPhotoSheet(false);
                 })
                 .catch(() => setError("Не удалось загрузить фото"));
             }}
@@ -277,25 +263,5 @@ export function EditPublicPageScreen() {
         </div>
       </footer>
     </div>
-
-    <BottomSheet open={photoSheet} onClose={() => setPhotoSheet(false)}>
-      <SheetSimpleHeader
-        title="Фото мастера"
-        lead="Загрузите из галереи или возьмите из Telegram"
-      />
-      <div className="ms-edit-photo-sheet">
-        <Button
-          variant="secondary"
-          onClick={applyTgPhoto}
-          disabled={!webApp?.initDataUnsafe?.user?.photo_url}
-        >
-          Из профиля Telegram
-        </Button>
-        <Button variant="primary" onClick={() => fileRef.current?.click()}>
-          Выбрать из галереи
-        </Button>
-      </div>
-    </BottomSheet>
-    </>
   );
 }

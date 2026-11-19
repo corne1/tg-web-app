@@ -15,11 +15,9 @@ import {
   type ServiceTypeCode,
 } from "../lib/masterDraft";
 import { MsArrowRight } from "../components/master/MsArrowRight";
-import { cacheProfile } from "../lib/profileStorage";
-import galleryIcon from "../assets/onboarding/gallery.svg";
+import { cacheProfile, getCachedProfile } from "../lib/profileStorage";
 import infoIcon from "../assets/onboarding/info.svg";
 import {
-  loadMasterAvatarDataUrl,
   prepareAvatarDataUrl,
   resolveMasterAvatarSrc,
   saveMasterAvatarDataUrl,
@@ -33,14 +31,27 @@ import {
   Field,
   IconButton,
   Input,
-  RadioMark,
   Textarea,
   TEXTAREA_MAX_LEN,
 } from "../ui";
 
-type PhotoSource = "telegram" | "upload";
-
 const ABOUT_PLACEHOLDER = "Расскажите о себе и своей работе";
+
+function CameraBadge() {
+  return (
+    <span className="ms-ob-cam" aria-hidden>
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <path
+          d="M4.2 4.2 5 3h4l.8 1.2H11a1 1 0 0 1 1 1V10a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5.2a1 1 0 0 1 1-1h1.2Z"
+          stroke="#fff"
+          strokeWidth="1.2"
+          strokeLinejoin="round"
+        />
+        <circle cx="7" cy="7.2" r="1.8" stroke="#fff" strokeWidth="1.2" />
+      </svg>
+    </span>
+  );
+}
 
 export function OnboardingScreen() {
   const navigate = useNavigate();
@@ -48,7 +59,6 @@ export function OnboardingScreen() {
   const { webApp } = useTelegram();
   const [fromReview] = useState(() => isFromReview(location.state));
   const initial = loadMasterDraft();
-  const tgPhoto = webApp?.initDataUnsafe?.user?.photo_url ?? null;
   const [name, setName] = useState(initial.name);
   const [serviceTypeCode, setServiceTypeCode] =
     useState<ServiceTypeCode | null>(initial.serviceTypeCode);
@@ -60,26 +70,14 @@ export function OnboardingScreen() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [previewAvatar, setPreviewAvatar] = useState(() =>
-    resolveMasterAvatarSrc(tgPhoto),
+    resolveMasterAvatarSrc(getCachedProfile()?.avatarUrl),
   );
-  const [photoSource, setPhotoSource] = useState<PhotoSource>(() => {
-    const local = loadMasterAvatarDataUrl();
-    if (local && local !== tgPhoto && !local.startsWith("http")) return "upload";
-    return "telegram";
-  });
   const fileRef = useRef<HTMLInputElement>(null);
   const city = initial.city || "Москва";
 
   useEffect(() => {
     if (catalogError) setError(catalogError);
   }, [catalogError]);
-
-  // Prefer freshly resolved TG photo when local cache is empty.
-  useEffect(() => {
-    if (loadMasterAvatarDataUrl()) return;
-    if (!tgPhoto) return;
-    setPreviewAvatar(tgPhoto);
-  }, [tgPhoto]);
 
   const draft = useMemo(
     () => ({ name: name.trim(), serviceTypeCode, city }),
@@ -99,14 +97,6 @@ export function OnboardingScreen() {
       );
     }
   }, []);
-
-  /** Ensure step-1 choice is stored before leaving the screen. */
-  const ensureAvatarPersisted = useCallback(async () => {
-    if (loadMasterAvatarDataUrl()) return;
-    if (photoSource === "telegram" && tgPhoto) {
-      await persistAvatar(tgPhoto);
-    }
-  }, [persistAvatar, photoSource, tgPhoto]);
 
   const persistLocal = useCallback(() => {
     const prev = loadMasterDraft();
@@ -137,7 +127,6 @@ export function OnboardingScreen() {
     setSaving(true);
     setError(null);
     try {
-      await ensureAvatarPersisted();
       await persistServer();
       if (fromReview) {
         webApp?.HapticFeedback?.notificationOccurred("success");
@@ -151,15 +140,7 @@ export function OnboardingScreen() {
     } finally {
       setSaving(false);
     }
-  }, [
-    ensureAvatarPersisted,
-    fromReview,
-    navigate,
-    persistServer,
-    saving,
-    valid,
-    webApp,
-  ]);
+  }, [fromReview, navigate, persistServer, saving, valid, webApp]);
 
   const handleSaveExit = useCallback(async () => {
     persistLocal();
@@ -172,7 +153,6 @@ export function OnboardingScreen() {
     setSaving(true);
     setError(null);
     try {
-      await ensureAvatarPersisted();
       await persistServer();
       webApp?.HapticFeedback?.notificationOccurred("success");
       navigate("/");
@@ -181,35 +161,9 @@ export function OnboardingScreen() {
     } finally {
       setSaving(false);
     }
-  }, [
-    ensureAvatarPersisted,
-    navigate,
-    persistLocal,
-    persistServer,
-    saving,
-    valid,
-    webApp,
-  ]);
-
-  const selectTelegramPhoto = useCallback(() => {
-    setPhotoSource("telegram");
-    if (!tgPhoto) {
-      setError("В Telegram нет фото профиля");
-      return;
-    }
-    setError(null);
-    void persistAvatar(tgPhoto);
-    webApp?.HapticFeedback?.selectionChanged?.();
-  }, [persistAvatar, tgPhoto, webApp]);
-
-  const selectUploadPhoto = useCallback(() => {
-    setPhotoSource("upload");
-    setError(null);
-    webApp?.HapticFeedback?.selectionChanged?.();
-  }, [webApp]);
+  }, [navigate, persistLocal, persistServer, saving, valid, webApp]);
 
   const openGalleryPicker = useCallback(() => {
-    setPhotoSource("upload");
     setError(null);
     fileRef.current?.click();
     webApp?.HapticFeedback?.selectionChanged?.();
@@ -261,8 +215,12 @@ export function OnboardingScreen() {
           </p>
         </section>
 
-        <section className="ms-ob-photo-card" aria-label="Фото мастера">
-          <div className="ms-ob-photo-head">
+        <button
+          type="button"
+          className="ms-ob-photo-card"
+          onClick={openGalleryPicker}
+        >
+          <span className="ms-ob-avatar-wrap">
             <img
               className="ms-ob-avatar"
               src={previewAvatar}
@@ -270,66 +228,15 @@ export function OnboardingScreen() {
               height={64}
               alt=""
             />
-            <div className="ms-ob-photo-copy">
-              <p className="ms-ob-photo-title">Фото мастера</p>
-              <p className="ms-ob-photo-sub">Выберите фотографию</p>
-            </div>
-          </div>
-
-          <div
-            className="ms-ob-photo-options"
-            role="radiogroup"
-            aria-label="Источник фото"
-          >
-            <button
-              type="button"
-              className="ms-ob-photo-option"
-              role="radio"
-              aria-checked={photoSource === "telegram"}
-              onClick={selectTelegramPhoto}
-            >
-              <RadioMark checked={photoSource === "telegram"} />
-              <span className="ms-ob-photo-option-label">
-                Использовать фото из Telegram
-              </span>
-            </button>
-            <button
-              type="button"
-              className="ms-ob-photo-option"
-              role="radio"
-              aria-checked={photoSource === "upload"}
-              onClick={selectUploadPhoto}
-            >
-              <RadioMark checked={photoSource === "upload"} />
-              <span className="ms-ob-photo-option-label">
-                Загрузить фотографию
-              </span>
-            </button>
-          </div>
-
-          {photoSource === "upload" ? (
-            <div className="ms-ob-upload">
-              <span className="ms-ob-upload-icon-wrap" aria-hidden>
-                <img
-                  className="ms-ob-upload-icon"
-                  src={galleryIcon}
-                  width={20}
-                  height={20}
-                  alt=""
-                />
-              </span>
-              <p className="ms-ob-upload-text">
-                Выберите фотографию из галереи устройства
-              </p>
-              <Button
-                className="ms-ob-upload-btn"
-                onClick={openGalleryPicker}
-              >
-                Выбрать
-              </Button>
-            </div>
-          ) : null}
-        </section>
+            <CameraBadge />
+          </span>
+          <span className="ms-ob-photo-copy">
+            <span className="ms-ob-photo-title">Фото мастера</span>
+            <span className="ms-ob-photo-sub">
+              Отображается на публичной странице
+            </span>
+          </span>
+        </button>
 
         <div className="ms-form-stack">
           <Field label="Имя" as="label">
@@ -423,7 +330,6 @@ export function OnboardingScreen() {
           const file = e.target.files?.[0];
           e.target.value = "";
           if (!file) return;
-          setPhotoSource("upload");
           void prepareAvatarDataUrl(file)
             .then(async (url) => {
               setError(null);
