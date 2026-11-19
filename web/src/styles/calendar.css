@@ -4726,10 +4726,10 @@ label.ms-sheet-item {
 }
 
 /* Cabinet settings (Мои услуги / время / место / правила).
-   Figma 21445:15471 Toolbar: 24px under back, 16px sides; do not reuse .ms-cab-body. */
+   Screen is full-bleed horizontally; do not reuse .ms-cab-body. */
 .ms-settings-body {
   gap: 24px;
-  padding: 24px 16px 16px;
+  padding: 24px 0 16px;
   box-sizing: border-box;
 }
 
@@ -6442,8 +6442,8 @@ label.ms-sheet-item {
 
 .ms-bd-toolbar.is-page {
   justify-content: flex-start;
-  /* Figma 21445:15471 Fast setting card/Toolbar — back row only; title sits in body */
-  padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 0;
+  /* Figma 21445:15471 Toolbar is full width, horizontal padding 0 */
+  padding: calc(12px + env(safe-area-inset-top, 0px)) 0 0;
 }
 
 .ms-bd-toolbar-title {
