@@ -11,6 +11,7 @@ function mapUser(row: Record<string, unknown>): StoredUser {
     language_code: (row.language_code as string | null) ?? null,
     is_premium: Boolean(row.is_premium),
     photo_url: (row.photo_url as string | null) ?? null,
+    is_test: Number(row.is_test) === 1,
     created_at: String(row.created_at),
     updated_at: String(row.updated_at),
     last_seen_at: String(row.last_seen_at),
@@ -63,6 +64,7 @@ export async function upsertUser(user: TelegramUser): Promise<StoredUser> {
       language_code: user.language_code ?? null,
       is_premium: Boolean(user.is_premium),
       photo_url: user.photo_url ?? null,
+      is_test: Number(prev?.is_test) === 1,
       created_at: createdAt,
       updated_at: now,
       last_seen_at: now,
@@ -78,5 +80,15 @@ export async function getUser(id: number): Promise<StoredUser | null> {
     });
     const row = result.rows[0];
     return row ? mapUser(row as unknown as Record<string, unknown>) : null;
+  });
+}
+
+/** Mark or clear the test flag. Ordinary login does not call this. */
+export async function setUserTest(id: number, isTest: boolean): Promise<void> {
+  await withDb(async (db) => {
+    await db.execute({
+      sql: "UPDATE users SET is_test = ? WHERE id = ?",
+      args: [isTest ? 1 : 0, id],
+    });
   });
 }

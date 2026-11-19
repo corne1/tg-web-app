@@ -435,30 +435,30 @@ test("cabinet edits show on the public page and in slots", async ({ browser }) =
   await client.close();
 });
 
-test("test accounts can restart onboarding", async ({ page }) => {
-  const rejected = await page.request.post("/api/auth/dev", {
+test("a flagged test user can restart onboarding", async ({ page }) => {
+  const closed = await page.request.post("/api/auth/dev", {
     data: { userId: 1 },
   });
-  expect(rejected.status()).toBe(400);
+  expect(closed.status()).toBe(404);
 
-  await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Тестовые учётки" })).toBeVisible();
-  await page.getByRole("button", { name: "Заново" }).first().click();
+  const id = uniqueUserId();
+  const plain = await login(page, { id, firstName: "Тест Мастер" });
+  await expect(page.getByRole("button", { name: "Заново" })).toHaveCount(0);
+  const denied = await page.request.post("/api/me/reset", {
+    headers: { Authorization: `Bearer ${plain.token}` },
+  });
+  expect(denied.status()).toBe(403);
+
+  await login(page, { id, firstName: "Тест Мастер", isTest: true });
   await page.getByRole("button", { name: "Создать страницу мастера" }).click();
-  await expect(page.getByText("Шаг 1 из 4")).toBeVisible();
-
-  await page.getByPlaceholder("Анна").fill("Мастер Тест");
+  await page.getByPlaceholder("Анна").fill("Чужое имя");
   await page.getByRole("radio", { name: "Маникюр", exact: true }).click();
   await page.getByRole("button", { name: "Продолжить", exact: true }).click();
   await expect(page.getByRole("button", { name: "Добавить первую услугу" })).toBeVisible();
 
-  await page.getByRole("button", { name: "Тест" }).click();
-  await page.getByRole("button", { name: "Продолжить" }).first().click();
-  await expect(page.getByRole("button", { name: "Добавить первую услугу" })).toBeVisible();
-
-  await page.getByRole("button", { name: "Тест" }).click();
-  await page.getByRole("button", { name: "Заново" }).first().click();
+  page.once("dialog", (dialog) => dialog.accept());
+  await page.getByRole("button", { name: "Заново" }).click();
   await page.getByRole("button", { name: "Создать страницу мастера" }).click();
   await expect(page.getByText("Шаг 1 из 4")).toBeVisible();
-  await expect(page.getByPlaceholder("Анна")).toHaveValue("Тест 1");
+  await expect(page.getByPlaceholder("Анна")).toHaveValue("Тест Мастер");
 });

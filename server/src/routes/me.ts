@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { config } from "../config.js";
 import { getProfile } from "../db/profiles.js";
+import { resetMasterCabinet } from "../db/resetMaster.js";
 import { listServices } from "../db/services.js";
 import { getUser } from "../db/users.js";
 import { requireSession, type AuthedRequest } from "../middleware.js";
@@ -18,6 +19,18 @@ meRouter.get("/me", requireSession, async (req: AuthedRequest, res) => {
     profile: profile ? serializeProfile(profile) : null,
     services: services.map(serializeService),
   });
+});
+
+/** Wipe the cabinet of the signed-in user. Refused unless users.is_test = 1. */
+meRouter.post("/me/reset", requireSession, async (req: AuthedRequest, res) => {
+  const id = req.telegramUser!.id;
+  const stored = await getUser(id);
+  if (!stored?.is_test) {
+    res.status(403).json({ error: "Not a test user" });
+    return;
+  }
+  await resetMasterCabinet(id);
+  res.json({ ok: true });
 });
 
 meRouter.get("/config/public", (_req, res) => {

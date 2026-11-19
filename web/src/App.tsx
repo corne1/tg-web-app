@@ -4,13 +4,10 @@ import {
   authenticate,
   clearStoredToken,
   ensureMasterProfile,
-  fetchDevAccounts,
   fetchMe,
   getStoredToken,
-  loginDevAccount,
-  resetDevAccount,
+  resetTestUser,
   type AppUser,
-  type DevAccount,
 } from "./api";
 import { BootSplash } from "./components/BootSplash";
 import { PageTransition } from "./components/PageTransition";
@@ -20,12 +17,7 @@ import {
   isOnboardingDone,
   masterResumePath,
 } from "./lib/profileStorage";
-import {
-  clearDevAccountId,
-  clearLocalMasterState,
-  readDevAccountId,
-  writeDevAccountId,
-} from "./lib/devAccounts";
+import { clearLocalMasterState } from "./lib/localMasterState";
 import {
   loadMasterDraft,
   normalizeScheduleBreak,
@@ -62,7 +54,6 @@ import { MyBookingsScreen } from "./screens/MyBookingsScreen";
 import { NotificationsScreen } from "./screens/NotificationsScreen";
 import { OnboardingScreen } from "./screens/OnboardingScreen";
 import { OnboardingSuccessScreen } from "./screens/OnboardingSuccessScreen";
-import { DevAccountsScreen } from "./screens/DevAccountsScreen";
 import { WelcomeMasterScreen } from "./screens/WelcomeMasterScreen";
 import { ScheduleScreen } from "./screens/ScheduleScreen";
 import { HoursSettingsScreen } from "./screens/HoursSettingsScreen";
@@ -207,8 +198,7 @@ export function App() {
   const [profile, setProfile] = useState<MasterProfile | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [devAccounts, setDevAccounts] = useState<DevAccount[] | null>(null);
-  const [devPicker, setDevPicker] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -229,21 +219,6 @@ export function App() {
       setError(null);
       void loadServiceTypes().catch(() => undefined);
       try {
-        if (import.meta.env.DEV) {
-          const picked = readDevAccountId();
-          if (picked) {
-            try {
-              await loginDevAccount(picked);
-              const me = await fetchMe();
-              if (!cancelled) applyMe(me);
-              return;
-            } catch {
-              clearDevAccountId();
-              clearStoredToken();
-            }
-          }
-        }
-
         if (initData) {
           const { user: authed } = await authenticate(initData);
           const me = await fetchMe();
@@ -262,16 +237,6 @@ export function App() {
           return;
         }
 
-        if (import.meta.env.DEV) {
-          const accounts = await fetchDevAccounts();
-          if (!cancelled && accounts && accounts.length > 0) {
-            setDevAccounts(accounts);
-            setDevPicker(true);
-            setUser(null);
-            return;
-          }
-        }
-
         if (!cancelled) {
           setUser(null);
           setError(
@@ -280,19 +245,6 @@ export function App() {
         }
       } catch (err) {
         clearStoredToken();
-        if (import.meta.env.DEV) {
-          try {
-            const accounts = await fetchDevAccounts();
-            if (!cancelled && accounts && accounts.length > 0) {
-              setDevAccounts(accounts);
-              setDevPicker(true);
-              setUser(null);
-              return;
-            }
-          } catch {
-            // keep the auth error below
-          }
-        }
         if (!cancelled) {
           setError(err instanceof Error ? err.message : "Auth failed");
         }
@@ -307,36 +259,22 @@ export function App() {
     };
   }, [initData]);
 
-  async function openDevPicker() {
-    if (!devAccounts) {
-      const accounts = await fetchDevAccounts();
-      if (!accounts || accounts.length === 0) return;
-      setDevAccounts(accounts);
+  async function restartTestUser() {
+    if (resetting) return;
+    if (!window.confirm("Стереть кабинет и начать онбординг заново?")) return;
+    setResetting(true);
+    try {
+      await resetTestUser();
+      clearLocalMasterState();
+      window.location.assign("/");
+    } catch (err) {
+      setResetting(false);
+      window.alert(err instanceof Error ? err.message : "Не удалось сбросить");
     }
-    setDevPicker(true);
-  }
-
-  async function enterDevAccount(id: number, reset: boolean) {
-    const prev = readDevAccountId();
-    if (reset || prev !== id) clearLocalMasterState();
-    if (reset) await resetDevAccount(id);
-    await loginDevAccount(id);
-    writeDevAccountId(id);
-    window.location.assign("/");
   }
 
   if (loading) {
     return <BootSplash framed label="Подключение…" />;
-  }
-
-  if (devPicker && devAccounts) {
-    return (
-      <DevAccountsScreen
-        accounts={devAccounts}
-        onEnter={enterDevAccount}
-        onClose={user ? () => setDevPicker(false) : null}
-      />
-    );
   }
 
   if (error && !user) {
@@ -362,13 +300,14 @@ export function App() {
   return (
     <BrowserRouter>
       <div className="app-frame">
-        {import.meta.env.DEV && (
+        {user.is_test && (
           <button
             type="button"
-            className="dev-account-fab"
-            onClick={() => void openDevPicker()}
+            className="test-reset-fab"
+            disabled={resetting}
+            onClick={() => void restartTestUser()}
           >
-            Тест
+            Заново
           </button>
         )}
         <PageTransition>

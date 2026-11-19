@@ -11,7 +11,7 @@ import {
 let client: Client | null = null;
 let migrated = false;
 
-const SCHEMA_VERSION = 3;
+const SCHEMA_VERSION = 4;
 
 function resolveDatabaseUrl(): string {
   if (config.databaseUrl) return config.databaseUrl;
@@ -109,6 +109,7 @@ function createIdealSchemaSql(): string[] {
       language_code TEXT,
       is_premium INTEGER NOT NULL DEFAULT 0 CHECK (is_premium IN (0, 1)),
       photo_url TEXT,
+      is_test INTEGER NOT NULL DEFAULT 0 CHECK (is_test IN (0, 1)),
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL,
       last_seen_at TEXT NOT NULL
@@ -294,6 +295,7 @@ async function migrateToV2(db: Client): Promise<void> {
       language_code TEXT,
       is_premium INTEGER NOT NULL DEFAULT 0,
       photo_url TEXT,
+      is_test INTEGER NOT NULL DEFAULT 0 CHECK (is_test IN (0, 1)),
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL,
       last_seen_at TEXT NOT NULL
@@ -608,6 +610,25 @@ async function migrateToV3(db: Client): Promise<void> {
   await setSchemaVersion(db, 3);
 }
 
+async function columnExists(
+  db: Client,
+  table: string,
+  column: string,
+): Promise<boolean> {
+  const info = await db.execute(`PRAGMA table_info(${table})`);
+  return info.rows.some((row) => String(row.name) === column);
+}
+
+/** users.is_test is set in the database. Login must not change it. */
+async function migrateToV4(db: Client): Promise<void> {
+  if (!(await columnExists(db, "users", "is_test"))) {
+    await db.execute(
+      `ALTER TABLE users ADD COLUMN is_test INTEGER NOT NULL DEFAULT 0 CHECK (is_test IN (0, 1))`,
+    );
+  }
+  await setSchemaVersion(db, 4);
+}
+
 async function migrateLegacyV0toV1Markers(db: Client): Promise<void> {
   // Soft path if somehow still on fragmented additive schema without schema_meta.
   // Handled by migrateToV2 rebuild.
@@ -637,6 +658,10 @@ export async function migrate(): Promise<void> {
   if (version < 3) {
     await migrateToV3(db);
     version = 3;
+  }
+  if (version < 4) {
+    await migrateToV4(db);
+    version = 4;
   }
 
   await ensureIdealEmptySchema(db);

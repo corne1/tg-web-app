@@ -400,60 +400,7 @@ body:has(.ms-boot-splash),
   font-size: 0.9rem;
 }
 
-.dev-accounts {
-  width: min(402px, 100%);
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 24px 16px 32px;
-}
-
-.dev-accounts-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  overflow: auto;
-  background: #fff;
-  display: flex;
-  justify-content: center;
-}
-
-.dev-accounts-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.dev-account-card {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 16px;
-  border: 1px solid var(--ms-line);
-  border-radius: var(--ms-radius-card);
-  background: var(--ms-fill2);
-}
-
-.dev-account-name {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-  letter-spacing: -0.16px;
-  line-height: 24px;
-}
-
-.dev-account-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.dev-account-actions .ms-btn-primary,
-.dev-account-actions .ms-btn-secondary {
-  flex: 1;
-  width: auto;
-}
-
-.dev-account-fab {
+.test-reset-fab {
   position: fixed;
   z-index: 40;
   top: calc(8px + env(safe-area-inset-top, 0px));
@@ -467,6 +414,11 @@ body:has(.ms-boot-splash),
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
+}
+
+.test-reset-fab:disabled {
+  opacity: 0.6;
+  cursor: default;
 }
 
 .screen-body {

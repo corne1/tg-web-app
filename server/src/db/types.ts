@@ -12,6 +12,8 @@ export type StoredUser = {
   language_code: string | null;
   is_premium: boolean;
   photo_url: string | null;
+  /** Set with SQL. Session login does not change it. */
+  is_test: boolean;
   created_at: string;
   updated_at: string;
   last_seen_at: string;

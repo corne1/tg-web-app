@@ -1,8 +1,6 @@
 import { Router } from "express";
 import { config } from "../config.js";
-import { resetDevMaster } from "../db/devAccounts.js";
-import { upsertUser } from "../db/users.js";
-import { DEV_ACCOUNTS, devAuthEnabled, findDevAccount } from "../lib/devAccounts.js";
+import { setUserTest, upsertUser } from "../db/users.js";
 import { e2eAuthEnabled, e2eSecretMatches } from "../lib/e2eAuth.js";
 import { createSessionToken } from "../session.js";
 import { AuthError, validateInitData } from "../telegramAuth.js";
@@ -43,7 +41,8 @@ authRouter.post("/telegram", async (req, res) => {
 
 /**
  * Session for Playwright. Absent unless E2E_SECRET is set on a non-production process.
- * Body: { secret, userId, firstName }
+ * Body: { secret, userId, firstName, isTest? }
+ * isTest writes users.is_test. Telegram login never does.
  */
 authRouter.post("/e2e", async (req, res) => {
   if (!e2eAuthEnabled()) {
@@ -72,57 +71,10 @@ authRouter.post("/e2e", async (req, res) => {
     language_code: "ru",
   };
   const stored = await upsertUser(user);
+  if (req.body?.isTest === true) {
+    await setUserTest(id, true);
+    stored.is_test = true;
+  }
   const token = await createSessionToken(user);
   res.json({ token, user: stored });
 });
-
-/**
- * Local test masters so onboarding can be repeated.
- * GET lists them. POST { userId } opens a session. POST /reset { userId } wipes that master.
- */
-authRouter.get("/dev", (_req, res) => {
-  if (!devAuthEnabled()) {
-    res.status(404).json({ error: "Not found" });
-    return;
-  }
-  res.json({ accounts: DEV_ACCOUNTS });
-});
-
-authRouter.post("/dev", async (req, res) => {
-  const account = devAccountFromBody(req.body?.userId);
-  if (!account) {
-    res.status(devAuthEnabled() ? 400 : 404).json({
-      error: devAuthEnabled() ? "Unknown test account" : "Not found",
-    });
-    return;
-  }
-
-  const user = {
-    id: account.id,
-    first_name: account.firstName,
-    username: `dev_${account.id}`,
-    language_code: "ru",
-  };
-  const stored = await upsertUser(user);
-  const token = await createSessionToken(user);
-  res.json({ token, user: stored });
-});
-
-authRouter.post("/dev/reset", async (req, res) => {
-  const account = devAccountFromBody(req.body?.userId);
-  if (!account) {
-    res.status(devAuthEnabled() ? 400 : 404).json({
-      error: devAuthEnabled() ? "Unknown test account" : "Not found",
-    });
-    return;
-  }
-  await resetDevMaster(account.id);
-  res.json({ ok: true });
-});
-
-function devAccountFromBody(raw: unknown) {
-  if (!devAuthEnabled()) return null;
-  const id = Number(raw);
-  if (!Number.isInteger(id)) return null;
-  return findDevAccount(id);
-}

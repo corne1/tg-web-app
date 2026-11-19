@@ -12,7 +12,7 @@ export function uniqueUserId(): number {
 
 export async function login(
   page: Page,
-  user: { id: number; firstName: string },
+  user: { id: number; firstName: string; isTest?: boolean },
   path = "/",
 ): Promise<{ token: string; slug: string | null }> {
   const res = await page.request.post("/api/auth/e2e", {
@@ -20,6 +20,7 @@ export async function login(
       secret: e2eSecret,
       userId: user.id,
       firstName: user.firstName,
+      ...(user.isTest ? { isTest: true } : {}),
     },
   });
   expect(res.ok(), await res.text()).toBeTruthy();
@@ -44,7 +45,7 @@ export async function login(
 /** Separate cookie jar and localStorage from other users in the same test. */
 export async function openUser(
   browser: Browser,
-  user: { id: number; firstName: string },
+  user: { id: number; firstName: string; isTest?: boolean },
   path = "/",
 ): Promise<{ page: Page; token: string; slug: string | null; close: () => Promise<void> }> {
   const context = await browser.newContext();
