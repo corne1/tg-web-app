@@ -6,7 +6,6 @@ import {
   ensureMasterProfile,
   fetchMe,
   getStoredToken,
-  resetTestUser,
   type AppUser,
 } from "./api";
 import { BootSplash } from "./components/BootSplash";
@@ -17,7 +16,6 @@ import {
   isOnboardingDone,
   masterResumePath,
 } from "./lib/profileStorage";
-import { clearLocalMasterState } from "./lib/localMasterState";
 import {
   loadMasterDraft,
   normalizeScheduleBreak,
@@ -198,7 +196,6 @@ export function App() {
   const [profile, setProfile] = useState<MasterProfile | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [resetting, setResetting] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -259,20 +256,6 @@ export function App() {
     };
   }, [initData]);
 
-  async function restartTestUser() {
-    if (resetting) return;
-    if (!window.confirm("Стереть кабинет и начать онбординг заново?")) return;
-    setResetting(true);
-    try {
-      await resetTestUser();
-      clearLocalMasterState();
-      window.location.assign("/");
-    } catch (err) {
-      setResetting(false);
-      window.alert(err instanceof Error ? err.message : "Не удалось сбросить");
-    }
-  }
-
   if (loading) {
     return <BootSplash framed label="Подключение…" />;
   }
@@ -300,16 +283,6 @@ export function App() {
   return (
     <BrowserRouter>
       <div className="app-frame">
-        {user.is_test && (
-          <button
-            type="button"
-            className="test-reset-fab"
-            disabled={resetting}
-            onClick={() => void restartTestUser()}
-          >
-            Заново
-          </button>
-        )}
         <PageTransition>
           <Routes>
             <Route

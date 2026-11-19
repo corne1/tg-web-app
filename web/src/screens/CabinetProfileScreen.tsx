@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchMe } from "../api";
+import { fetchMe, resetTestUser } from "../api";
 import { MasterAvatar } from "../components/master/MasterAvatar";
 import bellIcon from "../assets/cabinet/profile/bell.svg";
 import calendarClockIcon from "../assets/cabinet/profile/calendar-clock.svg";
@@ -14,9 +14,10 @@ import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
 import { saveMasterAvatarDataUrl } from "../lib/masterAvatar";
 import { useServiceTypes } from "../hooks/useServiceTypes";
+import { clearLocalMasterState } from "../lib/localMasterState";
 import { cacheProfile } from "../lib/profileStorage";
 import type { MasterProfile } from "../types";
-import { ChevronRightIcon } from "../ui";
+import { Button, ChevronRightIcon } from "../ui";
 
 type MenuItem = {
   id: string;
@@ -94,13 +95,17 @@ function MenuGroup({ items }: { items: MenuItem[] }) {
 export function CabinetProfileScreen() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<MasterProfile | null>(null);
+  const [isTestUser, setIsTestUser] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const { serviceTypes, metaFor } = useServiceTypes();
 
   useEffect(() => {
     let cancelled = false;
     void fetchMe()
       .then((me) => {
-        if (cancelled || !me.profile) return;
+        if (cancelled) return;
+        setIsTestUser(Boolean(me.user.is_test));
+        if (!me.profile) return;
         cacheProfile(me.profile);
         setProfile(me.profile);
         if (me.profile.avatarUrl) {
@@ -122,6 +127,22 @@ export function CabinetProfileScreen() {
     profile?.status === "active" || Boolean(profile?.onboardingComplete);
 
   const goHome = useCallback(() => navigate("/"), [navigate]);
+
+  const restartOnboarding = useCallback(() => {
+    if (resetting) return;
+    if (!window.confirm("Стереть кабинет и начать онбординг заново?")) return;
+    setResetting(true);
+    void resetTestUser()
+      .then(() => {
+        clearLocalMasterState();
+        window.location.assign("/");
+      })
+      .catch((err: unknown) => {
+        setResetting(false);
+        window.alert(err instanceof Error ? err.message : "Не удалось сбросить");
+      });
+  }, [resetting]);
+
   useBackButton(goHome);
   useMainButton({ text: "", visible: false, onClick: () => undefined });
 
@@ -180,6 +201,15 @@ export function CabinetProfileScreen() {
 
           <MenuGroup items={MENU_PRIMARY} />
           <MenuGroup items={MENU_SECONDARY} />
+          {isTestUser ? (
+            <Button
+              variant="secondary"
+              disabled={resetting}
+              onClick={restartOnboarding}
+            >
+              Сбросить онбординг
+            </Button>
+          ) : null}
         </div>
       </div>
 

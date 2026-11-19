@@ -400,27 +400,6 @@ body:has(.ms-boot-splash),
   font-size: 0.9rem;
 }
 
-.test-reset-fab {
-  position: fixed;
-  z-index: 40;
-  top: calc(8px + env(safe-area-inset-top, 0px));
-  right: 12px;
-  height: 32px;
-  padding: 0 12px;
-  border: none;
-  border-radius: 999px;
-  background: #3390ec;
-  color: #fff;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.test-reset-fab:disabled {
-  opacity: 0.6;
-  cursor: default;
-}
-
 .screen-body {
   flex: 1;
   display: flex;

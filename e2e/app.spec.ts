@@ -443,7 +443,8 @@ test("a flagged test user can restart onboarding", async ({ page }) => {
 
   const id = uniqueUserId();
   const plain = await login(page, { id, firstName: "Тест Мастер" });
-  await expect(page.getByRole("button", { name: "Заново" })).toHaveCount(0);
+  await page.goto("/cabinet/profile");
+  await expect(page.getByRole("button", { name: "Сбросить онбординг" })).toHaveCount(0);
   const denied = await page.request.post("/api/me/reset", {
     headers: { Authorization: `Bearer ${plain.token}` },
   });
@@ -455,9 +456,19 @@ test("a flagged test user can restart onboarding", async ({ page }) => {
   await page.getByRole("radio", { name: "Маникюр", exact: true }).click();
   await page.getByRole("button", { name: "Продолжить", exact: true }).click();
   await expect(page.getByRole("button", { name: "Добавить первую услугу" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Сбросить онбординг" })).toHaveCount(0);
+
+  await page.goto("/cabinet/profile");
+  const about = page.getByRole("button", { name: "О приложении" });
+  const reset = page.getByRole("button", { name: "Сбросить онбординг" });
+  await expect(about).toBeVisible();
+  await expect(reset).toBeVisible();
+  const aboutBox = await about.boundingBox();
+  const resetBox = await reset.boundingBox();
+  expect(aboutBox && resetBox && resetBox.y > aboutBox.y + aboutBox.height).toBeTruthy();
 
   page.once("dialog", (dialog) => dialog.accept());
-  await page.getByRole("button", { name: "Заново" }).click();
+  await reset.click();
   await page.getByRole("button", { name: "Создать страницу мастера" }).click();
   await expect(page.getByText("Шаг 1 из 4")).toBeVisible();
   await expect(page.getByPlaceholder("Анна")).toHaveValue("Тест Мастер");
