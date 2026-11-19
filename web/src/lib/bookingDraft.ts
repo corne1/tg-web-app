@@ -35,10 +35,6 @@ export function selectedServicesLabel(count: number): string {
   return `Выбрано: ${count} ${word}`;
 }
 
-export function serviceLetter(title: string): string {
-  return (title.trim().charAt(0) || "?").toUpperCase();
-}
-
 export function emptyBookingDraft(): BookingDraft {
   return {
     clientId: null,

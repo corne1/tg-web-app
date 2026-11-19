@@ -6051,21 +6051,6 @@ label.ms-sheet-item {
   background: #f6f3ff;
 }
 
-.ms-nb-svc-avatar {
-  flex-shrink: 0;
-  width: 44px;
-  height: 44px;
-  border-radius: var(--ms-radius-full);
-  background: var(--ms-purple-soft);
-  color: var(--ms-purple);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: -0.15px;
-}
-
 .ms-nb-svc-icon {
   border-radius: 14px;
 }

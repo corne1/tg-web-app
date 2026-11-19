@@ -4,6 +4,7 @@ import { fetchMe } from "../api";
 import { BookingClientSummary } from "../components/booking/BookingClientSummary";
 import { MasterSetupChrome } from "../components/master/MasterSetupChrome";
 import { MsArrowRight } from "../components/master/MsArrowRight";
+import { ServiceSparkIcon } from "../components/master/ServiceSparkIcon";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
 import clockPurpleIcon from "../assets/cabinet/clock-purple.svg";
@@ -17,7 +18,6 @@ import {
   readBookingDraft,
   resolveBookingClient,
   selectedServicesLabel,
-  serviceLetter,
 } from "../lib/bookingDraft";
 import { clientInitial } from "../lib/bookingClients";
 import {
@@ -226,8 +226,8 @@ export function NewBookingServiceScreen() {
                       className={cx("ms-nb-svc", on && "is-on")}
                       onClick={() => toggle(svc.id)}
                     >
-                      <span className="ms-nb-svc-avatar" aria-hidden>
-                        {serviceLetter(svc.title)}
+                      <span className="ms-service-avatar" aria-hidden>
+                        <ServiceSparkIcon className="ms-service-spark" />
                       </span>
                       <span className="ms-nb-svc-copy">
                         <span className="ms-nb-svc-title">{svc.title}</span>
