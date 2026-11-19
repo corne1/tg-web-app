@@ -5398,7 +5398,7 @@ label.ms-sheet-item {
   cursor: pointer;
 }
 
-/* Figma 21252:47003 Fill+Shadow — no solid white fill; glass via blur + border */
+/* Figma 21252:47003 — shadow only, no white fill or stroke */
 .ms-tabbar {
   flex-shrink: 0;
   display: grid;
@@ -5408,11 +5408,9 @@ label.ms-sheet-item {
   padding: 0;
   min-height: 60px;
   border-radius: 296px;
-  background: transparent;
-  border: 1px solid #fff;
+  background: none;
+  border: none;
   box-shadow: var(--ms-shadow-e3);
-  -webkit-backdrop-filter: blur(24px);
-  backdrop-filter: blur(24px);
   overflow: hidden;
 }
 
