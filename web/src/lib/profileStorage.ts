@@ -47,11 +47,11 @@ export function masterResumePath(profile?: MasterProfile | null): string {
   const p = profile ?? getCachedProfile();
   if (isOnboardingDone(p)) return "/cabinet";
   const step = p?.onboardingStep ?? 0;
-  // No profile progress yet → welcome (Figma 21201:36720).
-  if (!p?.name && !p?.serviceTypeCode) return "/onboarding/welcome";
-  if (step <= 1) return "/onboarding";
+  // No cabinet yet and step 1 is not saved. A draft name from ensure
+  // does not count: welcome is the entry until the profile step is stored.
+  if (step <= 1) return "/onboarding/welcome";
   if (step === 2) return "/onboarding/services";
   if (step === 3) return "/onboarding/hours";
   if (step >= 4) return "/onboarding/place";
-  return "/onboarding";
+  return "/onboarding/welcome";
 }

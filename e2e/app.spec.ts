@@ -33,6 +33,7 @@ test("master publishes a page clients can open", async ({ page }) => {
 test("time sheet shows both quick-choice rows", async ({ page }) => {
   const masterId = uniqueUserId();
   await login(page, { id: masterId, firstName: "Мастер Часы" });
+  await page.getByRole("button", { name: "Создать страницу мастера" }).click();
   await page.getByPlaceholder("Анна").fill("Мастер Часы");
   await page.getByRole("radio", { name: "Маникюр", exact: true }).click();
   await page.getByRole("button", { name: "Продолжить", exact: true }).click();
@@ -432,4 +433,32 @@ test("cabinet edits show on the public page and in slots", async ({ browser }) =
 
   await master.close();
   await client.close();
+});
+
+test("test accounts can restart onboarding", async ({ page }) => {
+  const rejected = await page.request.post("/api/auth/dev", {
+    data: { userId: 1 },
+  });
+  expect(rejected.status()).toBe(400);
+
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Тестовые учётки" })).toBeVisible();
+  await page.getByRole("button", { name: "Заново" }).first().click();
+  await page.getByRole("button", { name: "Создать страницу мастера" }).click();
+  await expect(page.getByText("Шаг 1 из 4")).toBeVisible();
+
+  await page.getByPlaceholder("Анна").fill("Мастер Тест");
+  await page.getByRole("radio", { name: "Маникюр", exact: true }).click();
+  await page.getByRole("button", { name: "Продолжить", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Добавить первую услугу" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Тест" }).click();
+  await page.getByRole("button", { name: "Продолжить" }).first().click();
+  await expect(page.getByRole("button", { name: "Добавить первую услугу" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Тест" }).click();
+  await page.getByRole("button", { name: "Заново" }).first().click();
+  await page.getByRole("button", { name: "Создать страницу мастера" }).click();
+  await expect(page.getByText("Шаг 1 из 4")).toBeVisible();
+  await expect(page.getByPlaceholder("Анна")).toHaveValue("Тест 1");
 });

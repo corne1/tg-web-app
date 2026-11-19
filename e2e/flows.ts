@@ -5,9 +5,9 @@ export async function reachPublishReview(
   input: { name: string; service: string; address: string },
 ): Promise<void> {
   const welcome = page.getByRole("button", { name: "Создать страницу мастера" });
-  if (await welcome.isVisible()) await welcome.click();
-
   const name = page.getByPlaceholder("Анна");
+  await expect(welcome.or(name)).toBeVisible();
+  if (await welcome.isVisible()) await welcome.click();
   await expect(name).toBeVisible();
   await name.fill(input.name);
   await page.getByRole("radio", { name: "Маникюр", exact: true }).click();

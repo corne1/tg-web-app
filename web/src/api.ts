@@ -65,6 +65,41 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+export type DevAccount = {
+  id: number;
+  firstName: string;
+};
+
+export async function fetchDevAccounts(): Promise<DevAccount[] | null> {
+  const res = await fetch("/api/auth/dev");
+  if (res.status === 404) return null;
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new ApiError(body.error ?? `HTTP ${res.status}`, res.status);
+  }
+  const data = (await res.json()) as { accounts?: DevAccount[] };
+  return data.accounts ?? [];
+}
+
+export async function loginDevAccount(userId: number): Promise<{
+  token: string;
+  user: AppUser;
+}> {
+  const data = await request<{ token: string; user: AppUser }>("/api/auth/dev", {
+    method: "POST",
+    body: JSON.stringify({ userId }),
+  });
+  localStorage.setItem(TOKEN_KEY, data.token);
+  return data;
+}
+
+export async function resetDevAccount(userId: number): Promise<void> {
+  await request("/api/auth/dev/reset", {
+    method: "POST",
+    body: JSON.stringify({ userId }),
+  });
+}
+
 export async function authenticate(initData: string): Promise<{
   token: string;
   user: AppUser;

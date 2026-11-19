@@ -4,9 +4,13 @@ import {
   authenticate,
   clearStoredToken,
   ensureMasterProfile,
+  fetchDevAccounts,
   fetchMe,
   getStoredToken,
+  loginDevAccount,
+  resetDevAccount,
   type AppUser,
+  type DevAccount,
 } from "./api";
 import { BootSplash } from "./components/BootSplash";
 import { PageTransition } from "./components/PageTransition";
@@ -16,6 +20,12 @@ import {
   isOnboardingDone,
   masterResumePath,
 } from "./lib/profileStorage";
+import {
+  clearDevAccountId,
+  clearLocalMasterState,
+  readDevAccountId,
+  writeDevAccountId,
+} from "./lib/devAccounts";
 import {
   loadMasterDraft,
   normalizeScheduleBreak,
@@ -52,6 +62,7 @@ import { MyBookingsScreen } from "./screens/MyBookingsScreen";
 import { NotificationsScreen } from "./screens/NotificationsScreen";
 import { OnboardingScreen } from "./screens/OnboardingScreen";
 import { OnboardingSuccessScreen } from "./screens/OnboardingSuccessScreen";
+import { DevAccountsScreen } from "./screens/DevAccountsScreen";
 import { WelcomeMasterScreen } from "./screens/WelcomeMasterScreen";
 import { ScheduleScreen } from "./screens/ScheduleScreen";
 import { HoursSettingsScreen } from "./screens/HoursSettingsScreen";
@@ -196,15 +207,43 @@ export function App() {
   const [profile, setProfile] = useState<MasterProfile | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [devAccounts, setDevAccounts] = useState<DevAccount[] | null>(null);
+  const [devPicker, setDevPicker] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
+
+    function applyMe(me: {
+      user: AppUser;
+      profile: MasterProfile | null;
+      services: Parameters<typeof syncDraftFromServer>[1];
+    }) {
+      setUser(me.user);
+      setProfile(me.profile);
+      cacheProfile(me.profile);
+      syncDraftFromServer(me.profile, me.services);
+    }
 
     async function boot() {
       setLoading(true);
       setError(null);
       void loadServiceTypes().catch(() => undefined);
       try {
+        if (import.meta.env.DEV) {
+          const picked = readDevAccountId();
+          if (picked) {
+            try {
+              await loginDevAccount(picked);
+              const me = await fetchMe();
+              if (!cancelled) applyMe(me);
+              return;
+            } catch {
+              clearDevAccountId();
+              clearStoredToken();
+            }
+          }
+        }
+
         if (initData) {
           const { user: authed } = await authenticate(initData);
           const me = await fetchMe();
@@ -219,13 +258,18 @@ export function App() {
 
         if (getStoredToken()) {
           const me = await fetchMe();
-          if (!cancelled) {
-            setUser(me.user);
-            setProfile(me.profile);
-            cacheProfile(me.profile);
-            syncDraftFromServer(me.profile, me.services);
-          }
+          if (!cancelled) applyMe(me);
           return;
+        }
+
+        if (import.meta.env.DEV) {
+          const accounts = await fetchDevAccounts();
+          if (!cancelled && accounts && accounts.length > 0) {
+            setDevAccounts(accounts);
+            setDevPicker(true);
+            setUser(null);
+            return;
+          }
         }
 
         if (!cancelled) {
@@ -236,6 +280,19 @@ export function App() {
         }
       } catch (err) {
         clearStoredToken();
+        if (import.meta.env.DEV) {
+          try {
+            const accounts = await fetchDevAccounts();
+            if (!cancelled && accounts && accounts.length > 0) {
+              setDevAccounts(accounts);
+              setDevPicker(true);
+              setUser(null);
+              return;
+            }
+          } catch {
+            // keep the auth error below
+          }
+        }
         if (!cancelled) {
           setError(err instanceof Error ? err.message : "Auth failed");
         }
@@ -250,8 +307,36 @@ export function App() {
     };
   }, [initData]);
 
+  async function openDevPicker() {
+    if (!devAccounts) {
+      const accounts = await fetchDevAccounts();
+      if (!accounts || accounts.length === 0) return;
+      setDevAccounts(accounts);
+    }
+    setDevPicker(true);
+  }
+
+  async function enterDevAccount(id: number, reset: boolean) {
+    const prev = readDevAccountId();
+    if (reset || prev !== id) clearLocalMasterState();
+    if (reset) await resetDevAccount(id);
+    await loginDevAccount(id);
+    writeDevAccountId(id);
+    window.location.assign("/");
+  }
+
   if (loading) {
     return <BootSplash framed label="Подключение…" />;
+  }
+
+  if (devPicker && devAccounts) {
+    return (
+      <DevAccountsScreen
+        accounts={devAccounts}
+        onEnter={enterDevAccount}
+        onClose={user ? () => setDevPicker(false) : null}
+      />
+    );
   }
 
   if (error && !user) {
@@ -277,6 +362,15 @@ export function App() {
   return (
     <BrowserRouter>
       <div className="app-frame">
+        {import.meta.env.DEV && (
+          <button
+            type="button"
+            className="dev-account-fab"
+            onClick={() => void openDevPicker()}
+          >
+            Тест
+          </button>
+        )}
         <PageTransition>
           <Routes>
             <Route
