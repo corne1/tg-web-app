@@ -22,7 +22,9 @@ import {
   type BookingClient,
 } from "../lib/bookingClients";
 import { patchBookingDraft } from "../lib/bookingDraft";
+import { loadMasterDraft } from "../lib/masterDraft";
 import { cx, Input } from "../ui";
+import { bookingNeedsPlaceStep } from "./NewBookingPlaceScreen";
 
 function SearchIcon() {
   return (
@@ -190,6 +192,7 @@ export function NewBookingClientScreen() {
     <>
       <MasterSetupChrome
         step={1}
+        stepTotal={bookingNeedsPlaceStep(loadMasterDraft().placeMode) ? 5 : 4}
         progressFilled={1}
         topTitle="Новая запись"
         onBack={goCabinet}

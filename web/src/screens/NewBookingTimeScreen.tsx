@@ -20,7 +20,7 @@ import {
 } from "../lib/bookingDraft";
 import { loadMasterDraft } from "../lib/masterDraft";
 import { monthTitle, sameDay } from "../lib/scheduleUi";
-import { cx } from "../ui";
+import { ChevronRightIcon, cx } from "../ui";
 import { bookingNeedsPlaceStep } from "./NewBookingPlaceScreen";
 
 const DOW = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
@@ -98,6 +98,7 @@ export function NewBookingTimeScreen() {
   return (
     <MasterSetupChrome
       step={3}
+      stepTotal={bookingNeedsPlaceStep(loadMasterDraft().placeMode) ? 5 : 4}
       progressFilled={3}
       topTitle="Новая запись"
       onBack={goBack}
@@ -245,7 +246,8 @@ export function NewBookingTimeScreen() {
               className="ms-nb-custom-time"
               onClick={() => setCustomOpen(true)}
             >
-              Выбрать другое время
+              <span>Выбрать другое время</span>
+              <ChevronRightIcon />
             </button>
           </section>
         ) : null}

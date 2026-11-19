@@ -3,7 +3,9 @@ import { BackIcon, CloseIcon, IconButton } from "../../ui";
 import { MsToast } from "./MsToast";
 
 type Props = {
-  step: 1 | 2 | 3 | 4;
+  step: 1 | 2 | 3 | 4 | 5;
+  /** Wizard length. Onboarding stays 4; a booking with a place step is 5. */
+  stepTotal?: number;
   progressFilled: number;
   /** Top bar title; defaults to «Настройки записи». */
   topTitle?: string;
@@ -23,6 +25,7 @@ type Props = {
 
 export function MasterSetupChrome({
   step,
+  stepTotal = 4,
   progressFilled,
   topTitle = "Настройки записи",
   hideWizardChrome = false,
@@ -55,7 +58,7 @@ export function MasterSetupChrome({
               </IconButton>
               <div className="ms-top-titles">
                 <h1 className="ms-top-title">{topTitle}</h1>
-                <p className="ms-top-sub">Шаг {step} из 4</p>
+                <p className="ms-top-sub">Шаг {step} из {stepTotal}</p>
               </div>
               {onClose ? (
                 <IconButton label="Закрыть" onClick={onClose}>
@@ -67,7 +70,7 @@ export function MasterSetupChrome({
             </header>
 
             <div className="ms-progress" aria-hidden>
-              {[1, 2, 3, 4].map((i) => (
+              {Array.from({ length: stepTotal }, (_, index) => index + 1).map((i) => (
                 <span
                   key={i}
                   className={`ms-progress-seg ${i <= progressFilled ? "is-on" : ""}`}

@@ -26,6 +26,7 @@ import {
   type MasterService,
 } from "../lib/masterDraft";
 import { cx } from "../ui";
+import { bookingNeedsPlaceStep } from "./NewBookingPlaceScreen";
 
 function NotePinIcon() {
   return (
@@ -118,6 +119,7 @@ export function NewBookingServiceScreen() {
     <>
       <MasterSetupChrome
         step={2}
+        stepTotal={bookingNeedsPlaceStep(loadMasterDraft().placeMode) ? 5 : 4}
         progressFilled={2}
         topTitle="Новая запись"
         onBack={goBack}

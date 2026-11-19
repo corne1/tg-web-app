@@ -6321,19 +6321,32 @@ label.ms-sheet-item {
   color: var(--ms-purple);
 }
 
+/* Figma 21234:43823 Button-Primary / Outline, 44px, chevron trailing */
 .ms-nb-custom-time {
   appearance: none;
-  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 44px;
   margin: 0;
-  padding: 0;
-  border: none;
-  background: none;
-  color: var(--ms-purple);
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: -0.14px;
-  line-height: 20px;
+  padding: 10px 16px;
+  border-radius: var(--ms-radius-full);
+  border: 1px solid var(--ms-line);
+  background: #fff;
+  color: var(--ms-ink);
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.16px;
+  line-height: 24px;
+  box-shadow: var(--ms-shadow-e1);
   cursor: pointer;
+  box-sizing: border-box;
+}
+
+.ms-nb-custom-time svg {
+  flex-shrink: 0;
+  color: var(--ms-tertiary);
 }
 
 .ms-nb-review {
@@ -7767,16 +7780,99 @@ label.ms-sheet-item {
   gap: 16px;
 }
 
-.ms-nb-place-studio {
-  margin: 0;
-  padding: 14px 16px;
-  border-radius: 16px;
-  background: var(--ms-fill2);
+/* Figma 21422:15801 — place choice cards */
+.ms-nb-place-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ms-nb-place-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 16px;
+  border: 1.5px solid var(--ms-line);
+  border-radius: 20px;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ms-nb-place-card.is-on {
+  border-color: var(--ms-purple);
+}
+
+.ms-nb-place-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: var(--ms-soft);
+  color: var(--ms-purple);
+}
+
+.ms-nb-place-copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ms-nb-place-title {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 22px;
+  color: var(--ms-ink);
+}
+
+.ms-nb-place-sub {
   font-size: 14px;
   font-weight: 400;
-  letter-spacing: -0.14px;
   line-height: 20px;
   color: var(--ms-muted);
+}
+
+.ms-nb-place-link {
+  align-self: flex-start;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  color: var(--ms-purple);
+  cursor: pointer;
+}
+
+.ms-nb-place-radio {
+  position: relative;
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  margin-top: 9px;
+  border: 1.5px solid var(--ms-line);
+  border-radius: 999px;
+  background: #fff;
+}
+
+.ms-nb-place-card.is-on .ms-nb-place-radio {
+  border-color: var(--ms-purple);
+}
+
+.ms-nb-place-card.is-on .ms-nb-place-radio::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border-radius: 999px;
+  background: var(--ms-purple);
 }
 
 .ms-visually-hidden {

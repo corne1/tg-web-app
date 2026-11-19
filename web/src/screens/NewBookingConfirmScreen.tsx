@@ -84,8 +84,9 @@ export function NewBookingConfirmScreen() {
 
   return (
     <MasterSetupChrome
-      step={4}
-      progressFilled={4}
+      step={bookingNeedsPlaceStep(loadMasterDraft().placeMode) ? 5 : 4}
+      stepTotal={bookingNeedsPlaceStep(loadMasterDraft().placeMode) ? 5 : 4}
+      progressFilled={bookingNeedsPlaceStep(loadMasterDraft().placeMode) ? 5 : 4}
       topTitle="Новая запись"
       onBack={goBack}
       onClose={goCabinet}
