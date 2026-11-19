@@ -11,6 +11,7 @@ import timerIcon from "../assets/cabinet/timer.svg";
 import usersRoundIcon from "../assets/cabinet/users-round.svg";
 import { ScheduleListSkeleton } from "../components/calendar/Skeleton";
 import { MasterTabBar } from "../components/master/MasterTabBar";
+import { ScheduleDateSheet } from "../components/master/ScheduleDateSheet";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
 import { dateToISO, emptyBookingDraft, writeBookingDraft } from "../lib/bookingDraft";
@@ -58,6 +59,7 @@ export function ScheduleScreen() {
   const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [weekCursor, setWeekCursor] = useState(() => startOfWeek(new Date()));
+  const [dateSheetOpen, setDateSheetOpen] = useState(false);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [profile, setProfile] = useState<MasterProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -139,12 +141,6 @@ export function ScheduleScreen() {
     });
   }, []);
 
-  const goToday = useCallback(() => {
-    const today = new Date();
-    setSelectedDate(today);
-    setWeekCursor(startOfWeek(today));
-  }, []);
-
   const goAdd = useCallback(
     (opts?: { prefillTime?: string | null; fromFreeSlot?: boolean }) => {
       // Blur #21 / #23: prefill date/time only; never mutate workingHours.
@@ -201,8 +197,8 @@ export function ScheduleScreen() {
             <button
               type="button"
               className="ms-cab-cal-btn"
-              onClick={goToday}
-              aria-label="Перейти к сегодня"
+              onClick={() => setDateSheetOpen(true)}
+              aria-label="Выбрать дату"
             >
               <img src={calendarIcon} width={20} height={20} alt="" />
             </button>
@@ -403,6 +399,17 @@ export function ScheduleScreen() {
       </div>
 
       <MasterTabBar />
+
+      <ScheduleDateSheet
+        open={dateSheetOpen}
+        selected={selectedDate}
+        hasBooking={(day) => bookedDayKeys.has(dayKey(day))}
+        onClose={() => setDateSheetOpen(false)}
+        onConfirm={(day) => {
+          selectDay(day);
+          setDateSheetOpen(false);
+        }}
+      />
     </div>
   );
 }

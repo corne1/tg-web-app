@@ -30,6 +30,56 @@ test("master publishes a page clients can open", async ({ page }) => {
   await expect(page.getByText("Кнопка демонстрационная, неактивна")).toBeVisible();
 });
 
+test("schedule calendar sheet picks a date", async ({ page }) => {
+  const masterId = uniqueUserId();
+  await login(page, { id: masterId, firstName: "Мастер Даты" });
+  await publishMaster(page, {
+    name: "Мастер Даты",
+    service: `Маникюр ${masterId}`,
+    address: `Тверская ${masterId}`,
+  });
+  await page.getByRole("button", { name: "Перейти в расписание" }).click();
+  await expect(page.getByRole("heading", { name: "Расписание", exact: true })).toBeVisible();
+
+  const target = new Date();
+  target.setDate(15);
+  const monthGen = [
+    "января",
+    "февраля",
+    "марта",
+    "апреля",
+    "мая",
+    "июня",
+    "июля",
+    "августа",
+    "сентября",
+    "октября",
+    "ноября",
+    "декабря",
+  ][target.getMonth()];
+  const weekday = [
+    "Воскресенье",
+    "Понедельник",
+    "Вторник",
+    "Среда",
+    "Четверг",
+    "Пятница",
+    "Суббота",
+  ][target.getDay()];
+  const dayLabel = `${target.getDate()} ${monthGen}`;
+
+  await page.getByRole("button", { name: "Выбрать дату" }).click();
+  await expect(page.getByRole("heading", { name: "Выберите дату" })).toBeVisible();
+  await expect(page.getByText("Есть записи")).toBeVisible();
+  await page.getByRole("gridcell", { name: dayLabel }).click();
+  await page.screenshot({ path: "test-results/schedule-date-sheet.png" });
+  await page.getByRole("button", { name: "Готово" }).click();
+  await expect(page.getByRole("heading", { name: "Выберите дату" })).toHaveCount(0);
+  await expect(
+    page.getByRole("heading", { name: `${weekday}, ${dayLabel}` }),
+  ).toBeVisible();
+});
+
 test("publish review edits return to the checklist", async ({ page }) => {
   const masterId = uniqueUserId();
   const service = `Маникюр ${masterId}`;

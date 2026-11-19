@@ -4832,6 +4832,165 @@ label.ms-sheet-item {
   flex-shrink: 0;
 }
 
+.ms-cab-date-sheet {
+  max-height: min(92dvh, 740px);
+  gap: 16px;
+  padding: 12px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+}
+
+.ms-cab-date-head {
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
+  align-items: center;
+  min-height: 44px;
+}
+
+.ms-cab-date-head-side {
+  width: 44px;
+  height: 44px;
+}
+
+.ms-cab-date-close {
+  background: var(--ms-fill2);
+  border-color: transparent;
+}
+
+.ms-cab-date-cal {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ms-cab-date-month {
+  display: grid;
+  grid-template-columns: 36px 1fr 36px;
+  align-items: center;
+}
+
+.ms-cab-date-month-title {
+  margin: 0;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.16px;
+  line-height: 22px;
+  color: var(--ms-ink);
+}
+
+.ms-cab-date-nav {
+  appearance: none;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--ms-ink);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.ms-cab-date-chevron.is-prev {
+  transform: rotate(180deg);
+}
+
+.ms-cab-date-dow,
+.ms-cab-date-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.ms-cab-date-dow {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: -0.12px;
+  line-height: 16px;
+  color: var(--ms-tertiary);
+}
+
+.ms-cab-date-day {
+  appearance: none;
+  position: relative;
+  height: 44px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--ms-ink);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ms-cab-date-num {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--ms-radius-full);
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+}
+
+.ms-cab-date-day.is-out {
+  color: var(--ms-tertiary);
+}
+
+.ms-cab-date-day.is-on .ms-cab-date-num {
+  background: var(--ms-purple-soft);
+  color: var(--ms-purple);
+}
+
+.ms-cab-date-dot {
+  position: absolute;
+  left: 50%;
+  bottom: 2px;
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  border-radius: 50%;
+  background: var(--ms-purple);
+}
+
+.ms-cab-date-legend {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--ms-line);
+  border-radius: var(--ms-radius-full);
+  background: #fff;
+}
+
+.ms-cab-date-legend-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  color: var(--ms-ink);
+}
+
+.ms-cab-date-legend-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--ms-purple);
+}
+
+.ms-cab-date-legend-info {
+  display: inline-flex;
+  color: var(--ms-tertiary);
+}
+
 .ms-cab-week {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
