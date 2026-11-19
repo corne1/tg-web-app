@@ -26,10 +26,12 @@ import {
 } from "../lib/masterAvatar";
 import { loadPublicAbout, savePublicAbout } from "../lib/publicProfile";
 import {
+  BackIcon,
   Button,
   Chip,
   ChipGroup,
   Field,
+  IconButton,
   Input,
   RadioMark,
   Textarea,
@@ -213,18 +215,29 @@ export function OnboardingScreen() {
     webApp?.HapticFeedback?.selectionChanged?.();
   }, [webApp]);
 
-  useBackButton(null);
+  const goBackToReview = useCallback(() => {
+    persistLocal();
+    navigateToOnboardingReview(navigate);
+  }, [navigate, persistLocal]);
+
+  useBackButton(fromReview ? goBackToReview : null);
   useMainButton({ text: "", visible: false, onClick: () => undefined });
 
   return (
     <div className="master-setup">
       <div className="ms-toolbar">
         <div className="ms-toolbar-nav">
-          <header className="ms-top ms-top-start">
+          <header className={fromReview ? "ms-top" : "ms-top ms-top-start"}>
+            {fromReview ? (
+              <IconButton label="Назад" onClick={goBackToReview}>
+                <BackIcon />
+              </IconButton>
+            ) : null}
             <div className="ms-top-titles">
               <h1 className="ms-top-title">Настройки записи</h1>
               <p className="ms-top-sub">Шаг 1 из 4</p>
             </div>
+            {fromReview ? <span className="ms-top-spacer" aria-hidden /> : null}
           </header>
 
           <div className="ms-progress" aria-hidden>

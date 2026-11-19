@@ -1,6 +1,6 @@
 import { expect, type Page } from "@playwright/test";
 
-export async function publishMaster(
+export async function reachPublishReview(
   page: Page,
   input: { name: string; service: string; address: string },
 ): Promise<void> {
@@ -31,6 +31,16 @@ export async function publishMaster(
   await page.getByRole("button", { name: /^Москва/ }).click();
   await page.getByPlaceholder("Улица, дом, офис").fill(input.address);
   await page.getByRole("button", { name: "Продолжить", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Проверьте профиль" }),
+  ).toBeVisible();
+}
+
+export async function publishMaster(
+  page: Page,
+  input: { name: string; service: string; address: string },
+): Promise<void> {
+  await reachPublishReview(page, input);
   await page.getByRole("button", { name: "Опубликовать профиль" }).click();
   await expect(
     page.getByRole("heading", { name: "Профиль опубликован!" }),

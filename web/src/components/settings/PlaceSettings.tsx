@@ -8,8 +8,10 @@ import {
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   clearFromReview,
+  clearRememberedPlaceStage,
+  initialOnboardingPlaceStage,
   markFromReview,
-  readReviewState,
+  rememberOnboardingReview,
 } from "../../lib/onboardingReviewEdit";
 import {
   completeMasterOnboarding,
@@ -163,10 +165,9 @@ export function PlaceSettings({ mode }: { mode: SettingsMode }) {
   const { webApp } = useTelegram();
   const initial = loadMasterDraft();
 
-  const [stage, setStage] = useState<PlaceStage>(() => {
-    const requested = readReviewState(location.state).placeStage;
-    return requested === 2 || requested === 3 ? requested : 1;
-  });
+  const [stage, setStage] = useState<PlaceStage>(() =>
+    isSettings ? 1 : initialOnboardingPlaceStage(location.state),
+  );
   /** Editing place details via review «Изменить» — Save returns to stage 3. */
   const [placeEditFromReview, setPlaceEditFromReview] = useState(false);
   const [placeMode, setPlaceMode] = useState<PlaceMode | null>(
@@ -211,15 +212,15 @@ export function PlaceSettings({ mode }: { mode: SettingsMode }) {
     void setMasterOnboardingStep(4).catch(() => undefined);
   }, [isSettings]);
 
-  // Land on review (or a requested stage) after editing another wizard step.
+  // Remember the checklist so a later history POP (state was never written
+  // onto the original place entry) still opens «Проверьте профиль».
+  // Do not replace the history entry here: a new location key remounts the
+  // route and used to drop the stage back to 1.
   useEffect(() => {
-    const requested = readReviewState(location.state).placeStage;
-    if (requested !== 1 && requested !== 2 && requested !== 3) return;
-    setStage(requested);
-    setPlaceEditFromReview(false);
-    if (requested === 3) clearFromReview();
-    navigate(location.pathname, { replace: true, state: null });
-  }, [location.pathname, location.state, navigate]);
+    if (isSettings || stage !== 3 || placeEditFromReview) return;
+    rememberOnboardingReview();
+    clearFromReview();
+  }, [isSettings, placeEditFromReview, stage]);
 
   useEffect(() => {
     let cancelled = false;
@@ -308,6 +309,8 @@ export function PlaceSettings({ mode }: { mode: SettingsMode }) {
       return;
     }
     persist();
+    clearFromReview();
+    clearRememberedPlaceStage();
     navigate("/onboarding/hours");
   }, [
     activeCityField,
@@ -480,6 +483,8 @@ export function PlaceSettings({ mode }: { mode: SettingsMode }) {
         place,
       });
       cacheProfile(profile);
+      clearFromReview();
+      clearRememberedPlaceStage();
       webApp?.HapticFeedback?.notificationOccurred("success");
       navigate("/onboarding/success", {
         replace: true,
@@ -513,6 +518,7 @@ export function PlaceSettings({ mode }: { mode: SettingsMode }) {
   const handleSaveExit = useCallback(() => {
     persist();
     void syncPlaceToServer();
+    clearFromReview();
     webApp?.HapticFeedback?.notificationOccurred("success");
     navigate(isSettings ? "/cabinet/profile" : "/");
   }, [isSettings, navigate, persist, syncPlaceToServer, webApp]);
@@ -1095,9 +1101,11 @@ export function PlaceSettings({ mode }: { mode: SettingsMode }) {
         {primaryLabel}
         {stage < 3 && !placeEditFromReview && <MsArrowRight />}
       </Button>
-      <Button variant="secondary" onClick={handleSaveExit}>
-        Сохранить и выйти
-      </Button>
+      {placeEditFromReview ? null : (
+        <Button variant="secondary" onClick={handleSaveExit}>
+          Сохранить и выйти
+        </Button>
+      )}
     </>
   );
 

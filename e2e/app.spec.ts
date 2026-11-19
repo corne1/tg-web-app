@@ -4,6 +4,7 @@ import {
   bookClientSlot,
   pickMasterSlot,
   publishMaster,
+  reachPublishReview,
   showScheduleCard,
 } from "./flows.ts";
 
@@ -27,6 +28,60 @@ test("master publishes a page clients can open", async ({ page }) => {
   await expect(page.getByText(service)).toBeVisible();
   await expect(page.getByText(`Москва, ${address}`)).toBeVisible();
   await expect(page.getByText("Кнопка демонстрационная, неактивна")).toBeVisible();
+});
+
+test("publish review edits return to the checklist", async ({ page }) => {
+  const masterId = uniqueUserId();
+  const service = `Маникюр ${masterId}`;
+  await login(page, { id: masterId, firstName: "Мастер Правки" });
+  await reachPublishReview(page, {
+    name: "Мастер Правки",
+    service,
+    address: `Тверская ${masterId}`,
+  });
+
+  const review = page.getByRole("heading", { name: "Проверьте профиль" });
+  const publish = page.getByRole("button", { name: "Опубликовать профиль" });
+  const edits = page.getByRole("button", { name: "Редактировать", exact: true });
+
+  await edits.nth(2).click();
+  await expect(
+    page.getByRole("heading", { name: "Когда вы принимаете клиентов?" }),
+  ).toBeVisible();
+  await page.goBack();
+  await expect(review).toBeVisible();
+  await expect(publish).toBeVisible();
+  await expect(page.getByText("Этап 1")).toHaveCount(0);
+
+  await edits.nth(0).click();
+  await page.getByRole("button", { name: "Назад", exact: true }).click();
+  await expect(review).toBeVisible();
+  await expect(publish).toBeVisible();
+
+  await edits.nth(1).click();
+  await page.getByRole("button", { name: "Действия" }).click();
+  await page.getByRole("menuitem", { name: "Редактировать" }).click();
+  await page.getByRole("button", { name: "Сохранить изменения" }).click();
+  await expect(page.getByRole("listitem").getByText(service)).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Когда вы принимаете клиентов?" }),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "Сохранить", exact: true }).click();
+  await expect(review).toBeVisible();
+  await expect(publish).toBeVisible();
+
+  await edits.nth(2).click();
+  await page.getByRole("button", { name: "Сохранить", exact: true }).click();
+  await expect(review).toBeVisible();
+  await expect(publish).toBeVisible();
+  await expect(page.getByText("Этап 1")).toHaveCount(0);
+
+  await edits.nth(3).click();
+  await expect(page.getByText("Этап 2")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Сохранить и выйти" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Сохранить", exact: true }).click();
+  await expect(review).toBeVisible();
+  await expect(publish).toBeVisible();
 });
 
 test("master creates a booking and sees it on the schedule", async ({ page }) => {
