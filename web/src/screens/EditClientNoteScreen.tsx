@@ -5,21 +5,13 @@ import {
   fetchCabinetClient,
   updateCabinetClientNote,
 } from "../api";
+import { ClientNoteFields } from "../components/clientNote/ClientNoteFields";
+import { noteTitleOrDefault } from "../lib/clientNote";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
 import { useTelegram } from "../hooks/useTelegram";
 import modalTrashIcon from "../assets/onboarding/modal-trash.svg";
-import {
-  BackIcon,
-  Button,
-  CloseIcon,
-  Field,
-  IconButton,
-  Input,
-  Modal,
-  Textarea,
-  TEXTAREA_MAX_LEN,
-} from "../ui";
+import { BackIcon, Button, CloseIcon, IconButton, Modal } from "../ui";
 
 /** Figma — «Редактирование заметки» next to create-note. */
 export function EditClientNoteScreen() {
@@ -84,7 +76,7 @@ export function EditClientNoteScreen() {
     setError(null);
     try {
       await updateCabinetClientNote(clientId, noteId, {
-        title: title.trim() || "Заметка",
+        title: noteTitleOrDefault(title),
         body: body.trim(),
       });
       webApp?.HapticFeedback?.notificationOccurred("success");
@@ -145,25 +137,12 @@ export function EditClientNoteScreen() {
           <p className="ms-cc-empty-line">Загрузка…</p>
         ) : (
           <>
-            <Field label="Заголовок" as="label">
-              <Input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Например, Предпочтения по форме"
-                autoComplete="off"
-              />
-            </Field>
-
-            <Field label="Текст заметки" as="label">
-              <Textarea
-                rows={5}
-                maxLength={TEXTAREA_MAX_LEN}
-                value={body}
-                onChange={(e) => setBody(e.target.value)}
-                placeholder="Запишите, что важно помнить об этом клиенте..."
-              />
-            </Field>
+            <ClientNoteFields
+              title={title}
+              body={body}
+              onTitle={setTitle}
+              onBody={setBody}
+            />
           </>
         )}
 

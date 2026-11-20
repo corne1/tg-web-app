@@ -7,6 +7,7 @@ import {
   canCancelBooking,
   canRescheduleBooking,
 } from "../lib/bookingRules.js";
+import { hydrateBookings } from "./bookingRows.js";
 import { withDb } from "./client.js";
 import type {
   BookingPlaceChoice,
@@ -15,91 +16,15 @@ import type {
   BookingStatus,
 } from "./types.js";
 
+export { bookingServiceTitles } from "./bookingRows.js";
+export {
+  listDueReminders,
+  markReminded,
+  type ReminderCandidate,
+} from "./bookingReminders.js";
+
 export function newBookingAccessToken(): string {
   return randomBytes(18).toString("base64url");
-}
-
-function mapBookingService(row: Record<string, unknown>): BookingServiceRow {
-  return {
-    id: String(row.id),
-    booking_id: String(row.booking_id),
-    service_id: row.service_id != null ? String(row.service_id) : null,
-    sort_order: Number(row.sort_order ?? 0),
-    title: String(row.title),
-    duration_min: Number(row.duration_min),
-    break_after_min: Number(row.break_after_min ?? 0),
-    price: Number(row.price),
-    price_mode: row.price_mode === "from" ? "from" : "fixed",
-    created_at: String(row.created_at),
-  };
-}
-
-function mapBooking(
-  row: Record<string, unknown>,
-  services: BookingServiceRow[] = [],
-): BookingRow {
-  const placeRaw = row.place_choice != null ? String(row.place_choice) : null;
-  const placeChoice: BookingPlaceChoice | null =
-    placeRaw === "studio" || placeRaw === "visit" ? placeRaw : null;
-  return {
-    id: String(row.id),
-    master_id: Number(row.master_id),
-    client_id: Number(row.client_id),
-    starts_at: String(row.starts_at),
-    duration_min: Number(row.duration_min),
-    price: Number(row.price),
-    price_from: Boolean(row.price_from),
-    status: String(row.status) as BookingStatus,
-    paid: Boolean(row.paid),
-    client_name: String(row.client_name),
-    reminded_24h: Boolean(row.reminded_24h),
-    reminded_1h: Boolean(row.reminded_1h),
-    created_at: String(row.created_at),
-    updated_at: String(row.updated_at),
-    master_client_id:
-      row.master_client_id != null ? String(row.master_client_id) : null,
-    access_token: row.access_token != null ? String(row.access_token) : null,
-    place_choice: placeChoice,
-    place_address:
-      row.place_address != null ? String(row.place_address) : null,
-    client_comment:
-      row.client_comment != null ? String(row.client_comment) : null,
-    visit_json: row.visit_json != null ? String(row.visit_json) : null,
-    services,
-  };
-}
-
-async function loadServicesForBookings(
-  db: Parameters<Parameters<typeof withDb>[0]>[0],
-  bookingIds: string[],
-): Promise<Map<string, BookingServiceRow[]>> {
-  const map = new Map<string, BookingServiceRow[]>();
-  if (bookingIds.length === 0) return map;
-  const placeholders = bookingIds.map(() => "?").join(", ");
-  const result = await db.execute({
-    sql: `SELECT * FROM booking_services
-      WHERE booking_id IN (${placeholders})
-      ORDER BY sort_order ASC, created_at ASC`,
-    args: bookingIds,
-  });
-  for (const row of result.rows) {
-    const svc = mapBookingService(row as unknown as Record<string, unknown>);
-    const list = map.get(svc.booking_id) ?? [];
-    list.push(svc);
-    map.set(svc.booking_id, list);
-  }
-  return map;
-}
-
-async function hydrateBookings(
-  db: Parameters<Parameters<typeof withDb>[0]>[0],
-  rows: Record<string, unknown>[],
-): Promise<BookingRow[]> {
-  const ids = rows.map((r) => String(r.id));
-  const servicesMap = await loadServicesForBookings(db, ids);
-  return rows.map((r) =>
-    mapBooking(r, servicesMap.get(String(r.id)) ?? []),
-  );
 }
 
 export type BookingServiceInput = {
@@ -581,67 +506,4 @@ export async function markPaid(
     });
     return { ...booking, paid: true, status: "paid", updated_at: now };
   });
-}
-
-export type ReminderCandidate = BookingRow & {
-  master_name: string;
-  master_timezone: string;
-  client_telegram_id: number;
-  master_telegram_id: number;
-};
-
-export async function listDueReminders(
-  kind: "24h" | "1h",
-  now = new Date(),
-): Promise<ReminderCandidate[]> {
-  const windowMs = kind === "24h" ? 24 * 60 * 60 * 1000 : 60 * 60 * 1000;
-  const slackMs = kind === "24h" ? 60 * 60 * 1000 : 15 * 60 * 1000;
-  const from = new Date(now.getTime() + windowMs - slackMs).toISOString();
-  const to = new Date(now.getTime() + windowMs + slackMs).toISOString();
-  const flagCol = kind === "24h" ? "reminded_24h" : "reminded_1h";
-
-  return withDb(async (db) => {
-    const result = await db.execute({
-      sql: `SELECT b.*, p.name AS master_name, p.timezone AS master_timezone
-        FROM bookings b
-        JOIN master_profiles p ON p.user_id = b.master_id
-        WHERE b.status != 'cancelled'
-          AND b.${flagCol} = 0
-          AND b.starts_at >= ?
-          AND b.starts_at < ?`,
-      args: [from, to],
-    });
-
-    const hydrated = await hydrateBookings(
-      db,
-      result.rows as unknown as Record<string, unknown>[],
-    );
-    return hydrated.map((base, i) => {
-      const r = result.rows[i]!;
-      return {
-        ...base,
-        master_name: String(r.master_name),
-        master_timezone: String(r.master_timezone),
-        client_telegram_id: base.client_id,
-        master_telegram_id: base.master_id,
-      };
-    });
-  });
-}
-
-export async function markReminded(
-  id: string,
-  kind: "24h" | "1h",
-): Promise<void> {
-  const col = kind === "24h" ? "reminded_24h" : "reminded_1h";
-  await withDb(async (db) => {
-    await db.execute({
-      sql: `UPDATE bookings SET ${col} = 1, updated_at = ? WHERE id = ?`,
-      args: [new Date().toISOString(), id],
-    });
-  });
-}
-
-export function bookingServiceTitles(booking: BookingRow): string[] {
-  return booking.services.map((s) => s.title).filter(Boolean);
 }

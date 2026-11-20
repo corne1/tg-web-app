@@ -1,73 +1,25 @@
 import type { ScheduleKind } from "../db/types.js";
+import {
+  defaultScheduleBreak,
+  defaultWorkingHours,
+  normalizeScheduleBreak,
+  normalizeWorkingHours as normalizeHours,
+  parseClockMinutes as timeToMinutes,
+  WEEKDAY_IDS,
+  type DayHours,
+  type ScheduleBreak,
+  type WeekdayId,
+  type WorkingHours,
+} from "./hoursNormalize.js";
 
-export type WeekdayId =
-  | "mon"
-  | "tue"
-  | "wed"
-  | "thu"
-  | "fri"
-  | "sat"
-  | "sun";
-
-export type DayHours = {
-  enabled: boolean;
-  start: string;
-  end: string;
+export type { DayHours, ScheduleBreak, WeekdayId, WorkingHours };
+export {
+  defaultScheduleBreak,
+  defaultWorkingHours,
+  normalizeScheduleBreak,
+  WEEKDAY_IDS,
+  timeToMinutes,
 };
-
-export type WorkingHours = Record<WeekdayId, DayHours>;
-
-/** Blocked lunch/break window (Figma «Добавить перерыв»). */
-export type ScheduleBreak = {
-  enabled: boolean;
-  start: string | null;
-  end: string | null;
-  days: WeekdayId[];
-};
-
-export const WEEKDAY_IDS: WeekdayId[] = [
-  "mon",
-  "tue",
-  "wed",
-  "thu",
-  "fri",
-  "sat",
-  "sun",
-];
-
-export function defaultScheduleBreak(): ScheduleBreak {
-  return {
-    enabled: false,
-    start: null,
-    end: null,
-    days: ["mon", "tue", "wed", "thu", "fri"],
-  };
-}
-
-export function normalizeScheduleBreak(raw: unknown): ScheduleBreak {
-  const base = defaultScheduleBreak();
-  if (!raw || typeof raw !== "object") return base;
-  const src = raw as Partial<ScheduleBreak>;
-  const days = Array.isArray(src.days)
-    ? src.days.filter((d): d is WeekdayId =>
-        (WEEKDAY_IDS as string[]).includes(String(d)),
-      )
-    : base.days;
-  const start =
-    typeof src.start === "string" && timeToMinutes(src.start) != null
-      ? src.start
-      : null;
-  const end =
-    typeof src.end === "string" && timeToMinutes(src.end) != null
-      ? src.end
-      : null;
-  return {
-    enabled: Boolean(src.enabled),
-    start,
-    end,
-    days: days.length > 0 ? days : base.days,
-  };
-}
 
 /** Persist hours + optional break in one JSON blob. */
 export function stringifyWorkingHoursBundle(
@@ -132,53 +84,8 @@ export const JS_WEEKDAY_TO_ID: WeekdayId[] = [
 
 export type DayWindow = { startHour: number; endHour: number; startMin: number; endMin: number };
 
-export function timeToMinutes(time: string): number | null {
-  const m = /^(\d{1,2}):(\d{2})$/.exec(String(time).trim());
-  if (!m) return null;
-  const h = Number(m[1]);
-  const min = Number(m[2]);
-  if (!Number.isFinite(h) || !Number.isFinite(min)) return null;
-  if (h < 0 || h > 23 || min < 0 || min > 59) return null;
-  return h * 60 + min;
-}
-
-function defaultDay(enabled: boolean, start = "10:00", end = "18:00"): DayHours {
-  return { enabled, start, end };
-}
-
-export function defaultWorkingHours(): WorkingHours {
-  return {
-    mon: defaultDay(true),
-    tue: defaultDay(true),
-    wed: defaultDay(true),
-    thu: defaultDay(true),
-    fri: defaultDay(true),
-    sat: defaultDay(false),
-    sun: defaultDay(false),
-  };
-}
-
-export function normalizeWorkingHours(
-  raw: unknown,
-): WorkingHours | null {
-  if (!raw || typeof raw !== "object") return null;
-  const src = raw as Partial<Record<WeekdayId, Partial<DayHours>>>;
-  const base = defaultWorkingHours();
-  let any = false;
-  for (const id of WEEKDAY_IDS) {
-    const row = src[id];
-    if (!row || typeof row !== "object") continue;
-    any = true;
-    const start = typeof row.start === "string" ? row.start : base[id].start;
-    const end = typeof row.end === "string" ? row.end : base[id].end;
-    if (timeToMinutes(start) == null || timeToMinutes(end) == null) continue;
-    base[id] = {
-      enabled: Boolean(row.enabled),
-      start,
-      end,
-    };
-  }
-  return any ? base : null;
+export function normalizeWorkingHours(raw: unknown): WorkingHours | null {
+  return normalizeHours(raw, "strict");
 }
 
 export function parseWorkingHoursJson(

@@ -24,6 +24,7 @@ import {
   normalizeScheduleBreak,
   normalizeWorkingHours,
 } from "../lib/workingHours.js";
+import { readMasterProfileBody } from "../lib/masterProfileInput.js";
 import { requireSession, type AuthedRequest } from "../middleware.js";
 import { serializeProfile, serializeService } from "./serializers.js";
 
@@ -55,25 +56,13 @@ masterRouter.post("/ensure", requireSession, async (req: AuthedRequest, res) => 
 /** Master onboarding step 1 — identity by Telegram user id. */
 masterRouter.put("/profile", requireSession, async (req: AuthedRequest, res) => {
   const tg = req.telegramUser!;
-  const body = req.body ?? {};
-  const name = typeof body.name === "string" ? body.name.trim() : "";
-  const serviceTypeCode =
-    typeof body.serviceTypeCode === "string"
-      ? body.serviceTypeCode.trim()
-      : "";
-  const city =
-    typeof body.city === "string" && body.city.trim()
-      ? body.city.trim()
-      : "Москва";
+  const parsed = readMasterProfileBody(req.body);
+  if (!parsed.ok) {
+    res.status(400).json({ error: parsed.error });
+    return;
+  }
+  const { name, serviceTypeCode, city, aboutText } = parsed.value;
 
-  if (!name || name.length > 80) {
-    res.status(400).json({ error: "Invalid name" });
-    return;
-  }
-  if (!serviceTypeCode || serviceTypeCode.length > 40) {
-    res.status(400).json({ error: "Invalid serviceTypeCode" });
-    return;
-  }
   if (!(await isValidServiceTypeCode(serviceTypeCode))) {
     res.status(400).json({ error: "Unknown service type" });
     return;
@@ -82,9 +71,6 @@ masterRouter.put("/profile", requireSession, async (req: AuthedRequest, res) => 
   try {
     await upsertUser(tg);
     const existing = await getProfile(tg.id);
-    const aboutRaw = body.about ?? body.aboutText;
-    const aboutText =
-      typeof aboutRaw === "string" ? aboutRaw : undefined;
 
     if (existing?.status === "active" && existing.onboarding_completed_at) {
       const profile = await upsertProfile({

@@ -1,19 +1,12 @@
 import { useCallback, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { createCabinetClientNote } from "../api";
+import { ClientNoteFields } from "../components/clientNote/ClientNoteFields";
+import { noteTitleOrDefault } from "../lib/clientNote";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
 import { useTelegram } from "../hooks/useTelegram";
-import {
-  BackIcon,
-  Button,
-  CloseIcon,
-  Field,
-  IconButton,
-  Input,
-  Textarea,
-  TEXTAREA_MAX_LEN,
-} from "../ui";
+import { BackIcon, Button, CloseIcon, IconButton } from "../ui";
 
 /** Figma 21370:23881 — «Создание заметки». */
 export function CreateClientNoteScreen() {
@@ -39,7 +32,7 @@ export function CreateClientNoteScreen() {
     setError(null);
     try {
       await createCabinetClientNote(clientId, {
-        title: title.trim() || "Заметка",
+        title: noteTitleOrDefault(title),
         body: body.trim(),
       });
       webApp?.HapticFeedback?.notificationOccurred("success");
@@ -75,25 +68,12 @@ export function CreateClientNoteScreen() {
       <div className="ms-body ms-cn-body">
         <h2 className="ms-cn-title">Новая заметка</h2>
 
-        <Field label="Заголовок" as="label">
-          <Input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Например, Предпочтения по форме"
-            autoComplete="off"
-          />
-        </Field>
-
-        <Field label="Текст заметки" as="label">
-          <Textarea
-            rows={5}
-            maxLength={TEXTAREA_MAX_LEN}
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            placeholder="Запишите, что важно помнить об этом клиенте..."
-          />
-        </Field>
+        <ClientNoteFields
+          title={title}
+          body={body}
+          onTitle={setTitle}
+          onBody={setBody}
+        />
 
         {error ? <p className="ms-footer-error">{error}</p> : null}
       </div>

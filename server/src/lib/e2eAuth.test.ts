@@ -1,7 +1,7 @@
 /**
  * E2E login gate. Run: npx tsx src/lib/e2eAuth.test.ts
  */
-import { e2eAuthEnabled, e2eSecretMatches } from "./e2eAuth.ts";
+import { e2eAuthEnabled, e2eSecretMatches } from "./e2eAuth.js";
 
 function assert(cond: unknown, msg: string): asserts cond {
   if (!cond) throw new Error(msg);

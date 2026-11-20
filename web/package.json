@@ -6,7 +6,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "test": "tsx src/lib/masterDraft.test.ts && tsx src/lib/placeStepFlow.test.ts && tsx src/lib/timeSheet.test.ts && tsx src/lib/workingHoursMutations.test.ts && tsx src/lib/onboardingReviewEdit.test.ts"
+    "test": "tsx src/lib/masterDraft.test.ts && tsx src/lib/placeStepFlow.test.ts && tsx src/lib/timeSheet.test.ts && tsx src/lib/workingHoursMutations.test.ts && tsx src/lib/onboardingReviewEdit.test.ts && tsx src/components/clientNote/ClientNoteFields.test.tsx"
   },
   "dependencies": {
     "@fontsource/geist-sans": "^5.2.5",

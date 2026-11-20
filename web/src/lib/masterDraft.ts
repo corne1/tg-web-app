@@ -1,5 +1,19 @@
+import {
+  defaultScheduleBreak,
+  defaultWorkingHours,
+  normalizeScheduleBreak,
+  normalizeWorkingHours as normalizeHours,
+  type DayHours,
+  type ScheduleBreak,
+  type WeekdayId,
+  type WorkingHours,
+} from "../../../server/src/lib/hoursNormalize.ts";
+
 /** Service type code from `/api/service-types`. */
 export type ServiceTypeCode = string;
+
+export type { DayHours, ScheduleBreak, WeekdayId, WorkingHours };
+export { defaultScheduleBreak, defaultWorkingHours, normalizeScheduleBreak };
 
 export type PriceMode = "fixed" | "from";
 
@@ -14,23 +28,6 @@ export type MasterService = {
   breakAfterMin: number;
   description: string;
 };
-
-export type WeekdayId =
-  | "mon"
-  | "tue"
-  | "wed"
-  | "thu"
-  | "fri"
-  | "sat"
-  | "sun";
-
-export type DayHours = {
-  enabled: boolean;
-  start: string;
-  end: string;
-};
-
-export type WorkingHours = Record<WeekdayId, DayHours>;
 
 export type HoursPresetId = "mon-fri" | "mon-sat" | "everyday" | "manual";
 
@@ -47,14 +44,6 @@ export type PlaceDetails = {
   addressVisibility: AddressVisibility;
 };
 
-/** Lunch / blocked window during working days (Figma 21091:27808). */
-export type ScheduleBreak = {
-  enabled: boolean;
-  start: string | null;
-  end: string | null;
-  days: WeekdayId[];
-};
-
 export type MasterDraft = {
   name: string;
   serviceTypeCode: ServiceTypeCode | null;
@@ -68,9 +57,20 @@ export type MasterDraft = {
   placeMode: PlaceMode | null;
   studioPlace: PlaceDetails;
   visitPlace: PlaceDetails;
+  /** Public page text. Saved profile on the server is the committed copy. */
+  about: string;
 };
 
 const KEY = "masterSetupDraft";
+const LEGACY_ABOUT_KEY = "masterPublicAbout";
+
+function readLegacyPublicAbout(): string {
+  try {
+    return localStorage.getItem(LEGACY_ABOUT_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
 
 export const DURATION_OPTIONS = [
   { value: 30, label: "30 минут" },
@@ -155,19 +155,6 @@ export const DAY_BREAK_OPTIONS = [
   { value: 120, label: "2 ч" },
 ] as const;
 
-export function defaultWorkingHours(): WorkingHours {
-  const hours = {} as WorkingHours;
-  for (const day of WEEKDAYS) {
-    const isWeekday = day.id !== "sat" && day.id !== "sun";
-    hours[day.id] = {
-      enabled: isWeekday,
-      start: "10:00",
-      end: "18:00",
-    };
-  }
-  return hours;
-}
-
 export function applyHoursPreset(
   presetId: Exclude<HoursPresetId, "manual">,
 ): WorkingHours {
@@ -211,18 +198,7 @@ export function hasEnabledWorkingDay(hours: WorkingHours): boolean {
 export function normalizeWorkingHours(
   raw: Partial<WorkingHours> | undefined,
 ): WorkingHours {
-  const base = defaultWorkingHours();
-  if (!raw || typeof raw !== "object") return base;
-  for (const day of WEEKDAYS) {
-    const row = raw[day.id];
-    if (!row) continue;
-    base[day.id] = {
-      enabled: Boolean(row.enabled),
-      start: typeof row.start === "string" ? row.start : base[day.id].start,
-      end: typeof row.end === "string" ? row.end : base[day.id].end,
-    };
-  }
-  return base;
+  return normalizeHours(raw, "form");
 }
 
 export function formatDuration(mins: number): string {
@@ -299,40 +275,6 @@ const emptyPlace = (): PlaceDetails => ({
   addressVisibility: "public",
 });
 
-export function defaultScheduleBreak(): ScheduleBreak {
-  return {
-    enabled: false,
-    start: null,
-    end: null,
-    days: ["mon", "tue", "wed", "thu", "fri"],
-  };
-}
-
-export function normalizeScheduleBreak(raw: unknown): ScheduleBreak {
-  const base = defaultScheduleBreak();
-  if (!raw || typeof raw !== "object") return base;
-  const src = raw as Partial<ScheduleBreak>;
-  const days = Array.isArray(src.days)
-    ? src.days.filter((d): d is WeekdayId =>
-        WEEKDAYS.some((w) => w.id === d),
-      )
-    : base.days;
-  const start =
-    typeof src.start === "string" && timeToMinutes(src.start) != null
-      ? src.start
-      : null;
-  const end =
-    typeof src.end === "string" && timeToMinutes(src.end) != null
-      ? src.end
-      : null;
-  return {
-    enabled: Boolean(src.enabled),
-    start,
-    end,
-    days: days.length > 0 ? days : base.days,
-  };
-}
-
 const emptyDraft = (): MasterDraft => ({
   name: "",
   serviceTypeCode: null,
@@ -345,6 +287,7 @@ const emptyDraft = (): MasterDraft => ({
   placeMode: null,
   studioPlace: emptyPlace(),
   visitPlace: emptyPlace(),
+  about: "",
 });
 
 function normalizePlace(raw: Partial<PlaceDetails> | undefined): PlaceDetails {
@@ -390,6 +333,8 @@ export function loadMasterDraft(): MasterDraft {
       placeMode,
       studioPlace: normalizePlace(parsed.studioPlace),
       visitPlace: normalizePlace(parsed.visitPlace),
+      about:
+        typeof parsed.about === "string" ? parsed.about : readLegacyPublicAbout(),
     };
   } catch {
     return emptyDraft();
