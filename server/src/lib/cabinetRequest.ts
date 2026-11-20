@@ -1,5 +1,5 @@
-type Ok<T> = { ok: true; value: T };
-type Fail = { ok: false; error: string };
+type Ok<T> = { ok: true; value: T; error?: undefined };
+type Fail = { ok: false; error: string; value?: undefined };
 export type ParseResult<T> = Ok<T> | Fail;
 
 function recordOf(body: unknown): Record<string, unknown> {

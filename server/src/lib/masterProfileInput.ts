@@ -7,7 +7,9 @@ export type MasterProfileInput = {
 
 export function readMasterProfileBody(
   body: unknown,
-): { ok: true; value: MasterProfileInput } | { ok: false; error: string } {
+):
+  | { ok: true; value: MasterProfileInput; error?: undefined }
+  | { ok: false; error: string; value?: undefined } {
   const record = body && typeof body === "object" ? (body as Record<string, unknown>) : {};
   const name = typeof record.name === "string" ? record.name.trim() : "";
   const serviceTypeCode =
