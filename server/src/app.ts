@@ -2,7 +2,6 @@ import express from "express";
 import cors from "cors";
 import { webhookCallback } from "grammy";
 import { config } from "./config.js";
-import { migrate } from "./db/client.js";
 import { apiRouter } from "./routes/index.js";
 import { parseCookies } from "./middleware.js";
 import { createBot } from "./bot.js";
@@ -19,16 +18,6 @@ export function createApp() {
   // Avatars are stored as data-URLs; phone JPEGs need headroom after resize.
   app.use(express.json({ limit: "1mb" }));
   app.use(parseCookies);
-
-  // Ensure schema exists before handling requests (idempotent).
-  app.use("/api", async (_req, _res, next) => {
-    try {
-      await migrate();
-      next();
-    } catch (err) {
-      next(err);
-    }
-  });
 
   const bot = createBot();
   if (bot) {

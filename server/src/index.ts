@@ -5,6 +5,8 @@ import express from "express";
 import { config } from "./config.js";
 import { createApp } from "./app.js";
 import { configureMenuButton, createBot } from "./bot.js";
+import { migrate } from "./db/client.js";
+import { assertProductionConfig } from "./lib/productionConfig.js";
 
 const app = createApp();
 const rootDir = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -27,41 +29,52 @@ if (existsSync(webDist)) {
   });
 }
 
-const server = app.listen(config.port, () => {
-  console.log(`[server] http://localhost:${config.port}`);
+async function start(): Promise<void> {
+  assertProductionConfig();
+  await migrate();
+
+  const server = app.listen(config.port, () => {
+    console.log(`[server] http://localhost:${config.port}`);
+  });
+
+  const bot = createBot();
+  if (bot) {
+    void (async () => {
+      try {
+        await bot.api.deleteWebhook({ drop_pending_updates: false });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        console.warn("[bot] deleteWebhook:", message);
+      }
+      try {
+        await configureMenuButton(bot);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        console.warn("[bot] menu button:", message);
+      }
+      try {
+        await bot.start({
+          onStart: (info) => console.log(`[bot] @${info.username} polling`),
+        });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        console.error("[bot] polling failed — API still running:", message);
+      }
+    })();
+  }
+
+  function shutdown() {
+    server.close();
+    bot?.stop();
+    process.exit(0);
+  }
+
+  process.on("SIGINT", shutdown);
+  process.on("SIGTERM", shutdown);
+}
+
+start().catch((err) => {
+  const message = err instanceof Error ? err.message : String(err);
+  console.error("[server] startup failed:", message);
+  process.exit(1);
 });
-
-const bot = createBot();
-if (bot) {
-  void (async () => {
-    try {
-      await bot.api.deleteWebhook({ drop_pending_updates: false });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      console.warn("[bot] deleteWebhook:", message);
-    }
-    try {
-      await configureMenuButton(bot);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      console.warn("[bot] menu button:", message);
-    }
-    try {
-      await bot.start({
-        onStart: (info) => console.log(`[bot] @${info.username} polling`),
-      });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      console.error("[bot] polling failed — API still running:", message);
-    }
-  })();
-}
-
-function shutdown() {
-  server.close();
-  bot?.stop();
-  process.exit(0);
-}
-
-process.on("SIGINT", shutdown);
-process.on("SIGTERM", shutdown);

@@ -23,7 +23,7 @@ function required(name: string, fallback?: string): string {
 
 const botToken = required("BOT_TOKEN", "000000:REPLACE_ME");
 
-function isPlaceholderToken(token: string): boolean {
+export function isPlaceholderToken(token: string): boolean {
   return (
     token === "000000:REPLACE_ME" ||
     token.includes("ABC-DEF") ||

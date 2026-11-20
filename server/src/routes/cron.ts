@@ -1,18 +1,18 @@
 import { Router } from "express";
 import { config } from "../config.js";
 import { listDueReminders, markReminded } from "../db/bookings.js";
+import { cronAuthorized } from "../lib/cronAuth.js";
 import { notifyReminder } from "../services/notify.js";
 
 export const cronRouter = Router();
 
 cronRouter.get("/reminders", async (req, res) => {
-  const auth = req.headers.authorization ?? "";
-  const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
-  const headerSecret = String(req.headers["x-cron-secret"] ?? "");
-  const ok =
-    (config.cronSecret &&
-      (token === config.cronSecret || headerSecret === config.cronSecret)) ||
-    req.headers["x-vercel-cron"] === "1";
+  const headerSecret = req.headers["x-cron-secret"];
+  const ok = cronAuthorized({
+    authorization: req.headers.authorization,
+    cronSecretHeader: Array.isArray(headerSecret) ? headerSecret[0] : headerSecret,
+    expectedSecret: config.cronSecret,
+  });
 
   if (!ok) {
     res.status(401).json({ error: "Unauthorized" });

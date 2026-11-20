@@ -45,7 +45,7 @@ Static Mini App + `/api` serverless in one project. Bot **polling** does not run
    - `WEBAPP_URL` = `https://<your-project>.vercel.app` (stable production URL)
    - `CORS_ORIGIN` = same URL (optionally also `http://localhost:5173`)
    - `DATABASE_URL` + `DATABASE_AUTH_TOKEN` — Turso libSQL (обязательно на Vercel; локально без них используется `./data/app.db`)
-   - `CRON_SECRET` (опционально, для `/api/cron/reminders`)
+   - `CRON_SECRET` (обязательно в production, от 16 символов; Vercel Cron шлёт `Authorization: Bearer`)
 4. Redeploy after setting env (`npx vercel --prod`).
 5. Disable **Deployment Protection** for Production (Settings → Deployment Protection), otherwise Telegram shows “Log in to Vercel”.
 6. Put the same production URL into local `.env` as `WEBAPP_URL` / `CORS_ORIGIN`, then:

@@ -6,7 +6,20 @@ let appPromise: Promise<Express> | null = null;
 function getApp(): Promise<Express> {
   if (!appPromise) {
     // Dynamic import: Vercel bundles the API entry as CJS; server is ESM.
-    appPromise = import("../server/src/app.js").then((m) => m.createApp());
+    // Schema is applied once per isolate, before the first request is served.
+    appPromise = (async () => {
+      const { assertProductionConfig } = await import(
+        "../server/src/lib/productionConfig.js"
+      );
+      const { migrate } = await import("../server/src/db/client.js");
+      const { createApp } = await import("../server/src/app.js");
+      assertProductionConfig();
+      await migrate();
+      return createApp();
+    })().catch((err) => {
+      appPromise = null;
+      throw err;
+    });
   }
   return appPromise;
 }

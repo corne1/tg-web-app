@@ -1,5 +1,6 @@
 {
   "name": "tg-app",
+  "version": "0.1.0",
   "private": true,
   "workspaces": [
     "web",
@@ -13,6 +14,7 @@
     "start": "npm run start -w server",
     "bot:menu": "npm run bot:menu -w server",
     "deploy": "npx vercel --prod",
+    "test": "npm test -w server && npm test -w web",
     "test:e2e": "playwright test --config e2e/playwright.config.ts"
   },
   "devDependencies": {

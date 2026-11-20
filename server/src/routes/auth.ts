@@ -2,16 +2,29 @@ import { Router } from "express";
 import { config } from "../config.js";
 import { setUserTest, upsertUser } from "../db/users.js";
 import { e2eAuthEnabled, e2eSecretMatches } from "../lib/e2eAuth.js";
+import { createRateLimiter, requestClientKey } from "../lib/rateLimit.js";
 import { createSessionToken } from "../session.js";
 import { AuthError, validateInitData } from "../telegramAuth.js";
 
 export const authRouter = Router();
+
+const telegramAuthLimiter = createRateLimiter(30, 60_000);
 
 /**
  * Exchange Telegram initData for a session JWT and upsert user.
  * Body: { initData: string }
  */
 authRouter.post("/telegram", async (req, res) => {
+  const clientKey = requestClientKey(
+    req.headers["x-forwarded-for"],
+    req.socket.remoteAddress,
+    Boolean(process.env.VERCEL),
+  );
+  if (!telegramAuthLimiter.allow(clientKey)) {
+    res.status(429).json({ error: "Too many requests" });
+    return;
+  }
+
   const initData = req.body?.initData;
   if (typeof initData !== "string" || !initData) {
     res.status(400).json({ error: "initData required" });

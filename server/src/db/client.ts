@@ -9,7 +9,7 @@ import {
 } from "./serviceTypeSeed.js";
 
 let client: Client | null = null;
-let migrated = false;
+let migrateTask: Promise<void> | null = null;
 
 const SCHEMA_VERSION = 4;
 
@@ -45,14 +45,6 @@ export function getDb(): Client {
   return client;
 }
 
-async function tryExec(db: Client, sql: string): Promise<void> {
-  try {
-    await db.execute(sql);
-  } catch {
-    // ignore (exists / already migrated)
-  }
-}
-
 async function tableExists(db: Client, name: string): Promise<boolean> {
   const r = await db.execute({
     sql: `SELECT 1 AS ok FROM sqlite_master WHERE type = 'table' AND name = ?`,
@@ -62,8 +54,7 @@ async function tableExists(db: Client, name: string): Promise<boolean> {
 }
 
 async function getSchemaVersion(db: Client): Promise<number> {
-  await tryExec(
-    db,
+  await db.execute(
     `CREATE TABLE IF NOT EXISTS schema_meta (
       version INTEGER NOT NULL,
       applied_at TEXT NOT NULL
@@ -249,7 +240,7 @@ function createIdealIndexesSql(): string[] {
 async function ensureIdealEmptySchema(db: Client): Promise<void> {
   await db.batch(createIdealSchemaSql(), "write");
   for (const sql of createIdealIndexesSql()) {
-    await tryExec(db, sql);
+    await db.execute(sql);
   }
 }
 
@@ -329,7 +320,7 @@ async function migrateToV2(db: Client): Promise<void> {
     "master_profiles",
     "service_types",
   ]) {
-    await tryExec(db, `DROP TABLE IF EXISTS ${name}`);
+    await db.execute(`DROP TABLE IF EXISTS ${name}`);
   }
 
   await ensureIdealEmptySchema(db);
@@ -574,8 +565,7 @@ async function migrateToV2(db: Client): Promise<void> {
   }
 
   // Backfill service_type_code on services from profile
-  await tryExec(
-    db,
+  await db.execute(
     `UPDATE master_services
       SET service_type_code = (
         SELECT p.service_type_code FROM master_profiles p
@@ -593,20 +583,20 @@ async function migrateToV2(db: Client): Promise<void> {
   await setSchemaVersion(db, 2);
 }
 
+const KNOWN_TABLES = new Set(["users", "master_profiles"]);
+
+const V3_COLUMNS = [
+  ["client_cancel_enabled", "INTEGER NOT NULL DEFAULT 1"],
+  ["client_reschedule_enabled", "INTEGER NOT NULL DEFAULT 1"],
+  ["reschedule_hours", "INTEGER NOT NULL DEFAULT 24"],
+] as const;
+
 /** Additive booking-rules columns on master_profiles (Figma 21455:21865). */
 async function migrateToV3(db: Client): Promise<void> {
-  await tryExec(
-    db,
-    `ALTER TABLE master_profiles ADD COLUMN client_cancel_enabled INTEGER NOT NULL DEFAULT 1`,
-  );
-  await tryExec(
-    db,
-    `ALTER TABLE master_profiles ADD COLUMN client_reschedule_enabled INTEGER NOT NULL DEFAULT 1`,
-  );
-  await tryExec(
-    db,
-    `ALTER TABLE master_profiles ADD COLUMN reschedule_hours INTEGER NOT NULL DEFAULT 24`,
-  );
+  for (const [name, ddl] of V3_COLUMNS) {
+    if (await columnExists(db, "master_profiles", name)) continue;
+    await db.execute(`ALTER TABLE master_profiles ADD COLUMN ${name} ${ddl}`);
+  }
   await setSchemaVersion(db, 3);
 }
 
@@ -615,6 +605,9 @@ async function columnExists(
   table: string,
   column: string,
 ): Promise<boolean> {
+  if (!KNOWN_TABLES.has(table)) {
+    throw new Error(`Unexpected table in columnExists: ${table}`);
+  }
   const info = await db.execute(`PRAGMA table_info(${table})`);
   return info.rows.some((row) => String(row.name) === column);
 }
@@ -629,19 +622,11 @@ async function migrateToV4(db: Client): Promise<void> {
   await setSchemaVersion(db, 4);
 }
 
-async function migrateLegacyV0toV1Markers(db: Client): Promise<void> {
-  // Soft path if somehow still on fragmented additive schema without schema_meta.
-  // Handled by migrateToV2 rebuild.
-  void db;
-}
-
-export async function migrate(): Promise<void> {
-  if (migrated) return;
+async function runMigrate(): Promise<void> {
   const db = getDb();
   await enableForeignKeys(db);
 
-  await tryExec(
-    db,
+  await db.execute(
     `CREATE TABLE IF NOT EXISTS schema_meta (
       version INTEGER NOT NULL,
       applied_at TEXT NOT NULL
@@ -651,7 +636,6 @@ export async function migrate(): Promise<void> {
   let version = await getSchemaVersion(db);
 
   if (version < 2) {
-    await migrateLegacyV0toV1Markers(db);
     await migrateToV2(db);
     version = 2;
   }
@@ -668,7 +652,16 @@ export async function migrate(): Promise<void> {
   await seedServiceTypes(db);
 
   void version;
-  migrated = true;
+}
+
+export function migrate(): Promise<void> {
+  if (!migrateTask) {
+    migrateTask = runMigrate().catch((err) => {
+      migrateTask = null;
+      throw err;
+    });
+  }
+  return migrateTask;
 }
 
 export async function withDb<T>(fn: (db: Client) => Promise<T>): Promise<T> {
