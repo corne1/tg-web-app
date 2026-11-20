@@ -136,12 +136,6 @@ export function ServicesSettings({ mode }: { mode: SettingsMode }) {
     saveMasterDraft({ ...draft, services });
   }, [services]);
 
-  const handleSaveExit = useCallback(() => {
-    persistLocal();
-    webApp?.HapticFeedback?.notificationOccurred("success");
-    navigate(isSettings ? "/cabinet/profile" : "/");
-  }, [isSettings, navigate, persistLocal, webApp]);
-
   const handlePrimary = useCallback(async () => {
     if (services.length === 0) return;
     persistLocal();
@@ -419,9 +413,6 @@ export function ServicesSettings({ mode }: { mode: SettingsMode }) {
       <Button disabled={!hasServices} onClick={() => void handlePrimary()}>
         Продолжить
         <MsArrowRight />
-      </Button>
-      <Button variant="secondary" onClick={() => void handleSaveExit()}>
-        Сохранить и выйти
       </Button>
     </>
   );

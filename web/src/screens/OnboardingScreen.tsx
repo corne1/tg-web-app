@@ -142,27 +142,6 @@ export function OnboardingScreen() {
     }
   }, [fromReview, navigate, persistServer, saving, valid, webApp]);
 
-  const handleSaveExit = useCallback(async () => {
-    persistLocal();
-    if (!valid) {
-      webApp?.HapticFeedback?.notificationOccurred("success");
-      navigate("/");
-      return;
-    }
-    if (saving) return;
-    setSaving(true);
-    setError(null);
-    try {
-      await persistServer();
-      webApp?.HapticFeedback?.notificationOccurred("success");
-      navigate("/");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Не удалось сохранить");
-    } finally {
-      setSaving(false);
-    }
-  }, [navigate, persistLocal, persistServer, saving, valid, webApp]);
-
   const openGalleryPicker = useCallback(() => {
     setError(null);
     fileRef.current?.click();
@@ -246,7 +225,6 @@ export function OnboardingScreen() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               autoComplete="given-name"
-              autoFocus
             />
           </Field>
 
@@ -309,15 +287,6 @@ export function OnboardingScreen() {
             {saving ? "Сохранение…" : fromReview ? "Сохранить" : "Продолжить"}
             {!fromReview ? <MsArrowRight /> : null}
           </Button>
-          {!fromReview ? (
-            <Button
-              variant="secondary"
-              disabled={saving}
-              onClick={() => void handleSaveExit()}
-            >
-              Сохранить и выйти
-            </Button>
-          ) : null}
         </div>
       </footer>
 

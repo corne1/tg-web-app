@@ -193,13 +193,6 @@ export function HoursSettings({ mode }: { mode: SettingsMode }) {
     webApp,
   ]);
 
-  const handleSaveExit = useCallback(() => {
-    persist();
-    void syncHoursToServer();
-    webApp?.HapticFeedback?.notificationOccurred("success");
-    navigate(isSettings ? "/cabinet/profile" : "/");
-  }, [isSettings, navigate, persist, syncHoursToServer, webApp]);
-
   const applyPreset = useCallback((id: Exclude<HoursPresetId, "manual">) => {
     const next = applyHoursPreset(id);
     setHours(next);
@@ -318,9 +311,6 @@ export function HoursSettings({ mode }: { mode: SettingsMode }) {
       <Button disabled={!canContinue} onClick={handleContinue}>
         Продолжить
         <MsArrowRight />
-      </Button>
-      <Button variant="secondary" onClick={handleSaveExit}>
-        Сохранить и выйти
       </Button>
     </>
   );

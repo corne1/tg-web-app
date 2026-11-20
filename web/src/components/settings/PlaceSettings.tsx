@@ -515,14 +515,6 @@ export function PlaceSettings({ mode }: { mode: SettingsMode }) {
     webApp,
   ]);
 
-  const handleSaveExit = useCallback(() => {
-    persist();
-    void syncPlaceToServer();
-    clearFromReview();
-    webApp?.HapticFeedback?.notificationOccurred("success");
-    navigate(isSettings ? "/cabinet/profile" : "/");
-  }, [isSettings, navigate, persist, syncPlaceToServer, webApp]);
-
   useEffect(() => {
     if (stage !== 3) return;
     persist();
@@ -1101,11 +1093,6 @@ export function PlaceSettings({ mode }: { mode: SettingsMode }) {
         {primaryLabel}
         {stage < 3 && !placeEditFromReview && <MsArrowRight />}
       </Button>
-      {placeEditFromReview ? null : (
-        <Button variant="secondary" onClick={handleSaveExit}>
-          Сохранить и выйти
-        </Button>
-      )}
     </>
   );
 
