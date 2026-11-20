@@ -237,7 +237,7 @@ test("master creates a booking and sees it on the schedule", async ({ page }) =>
   await page.getByRole("button", { name: "Добавить запись" }).click();
   await page.getByRole("button", { name: /Добавить нового клиента/ }).click();
   await page.getByPlaceholder("Анна Смирнова").fill(clientName);
-  await page.getByRole("button", { name: "Сохранить клиента" }).click();
+  await page.getByRole("button", { name: "Добавить клиента" }).click();
   await page.getByRole("checkbox", { name: new RegExp(service) }).click();
   await page.getByRole("button", { name: "Продолжить", exact: true }).click();
   await pickMasterSlot(page);

@@ -2,10 +2,13 @@ import { useCallback, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { createCabinetClient } from "../api";
 import { MasterSetupChrome } from "../components/master/MasterSetupChrome";
+import { MsArrowRight } from "../components/master/MsArrowRight";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
 import { useTelegram } from "../hooks/useTelegram";
 import { patchBookingDraft } from "../lib/bookingDraft";
+import { loadMasterDraft } from "../lib/masterDraft";
+import { bookingNeedsPlaceStep } from "./NewBookingPlaceScreen";
 import { BackIcon, Button, Field, IconButton, Input } from "../ui";
 
 /**
@@ -18,7 +21,6 @@ export function CreateClientScreen() {
   const fromBooking = params.get("from") === "booking";
   const { webApp } = useTelegram();
   const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,7 +44,6 @@ export function CreateClientScreen() {
     try {
       const data = await createCabinetClient({
         name: name.trim(),
-        phone: phone.trim(),
       });
       webApp?.HapticFeedback?.notificationOccurred("success");
       if (fromBooking) {
@@ -60,14 +61,14 @@ export function CreateClientScreen() {
     } finally {
       setSaving(false);
     }
-  }, [fromBooking, name, navigate, phone, saving, valid, webApp]);
+  }, [fromBooking, name, navigate, saving, valid, webApp]);
 
   const body = (
     <div className="ms-nb ms-create-client">
       <div className="ms-nb-intro">
         <h2 className="ms-nb-title">Добавить клиента</h2>
         <p className="ms-nb-lead">
-          Укажите имя клиента, чтобы сохранить его в своей базе
+          Укажите имя клиента, чтобы сохранить клиента в своей базе.
         </p>
       </div>
 
@@ -78,17 +79,6 @@ export function CreateClientScreen() {
           onChange={(e) => setName(e.target.value)}
           placeholder="Анна Смирнова"
           autoComplete="name"
-          autoFocus
-        />
-      </Field>
-
-      <Field label="Телефон" as="label">
-        <Input
-          type="tel"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          placeholder="+7 900 000-00-00"
-          autoComplete="tel"
         />
       </Field>
 
@@ -100,6 +90,7 @@ export function CreateClientScreen() {
     return (
       <MasterSetupChrome
         step={1}
+        stepTotal={bookingNeedsPlaceStep(loadMasterDraft().placeMode) ? 5 : 4}
         progressFilled={1}
         topTitle="Новый клиент"
         onBack={goBack}
@@ -108,10 +99,12 @@ export function CreateClientScreen() {
           <div className="ms-nb-footer">
             <Button
               variant="primary"
+              className="ms-nb-continue"
               disabled={!valid || saving}
               onClick={() => void onSave()}
             >
-              {saving ? "Сохранение…" : "Сохранить клиента"}
+              <span>{saving ? "Сохранение…" : "Добавить клиента"}</span>
+              {saving ? null : <MsArrowRight />}
             </Button>
           </div>
         }
@@ -138,7 +131,7 @@ export function CreateClientScreen() {
             disabled={!valid || saving}
             onClick={() => void onSave()}
           >
-            {saving ? "Сохранение…" : "Сохранить клиента"}
+            {saving ? "Сохранение…" : "Добавить клиента"}
           </Button>
         </div>
       </footer>
