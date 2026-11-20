@@ -12,14 +12,10 @@ import {
 import { useBackButton } from "../../hooks/useBackButton";
 import { useMainButton } from "../../hooks/useMainButton";
 import { useTelegram } from "../../hooks/useTelegram";
-import calendarIcon from "../../assets/cabinet/calendar.svg";
-import clockIcon from "../../assets/cabinet/clock.svg";
-import infoIcon from "../../assets/onboarding/info.svg";
 import {
   applyHoursPreset,
   defaultScheduleBreak,
   hasEnabledWorkingDay,
-  HOURS_PRESETS,
   loadMasterDraft,
   saveMasterDraft,
   timeToMinutes,
@@ -36,6 +32,9 @@ import {
   toggleWorkingDay,
   updateWorkingDayTime,
 } from "../../lib/workingHoursMutations";
+import { HoursBreakCard } from "./HoursBreakCard";
+import { HoursDayList } from "./HoursDayList";
+import { HoursPresetList } from "./HoursPresetList";
 import { TimeSheet } from "./HoursTimeSheet";
 import {
   BottomSheet,
@@ -63,28 +62,6 @@ function dayHoursSecondary(row: DayHours): string {
 function applyCopyLabel(count: number): string {
   if (count === 1) return "Применить к 1 дню";
   return `Применить к ${count} дням`;
-}
-
-function CopyIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <rect
-        x="5.5"
-        y="5.5"
-        width="7"
-        height="7"
-        rx="1.5"
-        stroke="currentColor"
-        strokeWidth="1.4"
-      />
-      <path
-        d="M10.5 5.5V4A1.5 1.5 0 0 0 9 2.5H4A1.5 1.5 0 0 0 2.5 4v5A1.5 1.5 0 0 0 4 10.5h1.5"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
 }
 
 export function HoursSettings({ mode }: { mode: SettingsMode }) {
@@ -323,228 +300,22 @@ export function HoursSettings({ mode }: { mode: SettingsMode }) {
       )}
 
       {isSettings ? null : (
-        <section className="ms-hours-section">
-          <h3 className="ms-hours-section-title">Быстрая настройка</h3>
-          <div className="ms-preset-list">
-            {HOURS_PRESETS.map((p) => {
-              const active = preset === p.id;
-              return (
-                <button
-                  key={p.id}
-                  type="button"
-                  className={cx("ms-preset-card", active && "is-active")}
-                  onClick={() => applyPreset(p.id)}
-                  aria-pressed={active}
-                >
-                  <span className="ms-preset-text">
-                    <span className="ms-preset-title">{p.title}</span>
-                    <span className="ms-preset-meta">
-                      <span className="ms-preset-meta-row">
-                        <img
-                          src={clockIcon}
-                          width={20}
-                          height={20}
-                          alt=""
-                          aria-hidden
-                        />
-                        <span>{p.hoursLabel}</span>
-                      </span>
-                      <span className="ms-preset-meta-row">
-                        <img
-                          src={calendarIcon}
-                          width={20}
-                          height={20}
-                          alt=""
-                          aria-hidden
-                        />
-                        <span>{p.offLabel}</span>
-                      </span>
-                    </span>
-                  </span>
-                  <RadioMark checked={active} />
-                </button>
-              );
-            })}
-          </div>
-        </section>
+        <HoursPresetList preset={preset} onSelect={applyPreset} />
       )}
 
-      <section className="ms-hours-section">
-        <div className="ms-hours-section-head">
-          <h3 className="ms-hours-section-title">Рабочие дни</h3>
-          <button type="button" className="ms-link-btn" onClick={openCopy}>
-            <CopyIcon />
-            Копировать часы
-          </button>
-        </div>
+      <HoursDayList
+        hours={hours}
+        onToggle={toggleDay}
+        onOpenTime={(id, field) => setSheet({ kind: "time", day: id, field })}
+        onCopy={openCopy}
+      />
 
-        <ul className="ms-day-list">
-          {WEEKDAYS.map((day) => {
-            const row = hours[day.id];
-            return (
-              <li
-                key={day.id}
-                className={`ms-day-card ${row.enabled ? "is-on" : "is-off"}`}
-              >
-                <div className="ms-day-row">
-                  <p className="ms-day-name">{day.label}</p>
-                  <div className="ms-day-controls">
-                    {row.enabled ? (
-                      <span className="ms-day-badge" role="status">
-                        <span className="ms-day-badge-dot" aria-hidden />
-                        Рабочий день
-                      </span>
-                    ) : (
-                      <span className="ms-day-badge is-off" role="status">
-                        Выходной
-                      </span>
-                    )}
-                    <button
-                      type="button"
-                      className={`ms-switch ${row.enabled ? "is-on" : ""}`}
-                      role="switch"
-                      aria-checked={row.enabled}
-                      aria-label={`${day.label}: ${row.enabled ? "рабочий" : "выходной"}`}
-                      onClick={() => toggleDay(day.id)}
-                    >
-                      <span className="ms-switch-knob" />
-                    </button>
-                  </div>
-                </div>
-
-                {row.enabled && (
-                  <div className="ms-day-times">
-                    <button
-                      type="button"
-                      className="ms-time-chip"
-                      onClick={() =>
-                        setSheet({ kind: "time", day: day.id, field: "start" })
-                      }
-                    >
-                      {row.start}
-                    </button>
-                    <span className="ms-time-sep" aria-hidden>
-                      —
-                    </span>
-                    <button
-                      type="button"
-                      className="ms-time-chip"
-                      onClick={() =>
-                        setSheet({ kind: "time", day: day.id, field: "end" })
-                      }
-                    >
-                      {row.end}
-                    </button>
-                  </div>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      </section>
-
-      <section className="ms-hours-section">
-        <h3 className="ms-hours-section-title">Перерыв в течение дня</h3>
-        <div className="ms-break-card">
-          <div className="ms-break-card-head">
-            <div className="ms-break-card-copy">
-              <p className="ms-break-card-title">Добавить перерыв</p>
-              <p className="ms-break-card-sub">
-                В это время клиенты не смогут записаться
-              </p>
-            </div>
-            <button
-              type="button"
-              className={`ms-switch ${scheduleBreak.enabled ? "is-on" : ""}`}
-              role="switch"
-              aria-checked={scheduleBreak.enabled}
-              aria-label="Добавить перерыв"
-              onClick={() =>
-                updateScheduleBreak({ enabled: !scheduleBreak.enabled })
-              }
-            >
-              <span className="ms-switch-knob" />
-            </button>
-          </div>
-
-          {scheduleBreak.enabled ? (
-            <>
-              <div className="ms-break-fields">
-                <label className="ms-break-field">
-                  <span className="ms-break-field-label">Начало перерыва</span>
-                  <button
-                    type="button"
-                    className={cx(
-                      "ms-break-time-trigger",
-                      !scheduleBreak.start && "is-placeholder",
-                    )}
-                    onClick={() =>
-                      setSheet({ kind: "break-time", field: "start" })
-                    }
-                  >
-                    <span>{scheduleBreak.start ?? "Выберите время"}</span>
-                    <ChevronRightIcon className="ms-sheet-chevron-right" />
-                  </button>
-                </label>
-                <label className="ms-break-field">
-                  <span className="ms-break-field-label">
-                    Окончание перерыва
-                  </span>
-                  <button
-                    type="button"
-                    className={cx(
-                      "ms-break-time-trigger",
-                      !scheduleBreak.end && "is-placeholder",
-                    )}
-                    onClick={() =>
-                      setSheet({ kind: "break-time", field: "end" })
-                    }
-                  >
-                    <span>{scheduleBreak.end ?? "Выберите время"}</span>
-                    <ChevronRightIcon className="ms-sheet-chevron-right" />
-                  </button>
-                </label>
-              </div>
-
-              <div className="ms-break-days-block">
-                <p className="ms-break-days-label">В какие дни действует?</p>
-                <div
-                  className="ms-break-days"
-                  role="group"
-                  aria-label="Дни перерыва"
-                >
-                  {WEEKDAYS.map((day) => {
-                    const on = scheduleBreak.days.includes(day.id);
-                    return (
-                      <button
-                        key={day.id}
-                        type="button"
-                        className={cx("ms-break-day", on && "is-on")}
-                        aria-pressed={on}
-                        onClick={() => toggleBreakDay(day.id)}
-                      >
-                        {day.short}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </>
-          ) : null}
-
-          <div className="ms-break-optional-tip" role="note">
-            <img
-              className="ms-break-optional-tip-icon"
-              src={infoIcon}
-              width={20}
-              height={20}
-              alt=""
-              aria-hidden
-            />
-            <span>Необязательно</span>
-          </div>
-        </div>
-      </section>
+      <HoursBreakCard
+        scheduleBreak={scheduleBreak}
+        onToggle={() => updateScheduleBreak({ enabled: !scheduleBreak.enabled })}
+        onOpenTime={(field) => setSheet({ kind: "break-time", field })}
+        onToggleDay={toggleBreakDay}
+      />
 
       {sheet?.kind === "time" && (
         <TimeSheet

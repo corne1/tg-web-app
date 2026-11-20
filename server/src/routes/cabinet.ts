@@ -23,6 +23,7 @@ import {
   buildBookingFromServices,
   selectServicesByIds,
 } from "../lib/bookingServices.js";
+import { readCabinetBookingBody, readCabinetClientBody, readNoteBody } from "../lib/cabinetRequest.js";
 import { requireSession, type AuthedRequest } from "../middleware.js";
 import { generateSlots } from "../services/slots.js";
 import {
@@ -165,13 +166,12 @@ cabinetRouter.post(
       tg.id,
       [tg.first_name, tg.last_name].filter(Boolean).join(" "),
     );
-    const body = req.body ?? {};
-    const name = String(body.name ?? "").trim();
-    const phone = String(body.phone ?? "").trim();
-    if (!name) {
-      res.status(400).json({ error: "name required" });
+    const parsed = readCabinetClientBody(req.body);
+    if (!parsed.ok) {
+      res.status(400).json({ error: parsed.error });
       return;
     }
+    const { name, phone } = parsed.value;
     const profile = await ensureMasterProfile(
       tg.id,
       [tg.first_name, tg.last_name].filter(Boolean).join(" "),
@@ -206,18 +206,16 @@ cabinetRouter.post(
       res.status(404).json({ error: "Client not found" });
       return;
     }
-    const body = req.body ?? {};
-    const title = String(body.title ?? "").trim();
-    const noteBody = String(body.body ?? "").trim();
-    if (!noteBody) {
-      res.status(400).json({ error: "body required" });
+    const parsed = readNoteBody(req.body);
+    if (!parsed.ok) {
+      res.status(400).json({ error: parsed.error });
       return;
     }
     await createClientNote({
       masterId: tg.id,
       clientId,
-      title: title || "Заметка",
-      body: noteBody,
+      title: parsed.value.title,
+      body: parsed.value.body,
     });
     const client = await getMasterClientDto(tg.id, clientId, profile.timezone);
     res.status(201).json({ client });
@@ -236,19 +234,17 @@ cabinetRouter.patch(
     );
     const clientId = String(req.params.clientId ?? "");
     const noteId = String(req.params.noteId ?? "");
-    const body = req.body ?? {};
-    const title = String(body.title ?? "").trim();
-    const noteBody = String(body.body ?? "").trim();
-    if (!noteBody) {
-      res.status(400).json({ error: "body required" });
+    const parsed = readNoteBody(req.body);
+    if (!parsed.ok) {
+      res.status(400).json({ error: parsed.error });
       return;
     }
     const updated = await updateClientNote({
       masterId: tg.id,
       clientId,
       noteId,
-      title: title || "Заметка",
-      body: noteBody,
+      title: parsed.value.title,
+      body: parsed.value.body,
     });
     if (!updated) {
       res.status(404).json({ error: "Note not found" });
@@ -296,41 +292,15 @@ cabinetRouter.post(
       tg.id,
       [tg.first_name, tg.last_name].filter(Boolean).join(" "),
     );
-    const body = req.body ?? {};
-    const masterClientId = String(body.masterClientId ?? body.clientId ?? "");
-    const dateISO = String(body.dateISO ?? "").trim();
-    const time = String(body.time ?? "").trim();
-    const serviceIds = Array.isArray(body.serviceIds)
-      ? body.serviceIds.map((id: unknown) => String(id))
-      : [];
-
-    if (!masterClientId || !/^\d{4}-\d{2}-\d{2}$/.test(dateISO)) {
-      res.status(400).json({ error: "masterClientId and dateISO required" });
+    const parsed = readCabinetBookingBody(req.body);
+    if (!parsed.ok) {
+      res.status(400).json({ error: parsed.error });
       return;
     }
-    const timeMatch = /^(\d{1,2}):(\d{2})$/.exec(time);
-    if (!timeMatch) {
-      res.status(400).json({ error: "time required (HH:MM)" });
-      return;
-    }
-
+    const { masterClientId, dateISO, hour, minute, serviceIds } = parsed.value;
     const clientRow = await getMasterClientRow(tg.id, masterClientId);
     if (!clientRow) {
       res.status(404).json({ error: "Client not found" });
-      return;
-    }
-
-    const hour = Number(timeMatch[1]);
-    const minute = Number(timeMatch[2]);
-    if (
-      !Number.isFinite(hour) ||
-      !Number.isFinite(minute) ||
-      hour < 0 ||
-      hour > 23 ||
-      minute < 0 ||
-      minute > 59
-    ) {
-      res.status(400).json({ error: "Invalid time" });
       return;
     }
 

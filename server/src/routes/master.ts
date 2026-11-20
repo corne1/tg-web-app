@@ -25,6 +25,14 @@ import {
   normalizeWorkingHours,
 } from "../lib/workingHours.js";
 import { readMasterProfileBody } from "../lib/masterProfileInput.js";
+import {
+  readAvatarUrl,
+  readBookingRulesBody,
+  readHoursBody,
+  readOnboardingStep,
+  readServiceBody,
+  readTravelBufferMin,
+} from "../lib/masterRequest.js";
 import { requireSession, type AuthedRequest } from "../middleware.js";
 import { serializeProfile, serializeService } from "./serializers.js";
 
@@ -104,14 +112,7 @@ masterRouter.put("/profile", requireSession, async (req: AuthedRequest, res) => 
 /** Persist master avatar (TG URL or gallery data-URL). Blur #16. */
 masterRouter.put("/avatar", requireSession, async (req: AuthedRequest, res) => {
   const tg = req.telegramUser!;
-  const body = req.body ?? {};
-  const raw = body.avatarUrl;
-  const avatarUrl =
-    raw === null || raw === undefined
-      ? null
-      : typeof raw === "string"
-        ? raw.trim() || null
-        : null;
+  const avatarUrl = readAvatarUrl(req.body);
 
   try {
     await upsertUser(tg);
@@ -146,6 +147,12 @@ masterRouter.put("/place", requireSession, async (req: AuthedRequest, res) => {
     res.status(400).json({ error: "Invalid place" });
     return;
   }
+  const travel = readTravelBufferMin(body);
+  if (!travel.ok) {
+    res.status(400).json({ error: travel.error });
+    return;
+  }
+  const travelBufferMin = travel.value;
 
   try {
     await upsertUser(tg);
@@ -157,20 +164,6 @@ masterRouter.put("/place", requireSession, async (req: AuthedRequest, res) => {
       );
     }
     const city = primaryCityFromPlace(place) ?? profile.city;
-    const travelRaw = body.travelBufferMin;
-    const travelBufferMin =
-      travelRaw === null || travelRaw === undefined || travelRaw === ""
-        ? undefined
-        : Number(travelRaw);
-    if (
-      travelBufferMin !== undefined &&
-      (!Number.isFinite(travelBufferMin) ||
-        travelBufferMin < 0 ||
-        travelBufferMin > 240)
-    ) {
-      res.status(400).json({ error: "Invalid travelBufferMin" });
-      return;
-    }
     const next = await upsertProfile({
       userId: tg.id,
       name: profile.name,
@@ -194,29 +187,12 @@ masterRouter.put("/place", requireSession, async (req: AuthedRequest, res) => {
 /** Persist onboarding working hours (source of truth for slot generation). */
 masterRouter.put("/hours", requireSession, async (req: AuthedRequest, res) => {
   const tg = req.telegramUser!;
-  const body = req.body ?? {};
-  const hours = normalizeWorkingHours(body.hours ?? body.workingHours);
-  const dayBreakRaw = body.dayBreakMin;
-  const dayBreakMin =
-    dayBreakRaw === null || dayBreakRaw === undefined || dayBreakRaw === ""
-      ? null
-      : Number(dayBreakRaw);
-  const scheduleBreak =
-    body.scheduleBreak !== undefined
-      ? normalizeScheduleBreak(body.scheduleBreak)
-      : undefined;
-
-  if (!hours || !hasEnabledWorkingDay(hours)) {
-    res.status(400).json({ error: "At least one working day required" });
+  const parsedHours = readHoursBody(req.body);
+  if (!parsedHours.ok) {
+    res.status(400).json({ error: parsedHours.error });
     return;
   }
-  if (
-    dayBreakMin != null &&
-    (!Number.isFinite(dayBreakMin) || dayBreakMin < 0 || dayBreakMin > 240)
-  ) {
-    res.status(400).json({ error: "Invalid dayBreakMin" });
-    return;
-  }
+  const { hours, dayBreakMin, scheduleBreak } = parsedHours.value;
 
   try {
     await upsertUser(tg);
@@ -242,47 +218,23 @@ masterRouter.put("/hours", requireSession, async (req: AuthedRequest, res) => {
   }
 });
 
-const BOOKING_RULE_HOURS = new Set([1, 2, 6, 12, 24, 48, 72]);
-
 /** Persist cancel/reschedule rules (Figma 21455:21865). */
 masterRouter.put(
   "/booking-rules",
   requireSession,
   async (req: AuthedRequest, res) => {
     const tg = req.telegramUser!;
-    const body = req.body ?? {};
-    const clientCancelEnabled =
-      body.clientCancelEnabled === undefined
-        ? undefined
-        : Boolean(body.clientCancelEnabled);
-    const clientRescheduleEnabled =
-      body.clientRescheduleEnabled === undefined
-        ? undefined
-        : Boolean(body.clientRescheduleEnabled);
-    const cancelHoursRaw =
-      body.cancelHours === undefined || body.cancelHours === null
-        ? undefined
-        : Number(body.cancelHours);
-    const rescheduleHoursRaw =
-      body.rescheduleHours === undefined || body.rescheduleHours === null
-        ? undefined
-        : Number(body.rescheduleHours);
-
-    if (
-      cancelHoursRaw !== undefined &&
-      (!Number.isFinite(cancelHoursRaw) || !BOOKING_RULE_HOURS.has(cancelHoursRaw))
-    ) {
-      res.status(400).json({ error: "Invalid cancelHours" });
+    const parsedRules = readBookingRulesBody(req.body);
+    if (!parsedRules.ok) {
+      res.status(400).json({ error: parsedRules.error });
       return;
     }
-    if (
-      rescheduleHoursRaw !== undefined &&
-      (!Number.isFinite(rescheduleHoursRaw) ||
-        !BOOKING_RULE_HOURS.has(rescheduleHoursRaw))
-    ) {
-      res.status(400).json({ error: "Invalid rescheduleHours" });
-      return;
-    }
+    const {
+      clientCancelEnabled,
+      clientRescheduleEnabled,
+      cancelHours: cancelHoursRaw,
+      rescheduleHours: rescheduleHoursRaw,
+    } = parsedRules.value;
 
     try {
       await upsertUser(tg);
@@ -318,27 +270,13 @@ masterRouter.get("/services", requireSession, async (req: AuthedRequest, res) =>
 masterRouter.put("/services/:id", requireSession, async (req: AuthedRequest, res) => {
   const tg = req.telegramUser!;
   const id = String(req.params.id);
-  const body = req.body ?? {};
-  const title = typeof body.title === "string" ? body.title.trim() : "";
-  const durationMin = Number(body.durationMin);
-  const price = Number(body.price);
-  const priceMode = body.priceMode === "from" ? "from" : "fixed";
-  const breakAfterMin = Number(body.breakAfterMin ?? 0);
-  const description =
-    typeof body.description === "string" ? body.description : "";
-
-  if (!title || title.length > 120) {
-    res.status(400).json({ error: "Invalid title" });
+  const parsedService = readServiceBody(req.body);
+  if (!parsedService.ok) {
+    res.status(400).json({ error: parsedService.error });
     return;
   }
-  if (!Number.isFinite(durationMin) || durationMin <= 0) {
-    res.status(400).json({ error: "Invalid durationMin" });
-    return;
-  }
-  if (!Number.isFinite(price) || price <= 0) {
-    res.status(400).json({ error: "Invalid price" });
-    return;
-  }
+  const { title, durationMin, price, priceMode, breakAfterMin, description } =
+    parsedService.value;
 
   try {
     await upsertUser(tg);
@@ -450,11 +388,12 @@ masterRouter.put(
   requireSession,
   async (req: AuthedRequest, res) => {
     const tg = req.telegramUser!;
-    const step = Number(req.body?.step);
-    if (!Number.isFinite(step) || step < 1 || step > 4) {
-      res.status(400).json({ error: "step must be 1..4" });
+    const parsedStep = readOnboardingStep(req.body);
+    if (!parsedStep.ok) {
+      res.status(400).json({ error: parsedStep.error });
       return;
     }
+    const step = parsedStep.value;
     const profile = await setOnboardingStep(tg.id, step);
     if (!profile) {
       res.status(404).json({ error: "Master profile not found" });
