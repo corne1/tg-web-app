@@ -1,5 +1,17 @@
-import type { ReactNode } from "react";
+import { createContext, useContext, useId, type ReactNode } from "react";
 import { cx } from "./cx";
+
+/** Lets Input/Textarea pick up the Field label's htmlFor target id. */
+export const FieldControlIdContext = createContext<string | undefined>(
+  undefined,
+);
+
+export function useFieldControlId(
+  explicitId?: string,
+): string | undefined {
+  const fromField = useContext(FieldControlIdContext);
+  return explicitId ?? fromField;
+}
 
 export function Field({
   label,
@@ -18,7 +30,11 @@ export function Field({
   className?: string;
   children: ReactNode;
 }) {
-  const Tag = as;
+  const autoId = useId();
+  /** `as="label"` used to wrap the control in <label>; that nests the clear
+   *  button inside the label and breaks typing/focus in Telegram Desktop. */
+  const controlId = htmlFor ?? (as === "label" ? autoId : undefined);
+
   const labelNode = (
     <>
       {label}
@@ -31,12 +47,12 @@ export function Field({
     </>
   );
 
-  return (
-    <Tag className={cx("ms-field", className)}>
+  const body = (
+    <>
       {as === "fieldset" ? (
         <legend className="ms-label">{labelNode}</legend>
-      ) : htmlFor ? (
-        <label className="ms-label" htmlFor={htmlFor}>
+      ) : controlId ? (
+        <label className="ms-label" htmlFor={controlId}>
           {labelNode}
         </label>
       ) : (
@@ -44,6 +60,16 @@ export function Field({
       )}
       {children}
       {error ? <span className="ms-field-error">{error}</span> : null}
-    </Tag>
+    </>
+  );
+
+  if (as === "fieldset") {
+    return <fieldset className={cx("ms-field", className)}>{body}</fieldset>;
+  }
+
+  return (
+    <FieldControlIdContext.Provider value={controlId}>
+      <div className={cx("ms-field", className)}>{body}</div>
+    </FieldControlIdContext.Provider>
   );
 }

@@ -1,10 +1,13 @@
 import {
   forwardRef,
+  useId,
   useState,
   type ChangeEvent,
+  type MouseEvent,
   type TextareaHTMLAttributes,
 } from "react";
 import { cx } from "./cx";
+import { useFieldControlId } from "./Field";
 
 /** Default limit for description / about / note textareas. */
 export const TEXTAREA_MAX_LEN = 300;
@@ -28,10 +31,17 @@ export const Textarea = forwardRef<HTMLTextAreaElement, Props>(
       value,
       defaultValue,
       onChange,
+      onMouseDown,
+      disabled,
+      readOnly,
+      id,
       ...props
     },
     ref,
   ) {
+    const autoId = useId();
+    const fieldId = useFieldControlId(id);
+    const textareaId = fieldId ?? autoId;
     const controlled = value !== undefined;
     const [uncontrolled, setUncontrolled] = useState(
       () => String(defaultValue ?? ""),
@@ -53,15 +63,26 @@ export const Textarea = forwardRef<HTMLTextAreaElement, Props>(
       onChange?.(e);
     };
 
+    const handleMouseDown = (e: MouseEvent<HTMLTextAreaElement>) => {
+      if (!disabled && !readOnly && e.button === 0) {
+        e.currentTarget.focus();
+      }
+      onMouseDown?.(e);
+    };
+
     return (
       <>
         <textarea
+          {...props}
           ref={ref}
+          id={textareaId}
           className={cx("ms-textarea", invalid && "is-invalid", className)}
           maxLength={limit}
           value={controlled ? value : uncontrolled}
           onChange={handleChange}
-          {...props}
+          disabled={disabled}
+          readOnly={readOnly}
+          onMouseDown={handleMouseDown}
         />
         {countVisible && limit != null ? (
           <span className="ms-char-count" aria-live="polite">

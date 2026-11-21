@@ -1562,6 +1562,9 @@ body:has(.ms-boot-splash),
   line-height: 20px;
   box-shadow: var(--ms-shadow-e1);
   transition: border-color 0.15s, box-shadow 0.15s;
+  pointer-events: auto;
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 .ms-input.has-clear {
@@ -2619,6 +2622,9 @@ body:has(.ms-boot-splash),
   letter-spacing: -0.14px;
   line-height: 20px;
   box-shadow: var(--ms-shadow-e1);
+  pointer-events: auto;
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 .ms-textarea:focus {

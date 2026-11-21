@@ -10,6 +10,7 @@ import {
   type Ref,
 } from "react";
 import { cx } from "./cx";
+import { useFieldControlId } from "./Field";
 import { InputClearIcon } from "./icons";
 
 type Props = InputHTMLAttributes<HTMLInputElement> & {
@@ -45,6 +46,7 @@ export const Input = forwardRef<HTMLInputElement, Props>(function Input(
     value,
     defaultValue,
     onChange,
+    onMouseDown,
     disabled,
     readOnly,
     type = "text",
@@ -54,7 +56,8 @@ export const Input = forwardRef<HTMLInputElement, Props>(function Input(
   forwardedRef,
 ) {
   const autoId = useId();
-  const inputId = id ?? autoId;
+  const fieldId = useFieldControlId(id);
+  const inputId = fieldId ?? autoId;
   const inputRef = useRef<HTMLInputElement | null>(null);
   const controlled = value !== undefined;
   const [uncontrolled, setUncontrolled] = useState(
@@ -86,7 +89,9 @@ export const Input = forwardRef<HTMLInputElement, Props>(function Input(
     if (!controlled) setUncontrolled("");
 
     const el = inputRef.current;
-    if (!el || !onChange) return;
+    if (!el) return;
+    el.focus();
+    if (!onChange) return;
 
     const native = Object.getOwnPropertyDescriptor(
       HTMLInputElement.prototype,
@@ -104,6 +109,7 @@ export const Input = forwardRef<HTMLInputElement, Props>(function Input(
   return (
     <div className={cx("ms-input-wrap", showClear && "has-clear")}>
       <input
+        {...props}
         ref={setInputRef}
         id={inputId}
         type={type}
@@ -117,7 +123,14 @@ export const Input = forwardRef<HTMLInputElement, Props>(function Input(
         onChange={handleChange}
         disabled={disabled}
         readOnly={readOnly}
-        {...props}
+        onMouseDown={(e) => {
+          // Telegram Desktop WebView often keeps keyboard focus on the chat
+          // composer; force the field to take focus on primary click.
+          if (!disabled && !readOnly && e.button === 0) {
+            e.currentTarget.focus();
+          }
+          onMouseDown?.(e);
+        }}
       />
       {showClear ? (
         <button
