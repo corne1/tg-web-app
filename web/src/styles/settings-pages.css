@@ -1,0 +1,157 @@
+/* settings-pages.css — About app, booking rules (from calendar.css L8529-8684) */
+/* Figma 21446:21072 — О приложении */
+.ms-about {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0 0 24px;
+}
+
+.ms-about-card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  border-radius: 20px;
+  background: var(--ms-soft);
+  overflow: hidden;
+}
+
+.ms-about-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.ms-about-label {
+  color: var(--ms-ink);
+  font-size: 16px;
+  font-weight: 400;
+  letter-spacing: -0.16px;
+  line-height: 24px;
+}
+
+.ms-about-value {
+  color: var(--ms-muted);
+  font-size: 16px;
+  font-weight: 400;
+  letter-spacing: -0.16px;
+  line-height: 24px;
+  text-align: right;
+}
+
+/* Figma 21455:21865 — Правила записи */
+.ms-rules {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 0 0 24px;
+}
+
+.ms-rules-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ms-rules-section-title {
+  margin: 0;
+  padding: 0 4px;
+  color: var(--ms-ink-strong);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  line-height: 24px;
+}
+
+.ms-rules-card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  border-radius: 20px;
+  background: var(--ms-soft);
+  overflow: hidden;
+}
+
+/* Figma 21446:20001 — gray caption inside soft card, above first row */
+.ms-rules-card-caption {
+  margin: 0;
+  padding: 14px 16px 0;
+  color: var(--ms-muted);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+}
+
+.ms-rules-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.ms-rules-copy {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+}
+
+.ms-rules-label {
+  margin: 0;
+  color: var(--ms-ink);
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.16px;
+  line-height: 22px;
+}
+
+.ms-rules-lead {
+  margin: 0;
+  color: var(--ms-muted);
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: -0.08px;
+  line-height: 18px;
+}
+
+.ms-rules-value {
+  color: var(--ms-muted);
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: -0.1px;
+  line-height: 20px;
+}
+
+.ms-rules-link {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin: 0;
+  padding: 14px 16px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.ms-rules-link:active {
+  background: var(--ms-fill2);
+}
+
+.ms-rules-link:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.ms-rules-rule {
+  margin: 0 16px;
+  border: none;
+  border-top: 1px solid var(--ms-line-soft);
+}

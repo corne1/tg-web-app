@@ -15,7 +15,7 @@ When implementing or changing UI under `web/`:
 1. Load **figma-design-to-code** skill, then `create_session` for the file.
 2. `get_design_context` + screenshot for the target node (and child nodes if response is sparse).
 3. Read Figma **comments** on that frame (browser Comments panel if MCP has no comments API).
-4. Reuse project tokens (`--ms-*` in `web/src/styles/calendar.css`) and existing components/assets. Map Figma values to tokens; do not hardcode random purples/spacings.
+4. Reuse project tokens (`--ms-*` in `web/src/styles/master.css`) and existing components/assets. Map Figma values to tokens; do not hardcode random purples/spacings. Styles live under `web/src/styles/` (`index.css` barrel).
 
 ## Hard rules
 - ❌ No layout/copy/icons/spacing “by eye” or from chat paste alone when Figma is available.

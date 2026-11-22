@@ -1,0 +1,12 @@
+/* App styles barrel — order matches former calendar.css cascade. */
+@import "./base.css";
+@import "./master.css";
+@import "./onboarding-services.css";
+@import "./onboarding-hours.css";
+@import "./onboarding-place.css";
+@import "./cabinet.css";
+@import "./booking.css";
+@import "./clients.css";
+@import "./profile.css";
+@import "./client-flow.css";
+@import "./settings-pages.css";
