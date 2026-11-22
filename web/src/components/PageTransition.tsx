@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, type ReactNode } from "react";
 import { useLocation, useNavigationType } from "react-router-dom";
 
-/** Root cabinet tabs — tab bar lives inside each screen; skip page slide between them. */
+/** Root cabinet tabs — no page slide / remount flash between them. */
 const CABINET_TAB_ROOTS = new Set([
   "/cabinet",
   "/cabinet/clients",
@@ -15,7 +15,7 @@ function isCabinetTabRoot(pathname: string): boolean {
 /**
  * Enter animation on route change.
  * PUSH → from right, POP → from left, REPLACE → fade.
- * Tab-bar switches skip the page animation (bar keeps its own active-state motion).
+ * Landing on a cabinet tab root skips the page animation (tab bar owns that UX).
  */
 export function PageTransition({ children }: { children: ReactNode }) {
   const location = useLocation();
@@ -25,10 +25,14 @@ export function PageTransition({ children }: { children: ReactNode }) {
 
   const fromPath = prevPathRef.current;
   const toPath = location.pathname;
-  const tabSwitch =
-    fromPath !== toPath &&
-    isCabinetTabRoot(fromPath) &&
-    isCabinetTabRoot(toPath);
+  const toTab = isCabinetTabRoot(toPath);
+  const fromTab = isCabinetTabRoot(fromPath);
+  /** Same URL re-push, or any navigation that lands on a tab root. */
+  const skipAnim =
+    skipFirst.current ||
+    fromPath === toPath ||
+    toTab ||
+    (fromTab && toTab);
 
   useLayoutEffect(() => {
     skipFirst.current = false;
@@ -38,16 +42,20 @@ export function PageTransition({ children }: { children: ReactNode }) {
   const tone =
     navType === "POP" ? "back" : navType === "REPLACE" ? "replace" : "forward";
 
-  const animate = !skipFirst.current && !tabSwitch;
+  /**
+   * Tab roots key by pathname so a same-tab history push (new location.key)
+   * does not remount the screen. Deeper routes keep location.key for enter anim.
+   */
+  const transitionKey = toTab ? `tab:${toPath}` : location.key;
 
   return (
     <div className="page-transition-root">
       <div
-        key={location.key}
+        key={transitionKey}
         className={
-          animate
-            ? `page-transition page-transition--${tone}`
-            : "page-transition"
+          skipAnim
+            ? "page-transition"
+            : `page-transition page-transition--${tone}`
         }
       >
         {children}

@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 
 function IconSchedule({ active }: { active: boolean }) {
   const stroke = active ? "#623DF5" : "#26282C";
@@ -72,6 +72,8 @@ const TABS = [
 ] as const;
 
 export function MasterTabBar() {
+  const { pathname } = useLocation();
+
   return (
     <nav className="ms-tabbar" aria-label="Кабинет">
       {TABS.map(({ to, label, Icon, end }) => (
@@ -79,6 +81,13 @@ export function MasterTabBar() {
           key={to}
           to={to}
           end={end}
+          replace
+          onClick={(e) => {
+            // Same tab root again → no history push / remount / rise flash.
+            if (pathname === to) {
+              e.preventDefault();
+            }
+          }}
           className={({ isActive }) =>
             `ms-tabbar-item${isActive ? " is-active" : ""}`
           }

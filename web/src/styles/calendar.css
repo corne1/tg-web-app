@@ -4683,6 +4683,8 @@ label.ms-sheet-item {
 /* Cabinet — schedule (Figma 21252:46890 «Нет записей (рабочий день)») */
 .master-setup.ms-cabinet {
   background: #fff;
+  /* Tab switches remount the screen; rise looked like a page reload. */
+  animation: none;
 }
 
 .ms-cab-header {
