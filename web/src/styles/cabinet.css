@@ -693,7 +693,7 @@
   cursor: pointer;
 }
 
-/* Figma 21252:47003 — floating pill: shadow only, no fill (content shows through) */
+/* Figma 21252:47003 — floating white pill + shadow over scroll content */
 .ms-tabbar {
   position: absolute;
   left: 25px;
@@ -707,9 +707,10 @@
   padding: 0;
   min-height: 60px;
   border-radius: 296px;
-  background: transparent;
+  background: #fff;
   border: none;
   box-shadow: var(--ms-shadow-e3);
+  overflow: hidden;
   pointer-events: auto;
 }
 
