@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { fetchMe } from "../api";
 import pencilIcon from "../assets/cabinet/profile/pencil.svg";
@@ -14,7 +14,7 @@ import { clientPreviewState } from "../lib/clientPreview";
 import { saveMasterAvatarDataUrl } from "../lib/masterAvatar";
 import { cacheProfile } from "../lib/profileStorage";
 import type { MasterProfile } from "../types";
-import { BackIcon, Button, ChevronRightIcon, IconButton } from "../ui";
+import { BackIcon, Button, ChevronRightIcon, IconButton, cx } from "../ui";
 
 type PubLocState = { toast?: "saved" };
 
@@ -31,6 +31,20 @@ function GlobeIcon() {
         stroke="#623DF5"
         strokeWidth="1.5"
         strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function CopyCheckIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <path
+        d="M3.333 8.333 6.333 11.333 12.667 4.667"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );
@@ -66,7 +80,17 @@ export function PublicProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const copiedResetRef = useRef<number | null>(null);
   const { serviceTypes, metaFor } = useServiceTypes();
+
+  useEffect(
+    () => () => {
+      if (copiedResetRef.current != null) {
+        window.clearTimeout(copiedResetRef.current);
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -119,7 +143,13 @@ export function PublicProfileScreen() {
       await navigator.clipboard.writeText(bookingLink);
       setCopied(true);
       webApp?.HapticFeedback?.notificationOccurred("success");
-      window.setTimeout(() => setCopied(false), 2000);
+      if (copiedResetRef.current != null) {
+        window.clearTimeout(copiedResetRef.current);
+      }
+      copiedResetRef.current = window.setTimeout(() => {
+        setCopied(false);
+        copiedResetRef.current = null;
+      }, 1000);
     } catch {
       webApp?.showAlert?.(bookingLink);
     }
@@ -223,12 +253,16 @@ export function PublicProfileScreen() {
             </div>
             <button
               type="button"
-              className="ms-pub-copy"
+              className={cx("ms-pub-copy", copied && "is-copied")}
               aria-label={copied ? "Скопировано" : "Копировать"}
               disabled={!bookingLink}
               onClick={() => void copyLink()}
             >
-              <img src={copyIcon} width={16} height={16} alt="" />
+              {copied ? (
+                <CopyCheckIcon />
+              ) : (
+                <img src={copyIcon} width={16} height={16} alt="" />
+              )}
             </button>
           </div>
           <Button

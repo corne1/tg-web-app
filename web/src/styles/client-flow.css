@@ -174,8 +174,7 @@
   color: var(--ms-ink);
 }
 
-.ms-client-svc-meta,
-.ms-nb-svc-meta {
+.ms-client-svc-meta {
   display: inline-flex;
   align-items: center;
   gap: 4px;

@@ -7,6 +7,7 @@ import { MsArrowRight } from "../components/master/MsArrowRight";
 import { ServiceSparkIcon } from "../components/master/ServiceSparkIcon";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
+import clockIcon from "../assets/cabinet/clock.svg";
 import clockPurpleIcon from "../assets/cabinet/clock-purple.svg";
 import plusCircleIcon from "../assets/onboarding/plus-circle.svg";
 import servicesEmptyIllu from "../assets/onboarding/services-empty.svg";
@@ -234,9 +235,21 @@ export function NewBookingServiceScreen() {
                       <span className="ms-nb-svc-copy">
                         <span className="ms-nb-svc-title">{svc.title}</span>
                         <span className="ms-nb-svc-meta">
-                          {formatDuration(svc.durationMin)}
-                          <span aria-hidden> · </span>
-                          {formatPrice(svc)}
+                          <img
+                            className="ms-service-timer"
+                            src={clockIcon}
+                            width={16}
+                            height={16}
+                            alt=""
+                            aria-hidden
+                          />
+                          <span className="ms-service-duration">
+                            {formatDuration(svc.durationMin)}
+                          </span>
+                          <span className="ms-service-sep" aria-hidden>
+                            ·
+                          </span>
+                          <span>{formatPrice(svc)}</span>
                         </span>
                       </span>
                       <span

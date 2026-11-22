@@ -594,28 +594,36 @@
 .ms-nb-svc-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
+/* Figma 21422:24386 File Upload - Avatar — Fill Gray/White × State Default/Selected */
 .ms-nb-svc {
   appearance: none;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
   width: 100%;
   margin: 0;
-  padding: 14px 16px;
-  border: 1.5px solid transparent;
-  border-radius: 20px;
+  padding: 16px;
+  border: 1px solid var(--ms-line-soft);
+  border-radius: var(--ms-radius-card);
   background: var(--ms-fill2);
   text-align: left;
   cursor: pointer;
   box-sizing: border-box;
 }
 
+.ms-nb-svc.is-fill-white {
+  background: #fff;
+}
+
 .ms-nb-svc.is-on {
-  border-color: var(--ms-purple);
-  background: #f6f3ff;
+  border-color: var(--ms-purple-border);
+}
+
+.ms-nb-svc.is-on .ms-service-spark {
+  color: var(--ms-purple);
 }
 
 .ms-nb-svc-icon {
@@ -627,7 +635,7 @@
   width: 22px;
   height: 22px;
   border-radius: 6px;
-  border: 1.5px solid #c5c8ce;
+  border: 1.5px solid var(--ms-line);
   background: #fff;
   display: inline-flex;
   align-items: center;
@@ -649,22 +657,35 @@
 }
 
 .ms-nb-svc-title {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
-  letter-spacing: -0.15px;
-  line-height: 22px;
+  letter-spacing: -0.16px;
+  line-height: 24px;
   color: var(--ms-ink);
 }
 
 .ms-nb-svc-meta {
   display: inline-flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 6px;
   font-size: 13px;
   font-weight: 400;
   letter-spacing: -0.13px;
   line-height: 18px;
   color: var(--ms-muted);
+}
+
+.ms-nb-svc-meta .ms-service-timer {
+  width: 16px;
+  height: 16px;
+  display: block;
+  flex: 0 0 auto;
+  color: var(--ms-tertiary);
+}
+
+.ms-nb-svc-meta .ms-service-sep {
+  color: var(--ms-tertiary);
 }
 
 .ms-nb-svc-empty {

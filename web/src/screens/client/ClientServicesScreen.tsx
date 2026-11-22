@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import clockIcon from "../../assets/cabinet/clock.svg";
 import clockPurpleIcon from "../../assets/cabinet/clock-purple.svg";
 import { ServiceSparkIcon } from "../../components/master/ServiceSparkIcon";
 import { ClientFlowShell } from "../../components/client/ClientFlowShell";
@@ -158,17 +159,20 @@ export function ClientServicesScreen() {
                   <span className="ms-nb-svc-title">{svc.title}</span>
                   <span className="ms-nb-svc-meta">
                     <img
-                      src={clockPurpleIcon}
+                      className="ms-service-timer"
+                      src={clockIcon}
                       width={16}
                       height={16}
                       alt=""
                       aria-hidden
                     />
-                    <span>
+                    <span className="ms-service-duration">
                       {formatDuration(svc.durationMin)}
-                      <span aria-hidden> • </span>
-                      {formatPrice(svc)}
                     </span>
+                    <span className="ms-service-sep" aria-hidden>
+                      ·
+                    </span>
+                    <span>{formatPrice(svc)}</span>
                   </span>
                 </span>
                 <span className={cx("ms-nb-check", on && "is-on")} aria-hidden>

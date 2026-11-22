@@ -947,7 +947,7 @@
   gap: 12px;
 }
 
-/* Figma 21446:15581 File Upload - Avatar — fill2 card, Gray Fill Icon */
+/* Figma 21422:24386 File Upload - Avatar — Fill Gray/White × Default/Selected */
 .ms-service-card {
   position: relative;
   display: flex;
@@ -959,6 +959,18 @@
   border-radius: var(--ms-radius-card);
   box-shadow: none;
   overflow: visible;
+}
+
+.ms-service-card.is-fill-white {
+  background: #fff;
+}
+
+.ms-service-card.is-on {
+  border-color: var(--ms-purple-border);
+}
+
+.ms-service-card.is-on .ms-service-spark {
+  color: var(--ms-purple);
 }
 
 .ms-service-avatar {

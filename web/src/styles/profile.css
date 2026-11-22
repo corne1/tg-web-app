@@ -366,6 +366,11 @@
   justify-content: center;
   cursor: pointer;
   padding: 0;
+  color: var(--ms-ink);
+}
+
+.ms-pub-copy.is-copied {
+  color: var(--ms-success);
 }
 
 .ms-pub-copy:disabled {
