@@ -59,16 +59,21 @@ input {
   min-height: 100vh;
   min-height: 100dvh;
   display: flex;
-  justify-content: center;
-  padding: 1.25rem 1rem 2rem;
+  justify-content: flex-start;
+  align-items: stretch;
+  /* Mini App is always edge-to-edge; never keep desktop “card” side gutters */
+  padding: 0;
+  width: 100%;
   background: #ffffff;
+  overflow-x: hidden;
 }
 
 /* Route enter transitions (PUSH / POP / REPLACE) */
 .page-transition-root {
   width: 100%;
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
+  align-items: stretch;
   align-self: stretch;
   min-height: 0;
 }
@@ -82,7 +87,8 @@ input {
 .page-transition {
   width: 100%;
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
+  align-items: stretch;
   min-height: 0;
 }
 
@@ -1153,9 +1159,13 @@ body:has(.ms-boot-splash),
 
 .master-setup {
   position: relative;
-  /* Full WebView width — no 402px phone-column gutters on desktop/Telegram Desktop */
+  /* Full WebView width — no phone-column gutters */
+  flex: 1 1 auto;
+  align-self: stretch;
   width: 100%;
-  /* Full viewport; app-frame padding is cleared via :has(.master-setup) */
+  max-width: none;
+  min-width: 0;
+  /* Full viewport; app-frame padding stays 0 */
   height: 100vh;
   height: 100dvh;
   max-height: 100vh;
