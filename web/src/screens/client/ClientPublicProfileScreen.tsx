@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import coverDemo from "../../assets/cabinet/profile/cover.jpg";
-import clockPurpleIcon from "../../assets/cabinet/clock-purple.svg";
+import clockIcon from "../../assets/cabinet/clock.svg";
 import { ClientMasterProfileSkeleton } from "../../components/calendar/Skeleton";
 import { ClientFlowShell } from "../../components/client/ClientFlowShell";
 import { PlaceModeIcon } from "../../components/master/PlaceModeIcon";
@@ -194,20 +194,21 @@ export function ClientPublicProfileScreen() {
                     <span className="ms-client-svc-name">{s.title}</span>
                     <span className="ms-client-svc-meta">
                       <img
-                        src={clockPurpleIcon}
+                        className="ms-service-timer"
+                        src={clockIcon}
                         width={16}
                         height={16}
                         alt=""
                         aria-hidden
                       />
-                      <span>
-                        <span className="ms-client-svc-duration">
-                          {formatDuration(s.durationMin)}
-                          <span aria-hidden> • </span>
-                        </span>
-                        <span className="ms-client-svc-price">
-                          {formatPrice(s)}
-                        </span>
+                      <span className="ms-client-svc-duration">
+                        {formatDuration(s.durationMin)}
+                      </span>
+                      <span className="ms-service-sep" aria-hidden>
+                        ·
+                      </span>
+                      <span className="ms-client-svc-price">
+                        {formatPrice(s)}
                       </span>
                     </span>
                   </div>

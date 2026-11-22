@@ -142,11 +142,12 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
   padding: 16px;
   border: 1px solid var(--ms-line-soft);
-  border-radius: 20px;
+  border-radius: var(--ms-radius-card);
   background: #fff;
+  box-sizing: border-box;
 }
 
 .ms-client-svc-icon,
@@ -167,21 +168,34 @@
 }
 
 .ms-client-svc-name {
-  font-size: 14px;
-  font-weight: 500;
-  letter-spacing: -0.14px;
-  line-height: 20px;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.16px;
+  line-height: 24px;
   color: var(--ms-ink);
 }
 
 .ms-client-svc-meta {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-size: 14px;
-  letter-spacing: -0.14px;
-  line-height: 20px;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: -0.13px;
+  line-height: 18px;
   color: var(--ms-muted);
+}
+
+.ms-client-svc-meta .ms-service-timer {
+  width: 16px;
+  height: 16px;
+  display: block;
+  flex: 0 0 auto;
+}
+
+.ms-client-svc-meta .ms-service-sep {
+  color: var(--ms-tertiary);
 }
 
 .ms-client-svc-duration {
@@ -253,42 +267,44 @@
 
 .ms-client-place-option {
   display: flex;
-  gap: 12px;
-  align-items: flex-start;
+  gap: 16px;
+  align-items: center;
   width: 100%;
   padding: 16px;
-  border: 1.5px solid var(--ms-line);
-  border-radius: 16px;
+  border: 1px solid var(--ms-line-soft);
+  border-radius: var(--ms-radius-card);
   background: #fff;
   text-align: left;
   cursor: pointer;
+  box-sizing: border-box;
 }
 
-.ms-client-place-option-icon {
-  color: var(--ms-purple);
-  margin-top: 2px;
+.ms-client-place-option .ms-service-avatar {
+  color: var(--ms-tertiary);
 }
 
 .ms-client-place-option.is-on {
-  border-color: var(--ms-purple, #623df5);
-  background: color-mix(in srgb, var(--ms-purple, #623df5) 6%, #fff);
+  border-color: var(--ms-purple-border);
 }
 
-.ms-client-place-option .ms-preset-radio {
+.ms-client-place-option.is-on .ms-service-avatar {
+  color: var(--ms-purple);
+}
+
+.ms-client-place-option .ms-nb-place-radio {
   margin-left: auto;
-  margin-top: 2px;
+  margin-top: 0;
+  flex-shrink: 0;
 }
 
-.ms-client-place-option.is-on .ms-preset-radio,
-.ms-client-place-option .ms-preset-radio.is-checked {
+.ms-client-place-option.is-on .ms-nb-place-radio {
   border-color: var(--ms-purple);
 }
 
-.ms-client-place-option.is-on .ms-preset-radio::after,
-.ms-client-place-option .ms-preset-radio.is-checked::after {
+.ms-client-place-option.is-on .ms-nb-place-radio::after {
   content: "";
   position: absolute;
-  inset: 3px;
+  inset: 4px;
   border-radius: 999px;
   background: var(--ms-purple);
 }

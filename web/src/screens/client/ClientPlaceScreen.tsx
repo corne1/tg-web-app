@@ -83,7 +83,9 @@ export function ClientPlaceScreen() {
       <div className="ms-nb">
         <div className="ms-nb-intro">
           <h2 className="ms-nb-title">Где вам удобно?</h2>
-          <p className="ms-nb-lead">Выберите, где встретиться</p>
+          <p className="ms-nb-lead">
+            Выберите, где встретиться с мастером
+          </p>
         </div>
         <div className="ms-client-place-options" role="radiogroup">
           {draft.place?.studio ? (
@@ -97,24 +99,18 @@ export function ClientPlaceScreen() {
               )}
               onClick={() => setChoice("studio")}
             >
-              <PlaceModeIcon
-                mode="studio"
-                size={24}
-                className="ms-client-place-option-icon"
-              />
+              <span className="ms-service-avatar" aria-hidden>
+                <PlaceModeIcon mode="studio" size={20} />
+              </span>
               <span className="ms-client-place-option-copy">
-                <span className="ms-client-place-option-title">В кабинете</span>
+                <span className="ms-client-place-option-title">
+                  В кабинете у мастера
+                </span>
                 {studioLine ? (
                   <span className="ms-client-place-option-sub">{studioLine}</span>
                 ) : null}
               </span>
-              <span
-                className={cx(
-                  "ms-preset-radio",
-                  choice === "studio" && "is-checked",
-                )}
-                aria-hidden
-              />
+              <span className="ms-nb-place-radio" aria-hidden />
             </button>
           ) : null}
           {draft.place?.visit ? (
@@ -128,26 +124,18 @@ export function ClientPlaceScreen() {
               )}
               onClick={() => setChoice("visit")}
             >
-              <PlaceModeIcon
-                mode="visit"
-                size={24}
-                className="ms-client-place-option-icon"
-              />
+              <span className="ms-service-avatar" aria-hidden>
+                <PlaceModeIcon mode="visit" size={20} />
+              </span>
               <span className="ms-client-place-option-copy">
                 <span className="ms-client-place-option-title">
                   С выездом к вам
                 </span>
                 <span className="ms-client-place-option-sub">
-                  Мастер приедет по вашему адресу
+                  Мастер приедет по указанному вами адресу
                 </span>
               </span>
-              <span
-                className={cx(
-                  "ms-preset-radio",
-                  choice === "visit" && "is-checked",
-                )}
-                aria-hidden
-              />
+              <span className="ms-nb-place-radio" aria-hidden />
             </button>
           ) : null}
         </div>
