@@ -4,6 +4,10 @@
   background: #fff;
   /* Tab switches remount the screen; rise looked like a page reload. */
   animation: none;
+  /* Floating tab bar: 16 gap + 60 bar + 25 bottom inset */
+  --ms-tabbar-clearance: calc(
+    16px + 60px + 25px + env(safe-area-inset-bottom, 0px)
+  );
 }
 
 .ms-cab-header {
@@ -48,8 +52,8 @@
 
 .ms-cab-body {
   gap: 0;
-  /* 16px = Fast setting Toolbar top pad before floating tab bar */
-  padding: 24px 0 16px;
+  /* Bottom clearance so list can scroll under the floating tab bar */
+  padding: 24px 0 var(--ms-tabbar-clearance);
 }
 
 /* Cabinet settings (Мои услуги / время / место / правила).
@@ -689,20 +693,24 @@
   cursor: pointer;
 }
 
-/* Figma 21252:47003 — shadow only, no white fill or stroke */
+/* Figma 21252:47003 — floating pill: shadow only, no fill (content shows through) */
 .ms-tabbar {
-  flex-shrink: 0;
+  position: absolute;
+  left: 25px;
+  right: 25px;
+  bottom: calc(25px + env(safe-area-inset-bottom, 0px));
+  z-index: 5;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 0;
-  margin: 0 25px calc(25px + env(safe-area-inset-bottom, 0px));
+  margin: 0;
   padding: 0;
   min-height: 60px;
   border-radius: 296px;
-  background: none;
+  background: transparent;
   border: none;
   box-shadow: var(--ms-shadow-e3);
-  overflow: hidden;
+  pointer-events: auto;
 }
 
 .ms-tabbar-item {
