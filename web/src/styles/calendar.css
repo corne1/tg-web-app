@@ -5381,7 +5381,7 @@ label.ms-sheet-item {
   cursor: pointer;
 }
 
-/* Figma 21252:47003 — shadow only, no white fill or stroke */
+/* Figma 21252:47003 — no fill/stroke; shadow removed (was painting over content). */
 .ms-tabbar {
   flex-shrink: 0;
   display: grid;
@@ -5393,7 +5393,7 @@ label.ms-sheet-item {
   border-radius: 296px;
   background: none;
   border: none;
-  box-shadow: var(--ms-shadow-e3);
+  box-shadow: none;
   overflow: hidden;
 }
 
