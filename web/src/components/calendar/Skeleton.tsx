@@ -148,6 +148,71 @@ export function ClientCardSkeleton() {
   );
 }
 
+/** Cabinet profile tab — identity under cover (avoids «Мастер» flash). */
+export function CabinetProfileIdentitySkeleton() {
+  return (
+    <div
+      className="ms-prof-identity"
+      aria-busy="true"
+      aria-label="Загрузка профиля"
+    >
+      <div className="ms-prof-avatar-wrap">
+        <Skeleton width="100%" height="100%" className="is-round" />
+      </div>
+      <div className="ms-prof-identity-text">
+        <Skeleton width="56%" height="22px" />
+        <Skeleton width="42%" height="14px" className="mt-2" />
+      </div>
+    </div>
+  );
+}
+
+/** Public / client master page — centered hero. */
+export function MasterHeroSkeleton({
+  centered = true,
+}: {
+  centered?: boolean;
+}) {
+  return (
+    <div
+      className={
+        centered ? "ms-pub-hero ms-prof-skel-hero" : "ms-prof-skel-hero"
+      }
+      aria-busy="true"
+      aria-label="Загрузка профиля"
+    >
+      <Skeleton width="88px" height="88px" className="is-round" />
+      <Skeleton width="48%" height="22px" className="mt-3" />
+      <Skeleton width="36%" height="14px" className="mt-2" />
+      <Skeleton width="104px" height="22px" className="is-round mt-3" />
+    </div>
+  );
+}
+
+/** Client-facing master profile while fetch runs. */
+export function ClientMasterProfileSkeleton() {
+  return (
+    <div aria-busy="true" aria-label="Загрузка профиля мастера">
+      <section className="ms-prof-hero ms-client-hero">
+        <div className="ms-prof-cover ms-prof-skel-cover" aria-hidden />
+        <CabinetProfileIdentitySkeleton />
+      </section>
+      <div className="ms-client-profile-content">
+        <div className="ms-cab-skel-slot-card">
+          <Skeleton width="40%" height="14px" />
+          <Skeleton width="90%" height="14px" className="mt-2" />
+          <Skeleton width="70%" height="14px" className="mt-2" />
+        </div>
+        <div className="ms-cab-skel-slot-card mt-3">
+          <Skeleton width="32%" height="14px" />
+          <Skeleton width="75%" height="16px" className="mt-2" />
+          <Skeleton width="50%" height="14px" className="mt-2" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /** Client «Мои записи» list. */
 export function BookingsListSkeleton({ rows = 3 }: { rows?: number }) {
   return (

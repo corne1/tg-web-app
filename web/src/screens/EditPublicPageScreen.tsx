@@ -140,7 +140,10 @@ export function EditPublicPageScreen() {
       });
       savePublicAbout(about.trim());
       webApp?.HapticFeedback?.notificationOccurred("success");
-      navigate("/cabinet/profile/public", { replace: true });
+      navigate("/cabinet/profile/public", {
+        replace: true,
+        state: { toast: "saved" as const },
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Не удалось сохранить");
     } finally {

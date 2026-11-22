@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchMe, resetTestUser } from "../api";
+import {
+  CabinetProfileIdentitySkeleton,
+  Skeleton,
+} from "../components/calendar/Skeleton";
 import { MasterAvatar } from "../components/master/MasterAvatar";
 import bellIcon from "../assets/cabinet/profile/bell.svg";
 import calendarClockIcon from "../assets/cabinet/profile/calendar-clock.svg";
@@ -95,6 +99,7 @@ function MenuGroup({ items }: { items: MenuItem[] }) {
 export function CabinetProfileScreen() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<MasterProfile | null>(null);
+  const [loading, setLoading] = useState(true);
   const [isTestUser, setIsTestUser] = useState(false);
   const [resetting, setResetting] = useState(false);
   const { serviceTypes, metaFor } = useServiceTypes();
@@ -112,7 +117,10 @@ export function CabinetProfileScreen() {
           saveMasterAvatarDataUrl(me.profile.avatarUrl);
         }
       })
-      .catch(() => undefined);
+      .catch(() => undefined)
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
     return () => {
       cancelled = true;
     };
@@ -153,22 +161,26 @@ export function CabinetProfileScreen() {
           <div className="ms-prof-cover" aria-hidden>
             <img src={coverDemo} alt="" />
           </div>
-          <div className="ms-prof-identity">
-            <div className="ms-prof-avatar-wrap">
-              <MasterAvatar
-                className="ms-prof-avatar"
-                remote={profile?.avatarUrl}
-                width={100}
-                height={100}
-              />
+          {loading ? (
+            <CabinetProfileIdentitySkeleton />
+          ) : (
+            <div className="ms-prof-identity">
+              <div className="ms-prof-avatar-wrap">
+                <MasterAvatar
+                  className="ms-prof-avatar"
+                  remote={profile?.avatarUrl}
+                  width={100}
+                  height={100}
+                />
+              </div>
+              <div className="ms-prof-identity-text">
+                <h1 className="ms-prof-name">
+                  {profile?.name?.trim() || "Мастер"}
+                </h1>
+                <p className="ms-prof-role">{title}</p>
+              </div>
             </div>
-            <div className="ms-prof-identity-text">
-              <h1 className="ms-prof-name">
-                {profile?.name?.trim() || "Мастер"}
-              </h1>
-              <p className="ms-prof-role">{title}</p>
-            </div>
-          </div>
+          )}
         </section>
 
         <div className="ms-prof-content">
@@ -177,7 +189,9 @@ export function CabinetProfileScreen() {
               <div className="ms-prof-public-copy">
                 <div className="ms-prof-public-title-row">
                   <h2 className="ms-prof-public-title">Публичный профиль</h2>
-                  {published ? (
+                  {loading ? (
+                    <Skeleton width="96px" height="22px" className="is-round" />
+                  ) : published ? (
                     <span className="ms-prof-status">
                       <span className="ms-prof-status-dot" aria-hidden />
                       Опубликован

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import coverDemo from "../../assets/cabinet/profile/cover.jpg";
 import clockPurpleIcon from "../../assets/cabinet/clock-purple.svg";
+import { ClientMasterProfileSkeleton } from "../../components/calendar/Skeleton";
 import { ClientFlowShell } from "../../components/client/ClientFlowShell";
 import { PlaceModeIcon } from "../../components/master/PlaceModeIcon";
 import { ServiceSparkIcon } from "../../components/master/ServiceSparkIcon";
@@ -97,7 +98,7 @@ export function ClientPublicProfileScreen() {
   if (loading) {
     return (
       <ClientFlowShell hideHeader>
-        <p className="ms-client-muted">Загрузка профиля…</p>
+        <ClientMasterProfileSkeleton />
       </ClientFlowShell>
     );
   }

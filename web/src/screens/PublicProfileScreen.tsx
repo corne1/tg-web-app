@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { fetchMe } from "../api";
 import pencilIcon from "../assets/cabinet/profile/pencil.svg";
 import copyIcon from "../assets/onboarding/action-copy.svg";
+import { MasterHeroSkeleton, Skeleton } from "../components/calendar/Skeleton";
 import { MasterAvatar } from "../components/master/MasterAvatar";
+import { MsToast } from "../components/master/MsToast";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
 import { useServiceTypes } from "../hooks/useServiceTypes";
@@ -13,6 +15,8 @@ import { saveMasterAvatarDataUrl } from "../lib/masterAvatar";
 import { cacheProfile } from "../lib/profileStorage";
 import type { MasterProfile } from "../types";
 import { BackIcon, Button, ChevronRightIcon, IconButton } from "../ui";
+
+type PubLocState = { toast?: "saved" };
 
 function displayLink(url: string): string {
   return url.replace(/^https?:\/\//i, "");
@@ -56,9 +60,12 @@ function ShareIcon() {
 /** Figma — «Публичный профиль» to the right of Profile tab. */
 export function PublicProfileScreen() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { webApp } = useTelegram();
   const [profile, setProfile] = useState<MasterProfile | null>(null);
+  const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
   const { serviceTypes, metaFor } = useServiceTypes();
 
   useEffect(() => {
@@ -72,11 +79,22 @@ export function PublicProfileScreen() {
           saveMasterAvatarDataUrl(me.profile.avatarUrl);
         }
       })
-      .catch(() => undefined);
+      .catch(() => undefined)
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
     return () => {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    const state = location.state as PubLocState | null;
+    if (state?.toast !== "saved") return;
+    setToast("Изменения сохранены");
+    window.setTimeout(() => setToast(null), 2500);
+    navigate(location.pathname, { replace: true, state: null });
+  }, [location.pathname, location.state, navigate]);
 
   const bookingLink = profile?.bookingLink ?? null;
   const linkLabel = useMemo(
@@ -144,6 +162,13 @@ export function PublicProfileScreen() {
 
   return (
     <div className="master-setup ms-cabinet ms-pub">
+      {toast ? (
+        <MsToast
+          message={toast}
+          tone="success"
+          onDismiss={() => setToast(null)}
+        />
+      ) : null}
       <header className="ms-bd-toolbar">
         <IconButton label="Назад" onClick={goBack}>
           <BackIcon />
@@ -160,24 +185,30 @@ export function PublicProfileScreen() {
       </header>
 
       <div className="ms-body ms-cab-body ms-pub-body">
-        <div className="ms-pub-hero">
-          <MasterAvatar
-            className="ms-pub-avatar"
-            remote={profile?.avatarUrl}
-            width={88}
-            height={88}
-          />
-          <h2 className="ms-pub-name">{profile?.name?.trim() || "Мастер"}</h2>
-          <p className="ms-pub-role">{title}</p>
-          {published ? (
-            <span className="ms-prof-status">
-              <span className="ms-prof-status-dot" aria-hidden />
-              Опубликован
-            </span>
-          ) : (
-            <span className="ms-prof-status is-draft">Черновик</span>
-          )}
-        </div>
+        {loading ? (
+          <MasterHeroSkeleton />
+        ) : (
+          <div className="ms-pub-hero">
+            <MasterAvatar
+              className="ms-pub-avatar"
+              remote={profile?.avatarUrl}
+              width={88}
+              height={88}
+            />
+            <h2 className="ms-pub-name">
+              {profile?.name?.trim() || "Мастер"}
+            </h2>
+            <p className="ms-pub-role">{title}</p>
+            {published ? (
+              <span className="ms-prof-status">
+                <span className="ms-prof-status-dot" aria-hidden />
+                Опубликован
+              </span>
+            ) : (
+              <span className="ms-prof-status is-draft">Черновик</span>
+            )}
+          </div>
+        )}
 
         <section className="ms-pub-link-card" aria-label="Ссылка для клиентов">
           <div className="ms-pub-link-head">
@@ -188,7 +219,7 @@ export function PublicProfileScreen() {
           </div>
           <div className="ms-pub-url-row">
             <div className="ms-pub-url" title={bookingLink ?? undefined}>
-              {linkLabel}
+              {loading ? <Skeleton width="70%" height="16px" /> : linkLabel}
             </div>
             <button
               type="button"
