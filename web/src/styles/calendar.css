@@ -1153,7 +1153,8 @@ body:has(.ms-boot-splash),
 
 .master-setup {
   position: relative;
-  width: min(402px, 100%);
+  /* Full WebView width — no 402px phone-column gutters on desktop/Telegram Desktop */
+  width: 100%;
   /* Full viewport; app-frame padding is cleared via :has(.master-setup) */
   height: 100vh;
   height: 100dvh;
@@ -1161,7 +1162,7 @@ body:has(.ms-boot-splash),
   max-height: 100dvh;
   min-height: 100vh;
   min-height: 100dvh;
-  margin: 0 auto;
+  margin: 0;
   background: #fff;
   color: var(--ms-ink);
   border-radius: 0;
