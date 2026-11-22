@@ -233,15 +233,24 @@
   border-top: 1px solid var(--ms-line-soft);
 }
 
+/* Figma 21416:129888 — Button-Primary Strong / Icon Only / pencil */
 .ms-pub-edit {
   background: var(--ms-purple) !important;
-  border-color: var(--ms-purple) !important;
+  border-color: transparent !important;
   color: #fff !important;
   box-shadow: none !important;
+  padding: 12px;
+}
+
+.ms-pub-edit:active {
+  background: var(--ms-purple) !important;
+  filter: brightness(0.92);
 }
 
 .ms-pub-edit img {
-  filter: brightness(0) invert(1);
+  display: block;
+  width: 20px;
+  height: 20px;
 }
 
 .ms-pub-body {

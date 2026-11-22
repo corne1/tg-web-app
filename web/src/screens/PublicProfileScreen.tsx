@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchMe } from "../api";
+import pencilIcon from "../assets/cabinet/profile/pencil.svg";
 import copyIcon from "../assets/onboarding/action-copy.svg";
-import editIcon from "../assets/onboarding/action-edit.svg";
 import { MasterAvatar } from "../components/master/MasterAvatar";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
@@ -154,7 +154,8 @@ export function PublicProfileScreen() {
           className="ms-pub-edit"
           onClick={() => navigate("/cabinet/profile/edit")}
         >
-          <img src={editIcon} width={16} height={16} alt="" />
+          {/* Figma 21416:129888 — Button-Primary Strong 44 / Lead Icon pencil */}
+          <img src={pencilIcon} width={20} height={20} alt="" />
         </IconButton>
       </header>
 
