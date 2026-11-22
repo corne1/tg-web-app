@@ -56,11 +56,10 @@
   padding: 24px 0 var(--ms-tabbar-clearance);
 }
 
-/* Cabinet settings (Мои услуги / время / место / правила).
-   Screen is full-bleed horizontally; do not reuse .ms-cab-body. */
+/* Cabinet settings (Мои услуги / время / место / правила) — 16px side gutters. */
 .ms-settings-body {
   gap: 24px;
-  padding: 24px 0 16px;
+  padding: 24px 16px 16px;
   box-sizing: border-box;
 }
 

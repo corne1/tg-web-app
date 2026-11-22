@@ -1007,8 +1007,8 @@
 
 .ms-bd-toolbar.is-page {
   justify-content: flex-start;
-  /* Figma 21445:15471 Toolbar is full width, horizontal padding 0 */
-  padding: calc(12px + env(safe-area-inset-top, 0px)) 0 0;
+  /* Align back control with 16px settings body gutters */
+  padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 0;
 }
 
 .ms-bd-toolbar-title {
