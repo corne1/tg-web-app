@@ -220,7 +220,7 @@ body:has(.ms-boot-splash),
   height: 87px;
 }
 
-/* Figma 21397:14609 — SVG glyphs from logotype, staggered */
+/* Boot wordmark — staggered letters (product name) */
 .ms-boot-word {
   margin: 0;
   display: flex;
@@ -228,7 +228,13 @@ body:has(.ms-boot-splash),
   justify-content: center;
   gap: 0;
   height: 31px;
-  line-height: 0;
+  font-family: "Geist Sans", var(--font-body), system-ui, sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 31px;
+  color: #fff;
+  white-space: nowrap;
 }
 
 .ms-boot-letter {
@@ -236,14 +242,8 @@ body:has(.ms-boot-splash),
   opacity: 0;
   transform: translateX(-28px);
   animation: ms-boot-letter 2.6s ease-in-out infinite;
-  animation-delay: calc(var(--i, 0) * 0.14s);
+  animation-delay: calc(var(--i, 0) * 0.08s);
   will-change: transform, opacity;
-}
-
-.ms-boot-letter svg {
-  display: block;
-  width: auto;
-  height: 31px;
 }
 
 @keyframes ms-boot-letter {

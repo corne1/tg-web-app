@@ -55,7 +55,7 @@ function collectCities(russiaAreas: HhArea[]): CityHit[] {
 async function fetchRussiaCities(): Promise<CityHit[]> {
   const res = await fetch(HH_RUSSIA_URL, {
     headers: {
-      "User-Agent": "PomniMiniApp/1.0 (cities)",
+      "User-Agent": "OnlineBookingMiniApp/1.0 (cities)",
       Accept: "application/json",
     },
   });

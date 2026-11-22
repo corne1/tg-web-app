@@ -24,7 +24,7 @@ export async function suggestAddresses(
     const res = await fetch(url, {
       headers: {
         Accept: "application/json",
-        "User-Agent": "pomni-tg-mini-app/1.0 (booking address suggest)",
+        "User-Agent": "online-booking-tg-mini-app/1.0 (booking address suggest)",
       },
       signal: AbortSignal.timeout(4000),
     });
