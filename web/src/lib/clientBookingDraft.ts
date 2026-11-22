@@ -169,7 +169,9 @@ export function clientBookingTotals(services: MasterService[]): {
   return {
     totalMin,
     priceSum,
-    priceLabel: anyFrom ? `от ${priceSum} ₽` : `${priceSum} ₽`,
+    priceLabel: anyFrom
+      ? `от ${priceSum.toLocaleString("ru-RU")} ₽`
+      : `${priceSum.toLocaleString("ru-RU")} ₽`,
     titles: services.map((s) => s.title).join(" · "),
   };
 }

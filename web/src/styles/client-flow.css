@@ -335,6 +335,15 @@
   gap: 14px;
 }
 
+.ms-client-form-section {
+  margin: 8px 0 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.15px;
+  line-height: 22px;
+  color: var(--ms-ink);
+}
+
 .ms-client-form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;

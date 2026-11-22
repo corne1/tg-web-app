@@ -149,13 +149,9 @@ export function ClientServicesScreen() {
                 type="button"
                 role="checkbox"
                 aria-checked={on}
-                      className={cx(
-                        "ms-nb-svc",
-                        "is-fill-white",
-                        on && "is-on",
-                      )}
-                      onClick={() => toggle(svc.id)}
-                    >
+                className={cx("ms-nb-svc", on && "is-on")}
+                onClick={() => toggle(svc.id)}
+              >
                 <div className="ms-service-avatar" aria-hidden>
                   <ServiceSparkIcon className="ms-service-spark" />
                 </div>

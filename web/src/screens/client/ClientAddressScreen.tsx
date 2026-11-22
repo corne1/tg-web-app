@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import infoIcon from "../../assets/onboarding/info.svg";
 import { suggestAddresses, type AddressHit } from "../../api";
 import { ClientFlowShell } from "../../components/client/ClientFlowShell";
 import { MsArrowRight } from "../../components/master/MsArrowRight";
+import { IconSearch } from "../../components/settings/PlaceSettingsParts";
 import { useBackButton } from "../../hooks/useBackButton";
 import { useMainButton } from "../../hooks/useMainButton";
 import {
@@ -48,7 +50,7 @@ export function ClientAddressScreen() {
   const [visitCity, setVisitCity] = useState(
     () => initial.visitCity || initial.place?.visit?.city || "",
   );
-  const [visitArea, setVisitArea] = useState(initial.visitArea);
+  const [visitArea] = useState(initial.visitArea);
   const [visitAddress, setVisitAddress] = useState(initial.visitAddress);
   const [visitApt, setVisitApt] = useState(initial.visitApt);
   const [visitEntrance, setVisitEntrance] = useState(initial.visitEntrance);
@@ -166,7 +168,7 @@ export function ClientAddressScreen() {
 
   return (
     <ClientFlowShell
-      title="Адрес клиента"
+      title="Адрес — выезд к клиенту"
       onBack={goBack}
       progressFilled={2}
       footer={
@@ -194,27 +196,57 @@ export function ClientAddressScreen() {
     >
       <div className="ms-nb">
         <div className="ms-nb-intro">
-          <h2 className="ms-nb-title">Куда приехать?</h2>
+          <h2 className="ms-nb-title">Куда приедет мастер?</h2>
           <p className="ms-nb-lead">
-            Укажите адрес. Мастер увидит его после подтверждения записи
+            Выберите, где встретиться с мастером
           </p>
         </div>
+
+        <div className="ms-info" role="note">
+          <img
+            src={infoIcon}
+            alt=""
+            className="ms-info-icon"
+            width={20}
+            height={20}
+          />
+          <div className="ms-info-copy">
+            <p>
+              Адрес будет доступен только мастеру. Он не отображается на
+              публичной странице мастера.
+            </p>
+          </div>
+        </div>
+
         <div className="ms-client-form">
-          <Field label="Город, улица и дом" as="label">
-            <Input
-              value={query}
-              onChange={(e) => {
-                setQuery(e.target.value);
-                setConfirmed(false);
-                setSuggestOpen(true);
-              }}
-              onFocus={() => setSuggestOpen(true)}
-              onBlur={() => {
-                window.setTimeout(() => setSuggestOpen(false), 150);
-              }}
-              placeholder="Москва, Тверская, 12"
-              autoComplete="street-address"
-            />
+          <Field label="Адрес" as="label">
+            <div
+              className={cx(
+                "ms-input-affix",
+                "ms-input-affix-prefix",
+                "ms-city-input-wrap",
+                suggestOpen && "is-open",
+              )}
+            >
+              <span className="ms-affix ms-affix-icon" aria-hidden>
+                <IconSearch />
+              </span>
+              <Input
+                className="ms-input-search"
+                value={query}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  setConfirmed(false);
+                  setSuggestOpen(true);
+                }}
+                onFocus={() => setSuggestOpen(true)}
+                onBlur={() => {
+                  window.setTimeout(() => setSuggestOpen(false), 150);
+                }}
+                placeholder="Город, улица и дом"
+                autoComplete="street-address"
+              />
+            </div>
           </Field>
           {suggestOpen && hits.length > 0 ? (
             <ul className="ms-city-suggest" role="listbox">
@@ -235,63 +267,45 @@ export function ClientAddressScreen() {
             </ul>
           ) : null}
 
-          {confirmed ? (
-            <p className="ms-client-muted">
-              {visitCity}
-              {visitAddress ? `, ${visitAddress}` : ""}
-            </p>
-          ) : null}
           {zoneError ? <p className="ms-client-error">{zoneError}</p> : null}
-          {visitZones ? (
-            <p className="ms-client-muted ms-client-zone-note">
-              Зона выезда: {visitZones}
-            </p>
-          ) : null}
 
-          <Field label="Район" as="label">
+          <p className="ms-client-form-section">Дополнительная информация</p>
+
+          <Field label="Квартира / офис" as="label">
             <Input
-              value={visitArea}
-              onChange={(e) => setVisitArea(e.target.value)}
-              placeholder="Тверской"
+              value={visitApt}
+              onChange={(e) => setVisitApt(e.target.value)}
+              placeholder="Например, 42"
             />
           </Field>
           <div className="ms-client-form-row">
-            <Field label="Квартира / офис" as="label">
-              <Input
-                value={visitApt}
-                onChange={(e) => setVisitApt(e.target.value)}
-                placeholder="42"
-              />
-            </Field>
             <Field label="Подъезд" as="label">
               <Input
                 value={visitEntrance}
                 onChange={(e) => setVisitEntrance(e.target.value)}
-                placeholder="2"
+                placeholder="Например, 2"
               />
             </Field>
-          </div>
-          <div className="ms-client-form-row">
             <Field label="Этаж" as="label">
               <Input
                 value={visitFloor}
                 onChange={(e) => setVisitFloor(e.target.value)}
-                placeholder="5"
-              />
-            </Field>
-            <Field label="Домофон" as="label">
-              <Input
-                value={visitIntercom}
-                onChange={(e) => setVisitIntercom(e.target.value)}
-                placeholder="42"
+                placeholder="Например, 5"
               />
             </Field>
           </div>
-          <Field label="Комментарий к адресу" as="label">
+          <Field label="Домофон" as="label">
+            <Input
+              value={visitIntercom}
+              onChange={(e) => setVisitIntercom(e.target.value)}
+              placeholder="Например, 42K"
+            />
+          </Field>
+          <Field label="Дополнительные уточнения" as="label">
             <Textarea
               value={visitNote}
               onChange={(e) => setVisitNote(e.target.value)}
-              placeholder="Как пройти, код калитки…"
+              placeholder="Как найти вход, ориентиры..."
               rows={3}
               maxLength={TEXTAREA_MAX_LEN}
             />
