@@ -689,7 +689,7 @@
   cursor: pointer;
 }
 
-/* Figma 21252:47003 — no fill/stroke; shadow removed (was painting over content). */
+/* Figma 21252:47003 — shadow only, no white fill or stroke */
 .ms-tabbar {
   flex-shrink: 0;
   display: grid;
@@ -701,7 +701,7 @@
   border-radius: 296px;
   background: none;
   border: none;
-  box-shadow: none;
+  box-shadow: var(--ms-shadow-e3);
   overflow: hidden;
 }
 
