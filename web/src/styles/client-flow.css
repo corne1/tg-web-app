@@ -1,8 +1,10 @@
 /* client-flow.css — Client booking funnel + public profile cards (from calendar.css L7909-8528) */
 /* Client booking funnel */
+/* Override .ms-cab-body (padding 24px 0 …) — funnel steps need 16px gutters. */
 .ms-client-flow .ms-client-body {
   gap: 16px;
-  padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  padding: 24px 16px calc(24px + env(safe-area-inset-bottom, 0px));
+  box-sizing: border-box;
 }
 
 /* Public profile: cover flush to top/sides; section cards inset */
