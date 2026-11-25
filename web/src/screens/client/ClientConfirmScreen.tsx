@@ -227,7 +227,7 @@ export function ClientConfirmScreen() {
         </div>
       }
     >
-      {/* Figma 21467:30996 — white page, soft section cards */}
+      {/* Figma 21467:30996 — soft section panels with label inside */}
       <div className="ms-nb ms-client-review">
         <div className="ms-nb-intro">
           <h2 className="ms-nb-title">Проверьте запись</h2>
@@ -236,7 +236,7 @@ export function ClientConfirmScreen() {
 
         <section className="ms-client-review-section">
           <h3 className="ms-client-review-label">Мастер</h3>
-          <div className="ms-client-review-card">
+          <div className="ms-client-review-row">
             <img
               className="ms-client-review-avatar"
               src={resolvePublicMasterAvatarSrc(draft.masterAvatarUrl)}
@@ -260,7 +260,7 @@ export function ClientConfirmScreen() {
           </div>
           <ul className="ms-client-review-svc-list">
             {services.map((svc) => (
-              <li key={svc.id} className="ms-client-review-card">
+              <li key={svc.id} className="ms-client-review-row">
                 <span className="ms-service-avatar" aria-hidden>
                   <ServiceSparkIcon className="ms-service-spark" />
                 </span>
@@ -287,7 +287,7 @@ export function ClientConfirmScreen() {
 
         <section className="ms-client-review-section">
           <h3 className="ms-client-review-label">Дата и время</h3>
-          <div className="ms-client-review-card ms-client-review-when">
+          <div className="ms-client-review-row ms-client-review-when">
             <div className="ms-client-review-copy">
               {draft.timeLabel ? (
                 <p className="ms-client-review-time">{draft.timeLabel}</p>
@@ -300,7 +300,7 @@ export function ClientConfirmScreen() {
 
         <section className="ms-client-review-section">
           <h3 className="ms-client-review-label">Место приёма</h3>
-          <div className="ms-client-review-card">
+          <div className="ms-client-review-row">
             <span
               className="ms-service-avatar ms-client-review-place-ico"
               aria-hidden
@@ -342,7 +342,7 @@ export function ClientConfirmScreen() {
 
         <section className="ms-client-review-section">
           <h3 className="ms-client-review-label">Ваши данные</h3>
-          <div className="ms-client-review-card">
+          <div className="ms-client-review-row">
             <span
               className="ms-service-avatar ms-client-review-place-ico"
               aria-hidden
