@@ -646,6 +646,137 @@
   font-weight: 500;
 }
 
+/* Figma 21467:30996 — Проверьте запись */
+.ms-client-review-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--ms-radius-card);
+  background: var(--ms-fill2);
+  box-sizing: border-box;
+}
+
+.ms-client-review-block-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ms-client-review-block-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.15px;
+  line-height: 22px;
+  color: var(--ms-ink);
+}
+
+.ms-client-review-block-meta {
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: -0.13px;
+  line-height: 18px;
+  color: var(--ms-muted);
+}
+
+.ms-client-review-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.ms-client-review-master {
+  padding: 16px;
+}
+
+.ms-client-review-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--ms-radius-full);
+  object-fit: cover;
+  flex: 0 0 auto;
+  background: var(--ms-fill2);
+}
+
+.ms-client-review-svc-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ms-client-review-svc {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.ms-client-review-copy {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ms-client-review-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.15px;
+  line-height: 22px;
+  color: var(--ms-ink);
+}
+
+.ms-client-review-sub {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: -0.13px;
+  line-height: 18px;
+  color: var(--ms-muted);
+}
+
+.ms-client-review-place-ico {
+  color: var(--ms-tertiary);
+}
+
+.ms-client-review-edit {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  margin: 0;
+  padding: 10px 16px;
+  border: 1px solid var(--ms-line);
+  border-radius: var(--ms-radius-full);
+  background: #fff;
+  color: var(--ms-ink);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
 .ms-client-success {
   display: flex;
   flex-direction: column;

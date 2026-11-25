@@ -53,7 +53,7 @@ export function ClientYourDataScreen() {
 
   return (
     <ClientFlowShell
-      title="Ваши данные"
+      title="Проверьте свои данные"
       onBack={goBack}
       progressFilled={4}
       footer={
@@ -76,6 +76,9 @@ export function ClientYourDataScreen() {
       <div className="ms-nb">
         <div className="ms-nb-intro">
           <h2 className="ms-nb-title">Как к вам обращаться?</h2>
+          <p className="ms-nb-lead">
+            Укажите имя, чтобы мастер знал, кого ждать
+          </p>
         </div>
         {/* Figma 21467:30694 */}
         <div className="ms-client-form">

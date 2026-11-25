@@ -150,6 +150,23 @@ export function selectedServicesLabel(count: number): string {
   return `Выбрано: ${count} ${servicesCountWord(count)}`;
 }
 
+function hoursWord(h: number): string {
+  const mod10 = h % 10;
+  const mod100 = h % 100;
+  if (mod10 === 1 && mod100 !== 11) return "час";
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return "часа";
+  return "часов";
+}
+
+/** Figma client review: «3 часа», not short «3 ч». */
+export function formatDurationLong(mins: number): string {
+  if (mins < 60) return `${mins} мин`;
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  if (m === 0) return `${h} ${hoursWord(h)}`;
+  return `${h} ${hoursWord(h)} ${m} мин`;
+}
+
 export function resolveClientServices(draft: ClientBookingDraft): MasterService[] {
   return draft.serviceIds
     .map((id) => draft.servicesCatalog.find((s) => s.id === id))

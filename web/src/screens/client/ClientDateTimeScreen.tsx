@@ -13,6 +13,7 @@ import { useBackButton } from "../../hooks/useBackButton";
 import { useMainButton } from "../../hooks/useMainButton";
 import {
   clientBookingTotals,
+  formatDurationLong,
   needsClientAddressStep,
   needsClientPlaceStep,
   patchClientDraft,
@@ -93,23 +94,6 @@ function groupDaySlots(slots: TimeSlot[]): { label: string; slots: TimeSlot[] }[
 }
 
 /** Figma pencil (same geometry as cabinet/profile/pencil.svg), tinted via currentColor. */
-function hoursWord(h: number): string {
-  const mod10 = h % 10;
-  const mod100 = h % 100;
-  if (mod10 === 1 && mod100 !== 11) return "час";
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return "часа";
-  return "часов";
-}
-
-/** Figma choice card: «3 часа», not short «3 ч». */
-function formatDurationLong(mins: number): string {
-  if (mins < 60) return `${mins} мин`;
-  const h = Math.floor(mins / 60);
-  const m = mins % 60;
-  if (m === 0) return `${h} ${hoursWord(h)}`;
-  return `${h} ${hoursWord(h)} ${m} мин`;
-}
-
 function ChoiceEditIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
