@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import calendarIcon from "../../assets/cabinet/calendar.svg";
 import {
   fetchClientBooking,
   fetchSlots,
@@ -7,15 +8,18 @@ import {
 } from "../../api";
 import { ClientFlowShell } from "../../components/client/ClientFlowShell";
 import { MsArrowRight } from "../../components/master/MsArrowRight";
+import { ServiceSparkIcon } from "../../components/master/ServiceSparkIcon";
 import { useBackButton } from "../../hooks/useBackButton";
 import { useMainButton } from "../../hooks/useMainButton";
 import {
   clientBookingTotals,
+  formatDuration,
   needsClientAddressStep,
   needsClientPlaceStep,
   patchClientDraft,
   readClientDraft,
   resolveClientServices,
+  servicesCountWord,
 } from "../../lib/clientBookingDraft";
 import { monthTitle, sameDay } from "../../lib/scheduleUi";
 import type { ClientBooking, TimeSlot } from "../../types";
@@ -26,10 +30,13 @@ type DayGroup = {
   dayLabel: string;
   date: string;
   dateISO: string;
+  dayNum: number;
+  dow: string;
   slots: TimeSlot[];
 };
 
 const DOW = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
+const DOW_SHORT = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
 
 function parseSlotDate(slot: TimeSlot): Date | null {
   const d = new Date(slot.startsAt);
@@ -46,6 +53,12 @@ function dateKey(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
+function parseISODate(iso: string): Date | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  if (!m) return null;
+  return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+}
+
 function buildMonthCells(anchor: Date): Date[] {
   const year = anchor.getFullYear();
   const month = anchor.getMonth();
@@ -59,6 +72,39 @@ function buildMonthCells(anchor: Date): Date[] {
     );
   }
   return cells;
+}
+
+function hmToMin(hm: string): number {
+  const [h, m] = hm.split(":").map(Number);
+  return (h || 0) * 60 + (m || 0);
+}
+
+function groupDaySlots(slots: TimeSlot[]): { label: string; slots: TimeSlot[] }[] {
+  const morning = slots.filter((s) => hmToMin(s.time) < 12 * 60);
+  const day = slots.filter((s) => {
+    const m = hmToMin(s.time);
+    return m >= 12 * 60 && m < 17 * 60;
+  });
+  const evening = slots.filter((s) => hmToMin(s.time) >= 17 * 60);
+  const groups: { label: string; slots: TimeSlot[] }[] = [];
+  if (morning.length) groups.push({ label: "Утро", slots: morning });
+  if (day.length) groups.push({ label: "День", slots: day });
+  if (evening.length) groups.push({ label: "Вечер", slots: evening });
+  return groups;
+}
+
+function ChoiceEditIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <path
+        d="M11.333 2.667 13.333 4.667M3.333 12.667V13.333H4L11.333 6 9.333 4 2 11.333l1.333 1.334Z"
+        stroke="currentColor"
+        strokeWidth="1.33"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
 }
 
 export function ClientDateTimeScreen() {
@@ -125,7 +171,7 @@ export function ClientDateTimeScreen() {
       setError(null);
       try {
         const data = await fetchSlots(masterKey, {
-          days: 14,
+          days: 42,
           durationMin: totals.totalMin || undefined,
           visit: isVisit,
         });
@@ -154,26 +200,29 @@ export function ClientDateTimeScreen() {
     for (const slot of slots) {
       const parsed = parseSlotDate(slot);
       const iso = parsed ? dateKey(parsed) : slot.date;
-      const key = iso;
-      const existing = map.get(key);
-      if (existing) existing.slots.push(slot);
-      else {
-        map.set(key, {
-          key,
-          dayLabel: slot.dayLabel,
-          date: slot.date,
-          dateISO: iso,
-          slots: [slot],
-        });
+      const existing = map.get(iso);
+      if (existing) {
+        existing.slots.push(slot);
+        continue;
       }
+      const d = parsed ?? parseISODate(iso);
+      map.set(iso, {
+        key: iso,
+        dayLabel: slot.dayLabel,
+        date: slot.date,
+        dateISO: iso,
+        dayNum: d ? d.getDate() : Number(iso.slice(-2)) || 0,
+        dow: d ? DOW_SHORT[d.getDay()]! : "",
+        slots: [slot],
+      });
     }
     return [...map.values()];
   }, [slots]);
 
-  const daysWithSlots = useMemo(() => {
-    const set = new Set(days.map((d) => d.dateISO));
-    return set;
-  }, [days]);
+  const daysWithSlots = useMemo(
+    () => new Set(days.map((d) => d.dateISO)),
+    [days],
+  );
 
   useEffect(() => {
     if (days.length === 0) {
@@ -188,6 +237,20 @@ export function ClientDateTimeScreen() {
   const activeDay = days.find((d) => d.key === dayKey) ?? null;
   const selected = slots.find((s) => s.id === selectedId);
   const cells = useMemo(() => buildMonthCells(monthAnchor), [monthAnchor]);
+  const slotGroups = useMemo(
+    () => (activeDay ? groupDaySlots(activeDay.slots) : []),
+    [activeDay],
+  );
+
+  const stripMonthTitle = useMemo(() => {
+    if (activeDay) {
+      const d = parseISODate(activeDay.dateISO);
+      if (d) return monthTitle(d);
+    }
+    return monthTitle(monthAnchor);
+  }, [activeDay, monthAnchor]);
+
+  const choiceMeta = `${services.length} ${servicesCountWord(services.length)} · ${formatDuration(totals.totalMin)}`;
 
   const goBack = useCallback(() => {
     if (rescheduleId) {
@@ -236,6 +299,15 @@ export function ClientDateTimeScreen() {
     }
   }, [navigate, rescheduleId, selected, submitting]);
 
+  const selectDay = useCallback((iso: string) => {
+    setDayKey(iso);
+    setSelectedId(null);
+    const d = parseISODate(iso);
+    if (d) {
+      setMonthAnchor(new Date(d.getFullYear(), d.getMonth(), 1));
+    }
+  }, []);
+
   useBackButton(goBack);
   useMainButton({ text: "", visible: false, onClick: () => undefined });
 
@@ -257,7 +329,7 @@ export function ClientDateTimeScreen() {
               disabled={!selected || submitting}
               onClick={continueNext}
             >
-              <span>{rescheduleId ? "Продолжить" : "Продолжить"}</span>
+              <span>Продолжить</span>
               <MsArrowRight />
             </button>
           </div>
@@ -266,7 +338,9 @@ export function ClientDateTimeScreen() {
         <div className="ms-nb">
           <div className="ms-nb-intro">
             <h2 className="ms-nb-title">Когда вам удобно?</h2>
-            <p className="ms-nb-lead">Ближайшие свободные слоты</p>
+            <p className="ms-nb-lead">
+              Выберите свободную дату и время для записи
+            </p>
           </div>
 
           {rescheduleId && currentBooking ? (
@@ -275,15 +349,69 @@ export function ClientDateTimeScreen() {
             </p>
           ) : null}
 
+          {!rescheduleId && services.length > 0 ? (
+            <section className="ms-client-choice" aria-label="Ваш выбор">
+              <div className="ms-client-choice-head">
+                <span className="ms-client-choice-label">Ваш выбор</span>
+                <button
+                  type="button"
+                  className="ms-client-choice-edit"
+                  onClick={() =>
+                    navigate(`/client/${encodeURIComponent(masterKey)}/services`)
+                  }
+                >
+                  <ChoiceEditIcon />
+                  <span>Изменить</span>
+                </button>
+              </div>
+              <div className="ms-client-choice-body">
+                <span className="ms-service-avatar" aria-hidden>
+                  <ServiceSparkIcon className="ms-service-spark" />
+                </span>
+                <div className="ms-client-choice-copy">
+                  <p className="ms-client-choice-meta">{choiceMeta}</p>
+                  <p className="ms-client-choice-titles">{totals.titles}</p>
+                </div>
+              </div>
+            </section>
+          ) : null}
+
           {loading ? (
             <p className="ms-client-muted">Загрузка слотов…</p>
           ) : days.length === 0 ? (
             <p className="ms-client-muted">Нет доступных дат и времени</p>
           ) : (
             <>
-              <div className="ms-client-day-row">
+              <section className="ms-client-dates" aria-label="Дата">
+                <div className="ms-client-dates-head">
+                  <h3 className="ms-client-dates-month">{stripMonthTitle}</h3>
+                  <button
+                    type="button"
+                    className="ms-client-cal-btn"
+                    aria-label="Открыть календарь"
+                    onClick={() => {
+                      if (activeDay) {
+                        const d = parseISODate(activeDay.dateISO);
+                        if (d) {
+                          setMonthAnchor(
+                            new Date(d.getFullYear(), d.getMonth(), 1),
+                          );
+                        }
+                      }
+                      setCalOpen(true);
+                    }}
+                  >
+                    <img
+                      src={calendarIcon}
+                      width={20}
+                      height={20}
+                      alt=""
+                      aria-hidden
+                    />
+                  </button>
+                </div>
                 <div
-                  className="ms-client-day-chips"
+                  className="ms-client-date-strip"
                   role="tablist"
                   aria-label="Даты"
                 >
@@ -295,52 +423,44 @@ export function ClientDateTimeScreen() {
                         type="button"
                         role="tab"
                         aria-selected={on}
-                        className={cx("ms-client-day-chip", on && "is-on")}
-                        onClick={() => {
-                          setDayKey(day.key);
-                          setSelectedId(null);
-                        }}
+                        className={cx("ms-client-date-dot", on && "is-on")}
+                        onClick={() => selectDay(day.key)}
                       >
-                        <span className="ms-client-day-chip-label">
-                          {day.dayLabel}
+                        <span className="ms-client-date-dot-num">
+                          {day.dayNum}
                         </span>
-                        <span className="ms-client-day-chip-date">
-                          {day.date}
-                        </span>
+                        <span className="ms-client-date-dot-dow">{day.dow}</span>
                       </button>
                     );
                   })}
                 </div>
-                <button
-                  type="button"
-                  className="ms-client-cal-open"
-                  onClick={() => setCalOpen(true)}
-                >
-                  Календарь
-                </button>
-              </div>
+              </section>
 
               {activeDay ? (
                 <section
-                  className="ms-client-day"
+                  className="ms-client-slots"
                   aria-label={activeDay.dayLabel}
                 >
-                  <h3 className="ms-client-day-title">Время</h3>
-                  <div className="ms-client-slot-grid">
-                    {activeDay.slots.map((slot) => {
-                      const on = selectedId === slot.id;
-                      return (
-                        <button
-                          key={slot.id}
-                          type="button"
-                          className={cx("ms-client-slot", on && "is-on")}
-                          onClick={() => setSelectedId(slot.id)}
-                        >
-                          {slot.time}
-                        </button>
-                      );
-                    })}
-                  </div>
+                  {slotGroups.map((group) => (
+                    <div key={group.label} className="ms-client-slot-group">
+                      <h3 className="ms-client-slot-period">{group.label}</h3>
+                      <div className="ms-client-slot-grid">
+                        {group.slots.map((slot) => {
+                          const on = selectedId === slot.id;
+                          return (
+                            <button
+                              key={slot.id}
+                              type="button"
+                              className={cx("ms-client-slot", on && "is-on")}
+                              onClick={() => setSelectedId(slot.id)}
+                            >
+                              {slot.time}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
                 </section>
               ) : null}
             </>
@@ -410,11 +530,7 @@ export function ClientDateTimeScreen() {
                     sameDay(day, today) && "is-today",
                     working && inMonth && !past && "has-slots",
                   )}
-                  onClick={() => {
-                    setDayKey(iso);
-                    setSelectedId(null);
-                    setCalOpen(false);
-                  }}
+                  onClick={() => selectDay(iso)}
                 >
                   {day.getDate()}
                   {working && inMonth && !past ? (
@@ -424,6 +540,17 @@ export function ClientDateTimeScreen() {
               );
             })}
           </div>
+          <p className="ms-client-cal-legend">
+            <span className="ms-client-cal-legend-dot" aria-hidden />
+            Есть свободное время
+          </p>
+          <button
+            type="button"
+            className={cx("ms-btn", "ms-btn-primary", "ms-nb-continue")}
+            onClick={() => setCalOpen(false)}
+          >
+            Готово
+          </button>
         </div>
       </BottomSheet>
 

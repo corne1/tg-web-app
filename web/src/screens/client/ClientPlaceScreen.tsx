@@ -7,6 +7,7 @@ import { useBackButton } from "../../hooks/useBackButton";
 import { useMainButton } from "../../hooks/useMainButton";
 import {
   needsClientAddressStep,
+  needsClientPlaceStep,
   patchClientDraft,
   readClientDraft,
   studioAddressLine,
@@ -26,15 +27,23 @@ export function ClientPlaceScreen() {
 
   useEffect(() => {
     let cancelled = false;
-    void loadClientMaster(masterKey).then(({ draft: d }) => {
-      if (cancelled) return;
-      setDraft(d);
-      if (d.place?.mode !== "both") {
-        navigate(`/client/${encodeURIComponent(masterKey)}/services`, {
-          replace: true,
-        });
-      }
-    });
+    void loadClientMaster(masterKey)
+      .then(({ draft: d }) => {
+        if (cancelled) return;
+        setDraft(d);
+        if (!needsClientPlaceStep(d.place)) {
+          navigate(`/client/${encodeURIComponent(masterKey)}/services`, {
+            replace: true,
+          });
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          navigate(`/client/${encodeURIComponent(masterKey)}/services`, {
+            replace: true,
+          });
+        }
+      });
     return () => {
       cancelled = true;
     };
@@ -69,15 +78,17 @@ export function ClientPlaceScreen() {
       onBack={goBack}
       progressFilled={2}
       footer={
-        <button
-          type="button"
-          className={cx("ms-btn", "ms-btn-primary", "ms-nb-continue")}
-          disabled={!choice}
-          onClick={continueNext}
-        >
-          <span>Продолжить</span>
-          <MsArrowRight />
-        </button>
+        <div className="ms-nb-footer">
+          <button
+            type="button"
+            className={cx("ms-btn", "ms-btn-primary", "ms-nb-continue")}
+            disabled={!choice}
+            onClick={continueNext}
+          >
+            <span>Продолжить</span>
+            <MsArrowRight />
+          </button>
+        </div>
       }
     >
       <div className="ms-nb">

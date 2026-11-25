@@ -267,18 +267,21 @@
   gap: 12px;
 }
 
+/* Figma 21466:17910 — File Upload style cards (fill2 × purple-border selected) */
 .ms-client-place-option {
   display: flex;
   gap: 16px;
   align-items: center;
   width: 100%;
+  margin: 0;
   padding: 16px;
   border: 1px solid var(--ms-line-soft);
   border-radius: var(--ms-radius-card);
-  background: #fff;
+  background: var(--ms-fill2);
   text-align: left;
   cursor: pointer;
   box-sizing: border-box;
+  appearance: none;
 }
 
 .ms-client-place-option .ms-service-avatar {
@@ -352,10 +355,206 @@
   gap: 12px;
 }
 
+/* Figma 21467:22342 — selected services summary above dates */
+.ms-client-choice {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--ms-radius-card);
+  background: var(--ms-fill2);
+  box-sizing: border-box;
+}
+
+.ms-client-choice-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ms-client-choice-label {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  color: var(--ms-ink);
+}
+
+.ms-client-choice-edit {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ms-purple);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  cursor: pointer;
+}
+
+.ms-client-choice-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+}
+
+.ms-client-choice-copy {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ms-client-choice-meta {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.15px;
+  line-height: 22px;
+  color: var(--ms-ink);
+}
+
+.ms-client-choice-titles {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: -0.13px;
+  line-height: 18px;
+  color: var(--ms-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ms-client-dates {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ms-client-dates-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ms-client-dates-month {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.16px;
+  line-height: 22px;
+  color: var(--ms-ink);
+}
+
+.ms-client-cal-btn {
+  appearance: none;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--ms-line-soft);
+  border-radius: var(--ms-radius-full);
+  background: #fff;
+  cursor: pointer;
+}
+
+.ms-client-date-strip {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 2px 2px 4px;
+  margin: 0 -2px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.ms-client-date-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.ms-client-date-dot {
+  appearance: none;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  color: var(--ms-ink);
+}
+
+.ms-client-date-dot-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--ms-radius-full);
+  border: 1.5px solid var(--ms-line);
+  background: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.16px;
+  line-height: 1;
+  box-sizing: border-box;
+}
+
+.ms-client-date-dot.is-on .ms-client-date-dot-num {
+  border-color: var(--ms-purple);
+  background: var(--ms-purple);
+  color: #fff;
+}
+
+.ms-client-date-dot-dow {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.13px;
+  line-height: 18px;
+  color: var(--ms-muted);
+}
+
+.ms-client-date-dot.is-on .ms-client-date-dot-dow {
+  color: var(--ms-ink);
+  font-weight: 600;
+}
+
 .ms-client-slots {
   display: flex;
   flex-direction: column;
   gap: 20px;
+}
+
+.ms-client-slot-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ms-client-slot-period {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.15px;
+  line-height: 22px;
+  color: var(--ms-ink);
 }
 
 .ms-client-day-title {
@@ -372,21 +571,44 @@
 }
 
 .ms-client-slot {
+  appearance: none;
   min-width: 72px;
-  padding: 10px 12px;
+  padding: 10px 14px;
   border: 1.5px solid var(--ms-line);
-  border-radius: 12px;
+  border-radius: var(--ms-radius-full);
   background: #fff;
   font-size: 14px;
-  font-weight: 560;
+  font-weight: 600;
+  letter-spacing: -0.14px;
+  line-height: 20px;
   color: var(--ms-ink);
   cursor: pointer;
+  box-sizing: border-box;
 }
 
 .ms-client-slot.is-on {
-  border-color: var(--ms-purple, #623df5);
-  background: var(--ms-purple, #623df5);
+  border-color: var(--ms-purple);
+  background: var(--ms-purple);
   color: #fff;
+}
+
+.ms-client-cal-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 0;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: -0.13px;
+  line-height: 18px;
+  color: var(--ms-muted);
+}
+
+.ms-client-cal-legend-dot {
+  width: 8px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--ms-purple);
 }
 
 .ms-client-summary {

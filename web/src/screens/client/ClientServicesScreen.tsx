@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import clockIcon from "../../assets/cabinet/clock.svg";
-import clockPurpleIcon from "../../assets/cabinet/clock-purple.svg";
 import { ServiceSparkIcon } from "../../components/master/ServiceSparkIcon";
 import { ClientFlowShell } from "../../components/client/ClientFlowShell";
 import { MsArrowRight } from "../../components/master/MsArrowRight";
@@ -65,9 +64,11 @@ export function ClientServicesScreen() {
   const continueNext = useCallback(() => {
     const next = patchClientDraft({
       serviceIds: draft.serviceIds,
+      place: draft.place,
       startsAt: null,
       dateLabel: null,
       timeLabel: null,
+      placeChoice: null,
     });
     if (needsClientPlaceStep(next.place)) {
       navigate(`/client/${encodeURIComponent(masterKey)}/place`);
@@ -80,7 +81,7 @@ export function ClientServicesScreen() {
       return;
     }
     navigate(`/client/${encodeURIComponent(masterKey)}/time`);
-  }, [draft.serviceIds, masterKey, navigate]);
+  }, [draft.place, draft.serviceIds, masterKey, navigate]);
 
   useBackButton(goBack);
   useMainButton({ text: "", visible: false, onClick: () => undefined });
@@ -118,7 +119,7 @@ export function ClientServicesScreen() {
                 <span className="ms-nb-foot-sum-price">{totals.priceLabel}</span>
               </div>
               <p className="ms-nb-foot-sum-dur">
-                <img src={clockPurpleIcon} width={16} height={16} alt="" aria-hidden />
+                <img src={clockIcon} width={16} height={16} alt="" aria-hidden />
                 <span>Длительность: {formatDuration(totals.totalMin)}</span>
               </p>
             </div>

@@ -243,7 +243,7 @@ export function ClientPublicProfileScreen() {
                 </div>
               </div>
             ) : null}
-            {master.place.visit && !master.place.studio ? (
+            {master.place.visit ? (
               <div className="ms-client-place-card">
                 <div className="ms-service-avatar" aria-hidden>
                   <PlaceModeIcon mode="visit" />
@@ -253,7 +253,8 @@ export function ClientPublicProfileScreen() {
                   <p className="ms-client-place-sub">
                     {[master.place.visit.city, master.place.visit.areas]
                       .filter(Boolean)
-                      .join(" · ") || "Мастер приедет по вашему адресу"}
+                      .join(" · ") ||
+                      "Мастер приедет по указанному вами адресу"}
                   </p>
                 </div>
               </div>

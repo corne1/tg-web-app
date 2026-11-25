@@ -138,14 +138,16 @@ export function clearClientDraft(): void {
   localStorage.removeItem(DRAFT_KEY);
 }
 
-export function selectedServicesLabel(count: number): string {
+export function servicesCountWord(count: number): string {
   const mod10 = count % 10;
   const mod100 = count % 100;
-  let word = "услуг";
-  if (mod10 === 1 && mod100 !== 11) word = "услуга";
-  else if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20))
-    word = "услуги";
-  return `Выбрано: ${count} ${word}`;
+  if (mod10 === 1 && mod100 !== 11) return "услуга";
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return "услуги";
+  return "услуг";
+}
+
+export function selectedServicesLabel(count: number): string {
+  return `Выбрано: ${count} ${servicesCountWord(count)}`;
 }
 
 export function resolveClientServices(draft: ClientBookingDraft): MasterService[] {
@@ -181,13 +183,17 @@ export function resolveAutoPlaceChoice(
   place: PublicPlaceDto | null,
 ): ClientPlaceChoice | null {
   if (!place) return "studio";
-  if (place.mode === "studio") return "studio";
-  if (place.mode === "visit") return "visit";
-  return null;
+  if (needsClientPlaceStep(place)) return null;
+  if (place.mode === "visit" || (place.visit && !place.studio)) return "visit";
+  if (place.mode === "studio" || place.studio) return "studio";
+  return "studio";
 }
 
+/** Show «Место приёма» when the client must choose between cabinet and visit. */
 export function needsClientPlaceStep(place: PublicPlaceDto | null): boolean {
-  return place?.mode === "both";
+  if (!place) return false;
+  if (place.mode === "both") return true;
+  return Boolean(place.studio && place.visit);
 }
 
 export function needsClientAddressStep(
