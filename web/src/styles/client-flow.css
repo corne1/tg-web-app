@@ -796,9 +796,12 @@
   background: #fff;
 }
 
+/* Figma 21477:18680 — _Dialog Footer */
 .ms-client-flow:has(.ms-client-success) .ms-client-footer {
   background: #fff;
   border-top: 1px solid var(--ms-line-soft);
+  padding: 20px 16px calc(20px + env(safe-area-inset-bottom, 0px));
+  gap: 0;
 }
 
 .ms-client-success {
@@ -818,10 +821,40 @@
   text-align: center;
 }
 
-.ms-client-success-mark {
-  display: flex;
+/* Figma 21477:18684 — success badge above title */
+.ms-client-success-badge {
+  box-sizing: border-box;
+  width: 96px;
+  height: 96px;
+  margin: 0 auto 4px;
+  padding: 14.4px;
+  border-radius: var(--ms-radius-full);
+  background: #fff;
+  border: 1.2px solid var(--ms-line-soft);
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
-  margin-bottom: 4px;
+  flex: 0 0 auto;
+}
+
+.ms-client-success-badge-inner {
+  box-sizing: border-box;
+  width: 67.2px;
+  height: 67.2px;
+  border-radius: var(--ms-radius-full);
+  background: #fff;
+  border: 1.2px solid var(--ms-line-soft);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--ms-shadow-e2);
+}
+
+.ms-client-success-badge-check {
+  display: block;
+  width: 33.6px;
+  height: 33.6px;
+  color: var(--ms-success);
 }
 
 .ms-client-success-title {
@@ -899,7 +932,13 @@
 .ms-client-success-footer {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 16px;
+  width: 100%;
+}
+
+.ms-client-success-footer .ms-btn-primary {
+  min-height: 48px;
+  padding: 12px 16px;
 }
 
 .ms-client-success-cancel {
@@ -911,16 +950,20 @@
   min-height: 48px;
   margin: 0;
   padding: 12px 16px;
-  border: 1.5px solid #f53d3d;
+  border: 1px solid #ff7070; /* state/error/border */
   border-radius: var(--ms-radius-full);
   background: #fff;
-  color: #f53d3d;
+  color: #d92626; /* state/error/text */
   font-size: 16px;
   font-weight: 500;
   letter-spacing: -0.16px;
   line-height: 24px;
   cursor: pointer;
   box-sizing: border-box;
+}
+
+.ms-client-success-cancel:active {
+  background: color-mix(in srgb, #d92626 6%, #fff);
 }
 
 .ms-client-success-status {

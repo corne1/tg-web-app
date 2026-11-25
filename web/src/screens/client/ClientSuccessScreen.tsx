@@ -38,18 +38,28 @@ type BookingState = {
   };
 };
 
-function SuccessCheckIcon() {
+/** Figma 21477:18684 — 96px ring badge + white disc + green check. */
+function SuccessCheckBadge() {
   return (
-    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden>
-      <circle cx="20" cy="20" r="20" fill="var(--ms-success)" />
-      <path
-        d="M12 20.5 17.2 25.5 28 14.5"
-        stroke="#fff"
-        strokeWidth="2.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
+    <div className="ms-client-success-badge" aria-hidden>
+      <span className="ms-client-success-badge-inner">
+        <svg
+          className="ms-client-success-badge-check"
+          width="34"
+          height="34"
+          viewBox="0 0 34 34"
+          fill="none"
+        >
+          <path
+            d="M7.5 17.2 13.8 23.5 26.5 10.5"
+            stroke="currentColor"
+            strokeWidth="2.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </span>
+    </div>
   );
 }
 
@@ -224,9 +234,7 @@ export function ClientSuccessScreen() {
         {/* Figma 21477:18678 — Запись подтверждена */}
         <div className="ms-client-success">
           <div className="ms-client-success-hero">
-            <div className="ms-client-success-mark" aria-hidden>
-              <SuccessCheckIcon />
-            </div>
+            <SuccessCheckBadge />
             <h1 className="ms-client-success-title">Запись подтверждена</h1>
             <p className="ms-client-success-lead">Вы записаны к мастеру</p>
           </div>

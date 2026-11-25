@@ -145,14 +145,14 @@ export function ClientBookingDetailScreen() {
             ) : null}
 
             {!cancelled ? (
-              <div className="ms-client-detail-actions">
+              <div className="ms-client-success-footer ms-client-detail-actions">
                 {booking.canReschedule ? (
                   <button
                     type="button"
-                    className={cx("ms-btn", "ms-btn-primary")}
+                    className={cx("ms-btn", "ms-btn-primary", "ms-client-cta")}
                     onClick={onReschedule}
                   >
-                    Перенести запись
+                    Перенести мою запись
                   </button>
                 ) : (
                   <p className="ms-client-rule-hint">
@@ -162,7 +162,7 @@ export function ClientBookingDetailScreen() {
                 {booking.canCancel ? (
                   <button
                     type="button"
-                    className="ms-btn ms-btn-ghost ms-client-cancel-btn"
+                    className="ms-client-success-cancel"
                     onClick={() => setCancelOpen(true)}
                   >
                     Отменить запись
