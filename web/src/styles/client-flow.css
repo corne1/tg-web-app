@@ -472,14 +472,17 @@
   cursor: pointer;
 }
 
+/* Bleed to screen right so ~5th day circle is half-clipped; swipe scrolls. */
 .ms-client-date-strip {
   display: flex;
   gap: 12px;
   overflow-x: auto;
-  padding: 2px 2px 4px;
-  margin: 0 -2px;
+  overscroll-behavior-x: contain;
+  padding: 2px 0 4px;
+  margin-right: -16px;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  touch-action: pan-x;
 }
 
 .ms-client-date-strip::-webkit-scrollbar {
@@ -501,18 +504,19 @@
   color: var(--ms-ink);
 }
 
+/* Figma `_Calendar Number` — 72×72 */
 .ms-client-date-dot-num {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
+  width: 72px;
+  height: 72px;
   border-radius: var(--ms-radius-full);
   border: 1.5px solid var(--ms-line);
   background: #fff;
-  font-size: 16px;
+  font-size: 20px;
   font-weight: 600;
-  letter-spacing: -0.16px;
+  letter-spacing: -0.2px;
   line-height: 1;
   box-sizing: border-box;
 }

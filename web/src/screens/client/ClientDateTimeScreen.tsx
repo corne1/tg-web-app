@@ -93,13 +93,21 @@ function groupDaySlots(slots: TimeSlot[]): { label: string; slots: TimeSlot[] }[
   return groups;
 }
 
+/** Figma pencil (same geometry as cabinet/profile/pencil.svg), tinted via currentColor. */
 function ChoiceEditIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
-        d="M11.333 2.667 13.333 4.667M3.333 12.667V13.333H4L11.333 6 9.333 4 2 11.333l1.333 1.334Z"
+        d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"
         stroke="currentColor"
-        strokeWidth="1.33"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="m15 5 4 4"
+        stroke="currentColor"
+        strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
