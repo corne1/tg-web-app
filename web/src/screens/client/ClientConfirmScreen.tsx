@@ -227,7 +227,7 @@ export function ClientConfirmScreen() {
         </div>
       }
     >
-      {/* Figma 21467:30996 — gray page, white cards, section labels */}
+      {/* Figma 21467:30996 — white page, soft section cards */}
       <div className="ms-nb ms-client-review">
         <div className="ms-nb-intro">
           <h2 className="ms-nb-title">Проверьте запись</h2>

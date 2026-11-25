@@ -646,9 +646,9 @@
   font-weight: 500;
 }
 
-/* Figma 21467:30996 — Проверьте запись: soft page + white cards */
+/* Figma 21467:30996 — Проверьте запись: white page + soft cards */
 .ms-client-flow:has(.ms-client-review) .ms-client-body {
-  background: var(--ms-soft);
+  background: #fff;
 }
 
 .ms-client-flow:has(.ms-client-review) .ms-client-footer {
@@ -697,7 +697,7 @@
   min-width: 0;
   padding: 14px 16px;
   border-radius: var(--ms-radius-card);
-  background: #fff;
+  background: var(--ms-soft);
   box-sizing: border-box;
 }
 
