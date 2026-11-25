@@ -16,7 +16,7 @@ export function ClientFlowShell({
   children: ReactNode;
   footer?: ReactNode;
   hideHeader?: boolean;
-  /** 1-based filled segments under the toolbar (Figma client funnel). */
+  /** 1-based step under the toolbar (Figma client funnel — continuous bar). */
   progressFilled?: number;
   progressTotal?: number;
 }) {
@@ -24,6 +24,9 @@ export function ClientFlowShell({
     !hideHeader &&
     typeof progressFilled === "number" &&
     progressTotal > 0;
+  const progressPct = showProgress
+    ? Math.min(100, Math.max(0, (progressFilled / progressTotal) * 100))
+    : 0;
 
   return (
     <div className="master-setup ms-cabinet ms-client-flow">
@@ -37,13 +40,11 @@ export function ClientFlowShell({
         </header>
       ) : null}
       {showProgress ? (
-        <div className="ms-progress ms-client-progress" aria-hidden>
-          {Array.from({ length: progressTotal }, (_, i) => (
-            <span
-              key={i}
-              className={`ms-progress-seg ${i < progressFilled ? "is-on" : ""}`}
-            />
-          ))}
+        <div className="ms-client-progress" aria-hidden>
+          <span
+            className="ms-client-progress-fill"
+            style={{ width: `${progressPct}%` }}
+          />
         </div>
       ) : null}
       <div className="ms-body ms-cab-body ms-client-body">{children}</div>

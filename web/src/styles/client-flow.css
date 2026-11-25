@@ -445,8 +445,23 @@
   font-weight: 560;
 }
 
+/* Figma client funnel: one continuous track (not segmented pills). */
 .ms-client-progress {
-  padding: 0 16px 8px;
+  display: block;
+  flex: 0 0 auto;
+  height: 8px;
+  margin: 0 16px 8px;
+  padding: 0;
+  border-radius: var(--ms-radius-full);
+  background: var(--ms-fill2);
+  overflow: hidden;
+}
+
+.ms-client-progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ms-purple);
 }
 
 .ms-client-toolbar + .ms-client-progress {
