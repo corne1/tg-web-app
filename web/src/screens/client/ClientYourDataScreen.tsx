@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import infoIcon from "../../assets/cabinet/profile/info.svg";
 import { ClientFlowShell } from "../../components/client/ClientFlowShell";
 import { MsArrowRight } from "../../components/master/MsArrowRight";
 import { useBackButton } from "../../hooks/useBackButton";
@@ -56,41 +57,64 @@ export function ClientYourDataScreen() {
       onBack={goBack}
       progressFilled={4}
       footer={
-        <button
-          type="button"
-          className={cx("ms-btn", "ms-btn-primary", "ms-nb-continue")}
-          disabled={!canContinue}
-          onClick={continueNext}
-        >
-          <span>Продолжить</span>
-          <MsArrowRight />
-        </button>
+        <div className="ms-nb-footer">
+          {!canContinue ? (
+            <p className="ms-nb-footer-hint">Укажите имя</p>
+          ) : null}
+          <button
+            type="button"
+            className={cx("ms-btn", "ms-btn-primary", "ms-nb-continue")}
+            disabled={!canContinue}
+            onClick={continueNext}
+          >
+            <span>Продолжить</span>
+            <MsArrowRight />
+          </button>
+        </div>
       }
     >
       <div className="ms-nb">
         <div className="ms-nb-intro">
           <h2 className="ms-nb-title">Как к вам обращаться?</h2>
-          <p className="ms-nb-lead">
-            Имя можно изменить. Телефон и email не запрашиваем
-          </p>
         </div>
+        {/* Figma 21467:30694 */}
         <div className="ms-client-form">
-          <Field label="Имя" as="label">
+          <Field label="Ваше имя" as="label">
             <Input
               value={clientName}
               onChange={(e) => setClientName(e.target.value)}
-              placeholder="Анна"
+              placeholder="Настя"
               autoComplete="name"
             />
+            <span className="ms-field-hint">
+              <img
+                src={infoIcon}
+                alt=""
+                className="ms-field-hint-icon"
+                width={16}
+                height={16}
+              />
+              Имя из Telegram. Можно изменить.
+            </span>
           </Field>
-          <Field label="Комментарий к записи" as="label">
+          <Field label="Комментарий мастеру" as="label">
             <Textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              placeholder="Пожелания, детали…"
+              placeholder="Например, пожелания или важные уточнения"
               rows={3}
               maxLength={TEXTAREA_MAX_LEN}
             />
+            <span className="ms-field-hint">
+              <img
+                src={infoIcon}
+                alt=""
+                className="ms-field-hint-icon"
+                width={16}
+                height={16}
+              />
+              Необязательно
+            </span>
           </Field>
         </div>
       </div>

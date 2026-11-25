@@ -355,14 +355,13 @@
   gap: 12px;
 }
 
-/* Figma 21467:22342 — selected services summary above dates */
+/* Figma 21467:29729 — eyebrow + Primary Elevated card (drop shadow) */
 .ms-client-choice {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 16px;
-  border-radius: var(--ms-radius-card);
-  background: var(--ms-fill2);
+  padding: 0;
+  background: transparent;
   box-sizing: border-box;
 }
 
@@ -375,10 +374,10 @@
 
 .ms-client-choice-label {
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: -0.14px;
   line-height: 20px;
-  color: var(--ms-ink);
+  color: var(--ms-muted);
 }
 
 .ms-client-choice-edit {
@@ -398,11 +397,16 @@
   cursor: pointer;
 }
 
-.ms-client-choice-body {
+.ms-client-choice-card {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
   min-width: 0;
+  padding: 16px;
+  border-radius: var(--ms-radius-card);
+  background: #fff;
+  box-shadow: var(--ms-shadow-e1);
+  box-sizing: border-box;
 }
 
 .ms-client-choice-copy {
