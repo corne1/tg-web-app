@@ -679,11 +679,11 @@
 
 .ms-client-review-label {
   margin: 0;
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: -0.13px;
-  line-height: 18px;
-  color: var(--ms-muted);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.16px;
+  line-height: 24px;
+  color: var(--ms-ink);
 }
 
 .ms-client-review-count {
