@@ -204,7 +204,7 @@ export function ClientConfirmScreen() {
         <div className="ms-nb-footer">
           <div className="ms-nb-foot-sum">
             <div className="ms-nb-foot-sum-row">
-              <span className="ms-nb-foot-sum-label">Итого</span>
+              <span className="ms-nb-foot-sum-label">Итого:</span>
               <span className="ms-nb-foot-sum-price">{totals.priceLabel}</span>
             </div>
             <p className="ms-nb-foot-sum-dur">
@@ -227,44 +227,56 @@ export function ClientConfirmScreen() {
         </div>
       }
     >
-      <div className="ms-nb">
+      {/* Figma 21467:30996 — gray page, white cards, section labels */}
+      <div className="ms-nb ms-client-review">
         <div className="ms-nb-intro">
           <h2 className="ms-nb-title">Проверьте запись</h2>
           <p className="ms-nb-lead">Убедитесь, что всё указано верно</p>
         </div>
 
-        {/* Figma 21467:30996 */}
-        <section className="ms-client-review-card ms-client-review-master">
-          <img
-            className="ms-client-review-avatar"
-            src={resolvePublicMasterAvatarSrc(draft.masterAvatarUrl)}
-            alt=""
-            width={48}
-            height={48}
-          />
-          <div className="ms-client-review-copy">
-            <p className="ms-client-review-title">{draft.masterName}</p>
-            <p className="ms-client-review-sub">{roleLabel}</p>
+        <section className="ms-client-review-section">
+          <h3 className="ms-client-review-label">Мастер</h3>
+          <div className="ms-client-review-card">
+            <img
+              className="ms-client-review-avatar"
+              src={resolvePublicMasterAvatarSrc(draft.masterAvatarUrl)}
+              alt=""
+              width={48}
+              height={48}
+            />
+            <div className="ms-client-review-copy">
+              <p className="ms-client-review-title">{draft.masterName}</p>
+              <p className="ms-client-review-sub">{roleLabel}</p>
+            </div>
           </div>
         </section>
 
-        <section className="ms-client-review-block">
-          <div className="ms-client-review-block-head">
-            <h3 className="ms-client-review-block-title">Услуги</h3>
-            <span className="ms-client-review-block-meta">
+        <section className="ms-client-review-section">
+          <div className="ms-client-review-section-head">
+            <h3 className="ms-client-review-label">Услуги</h3>
+            <span className="ms-client-review-count">
               Добавлено: {services.length}
             </span>
           </div>
           <ul className="ms-client-review-svc-list">
             {services.map((svc) => (
-              <li key={svc.id} className="ms-client-review-svc">
+              <li key={svc.id} className="ms-client-review-card">
                 <span className="ms-service-avatar" aria-hidden>
                   <ServiceSparkIcon className="ms-service-spark" />
                 </span>
                 <span className="ms-client-review-copy">
                   <span className="ms-client-review-title">{svc.title}</span>
-                  <span className="ms-client-review-sub">
-                    {formatDuration(svc.durationMin)} · {formatPrice(svc)}
+                  <span className="ms-client-review-sub ms-client-review-svc-meta">
+                    <img
+                      src={clockIcon}
+                      width={14}
+                      height={14}
+                      alt=""
+                      aria-hidden
+                    />
+                    <span>{formatDuration(svc.durationMin)}</span>
+                    <span aria-hidden>·</span>
+                    <span>{formatPrice(svc)}</span>
                   </span>
                 </span>
               </li>
@@ -273,23 +285,26 @@ export function ClientConfirmScreen() {
           <ReviewEditButton onClick={() => navigate(`${base}/services`)} />
         </section>
 
-        <section className="ms-client-review-block">
-          <h3 className="ms-client-review-block-title">Дата и время</h3>
-          <div className="ms-client-review-card">
+        <section className="ms-client-review-section">
+          <h3 className="ms-client-review-label">Дата и время</h3>
+          <div className="ms-client-review-card ms-client-review-when">
             <div className="ms-client-review-copy">
-              <p className="ms-client-review-title">{dateHeading}</p>
               {draft.timeLabel ? (
-                <p className="ms-client-review-sub">{draft.timeLabel}</p>
+                <p className="ms-client-review-time">{draft.timeLabel}</p>
               ) : null}
+              <p className="ms-client-review-sub">{dateHeading}</p>
             </div>
           </div>
           <ReviewEditButton onClick={() => navigate(`${base}/time`)} />
         </section>
 
-        <section className="ms-client-review-block">
-          <h3 className="ms-client-review-block-title">Место приёма</h3>
+        <section className="ms-client-review-section">
+          <h3 className="ms-client-review-label">Место приёма</h3>
           <div className="ms-client-review-card">
-            <span className="ms-service-avatar ms-client-review-place-ico" aria-hidden>
+            <span
+              className="ms-service-avatar ms-client-review-place-ico"
+              aria-hidden
+            >
               <PlaceModeIcon
                 mode={draft.placeChoice === "visit" ? "visit" : "studio"}
                 size={20}
@@ -304,7 +319,9 @@ export function ClientConfirmScreen() {
               {draft.placeChoice === "visit" ? (
                 <>
                   {visitDetails?.address ? (
-                    <p className="ms-client-review-sub">{visitDetails.address}</p>
+                    <p className="ms-client-review-sub">
+                      {visitDetails.address}
+                    </p>
                   ) : null}
                   {visitDetails?.meta ? (
                     <p className="ms-client-review-sub">{visitDetails.meta}</p>
@@ -323,17 +340,21 @@ export function ClientConfirmScreen() {
           <ReviewEditButton onClick={() => navigate(placeEditTo)} />
         </section>
 
-        <section className="ms-client-review-block">
-          <h3 className="ms-client-review-block-title">Ваши данные</h3>
+        <section className="ms-client-review-section">
+          <h3 className="ms-client-review-label">Ваши данные</h3>
           <div className="ms-client-review-card">
-            <span className="ms-service-avatar ms-client-review-place-ico" aria-hidden>
+            <span
+              className="ms-service-avatar ms-client-review-place-ico"
+              aria-hidden
+            >
               <ClientPersonIcon />
             </span>
             <div className="ms-client-review-copy">
               <p className="ms-client-review-title">{draft.clientName}</p>
-              {draft.comment ? (
-                <p className="ms-client-review-sub">{draft.comment}</p>
-              ) : null}
+              <p className="ms-client-review-sub">
+                Комментарий:{" "}
+                {draft.comment.trim() ? draft.comment.trim() : "Не добавлен"}
+              </p>
             </div>
           </div>
           <ReviewEditButton onClick={() => navigate(`${base}/data`)} />

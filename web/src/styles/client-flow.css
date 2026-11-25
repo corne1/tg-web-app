@@ -646,25 +646,34 @@
   font-weight: 500;
 }
 
-/* Figma 21467:30996 — Проверьте запись */
-.ms-client-review-block {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 16px;
-  border-radius: var(--ms-radius-card);
-  background: var(--ms-fill2);
-  box-sizing: border-box;
+/* Figma 21467:30996 — Проверьте запись: soft page + white cards */
+.ms-client-flow:has(.ms-client-review) .ms-client-body {
+  background: var(--ms-soft);
 }
 
-.ms-client-review-block-head {
+.ms-client-flow:has(.ms-client-review) .ms-client-footer {
+  background: #fff;
+  border-top: 1px solid var(--ms-line-soft);
+}
+
+.ms-client-review {
+  gap: 20px;
+}
+
+.ms-client-review-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ms-client-review-section-head {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
 }
 
-.ms-client-review-block-title {
+.ms-client-review-label {
   margin: 0;
   font-size: 15px;
   font-weight: 600;
@@ -673,7 +682,7 @@
   color: var(--ms-ink);
 }
 
-.ms-client-review-block-meta {
+.ms-client-review-count {
   font-size: 13px;
   font-weight: 400;
   letter-spacing: -0.13px;
@@ -686,14 +695,14 @@
   align-items: center;
   gap: 12px;
   min-width: 0;
-  padding: 12px 14px;
-  border-radius: 16px;
+  padding: 14px 16px;
+  border-radius: var(--ms-radius-card);
   background: #fff;
   box-sizing: border-box;
 }
 
-.ms-client-review-master {
-  padding: 16px;
+.ms-client-review-when {
+  align-items: flex-start;
 }
 
 .ms-client-review-avatar {
@@ -714,17 +723,6 @@
   gap: 8px;
 }
 
-.ms-client-review-svc {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-  padding: 12px 14px;
-  border-radius: 16px;
-  background: #fff;
-  box-sizing: border-box;
-}
-
 .ms-client-review-copy {
   flex: 1;
   min-width: 0;
@@ -742,6 +740,15 @@
   color: var(--ms-ink);
 }
 
+.ms-client-review-time {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  line-height: 28px;
+  color: var(--ms-ink);
+}
+
 .ms-client-review-sub {
   margin: 0;
   font-size: 13px;
@@ -749,6 +756,12 @@
   letter-spacing: -0.13px;
   line-height: 18px;
   color: var(--ms-muted);
+}
+
+.ms-client-review-svc-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .ms-client-review-place-ico {
