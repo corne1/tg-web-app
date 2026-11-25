@@ -14,7 +14,7 @@ import {
 import { ensureClientFromBooking } from "../db/clients.js";
 import { getProfile } from "../db/profiles.js";
 import { listServices } from "../db/services.js";
-import { upsertUser } from "../db/users.js";
+import { getUser, upsertUser } from "../db/users.js";
 import {
   buildBookingFromServices,
   selectServicesByIds,
@@ -62,8 +62,13 @@ bookingsRouter.post("/", requireSession, async (req: AuthedRequest, res) => {
     return;
   }
   if (masterId === tg.id) {
-    res.status(400).json({ error: "Cannot book yourself" });
-    return;
+    const stored = await getUser(tg.id);
+    const allowSelfBook =
+      process.env.NODE_ENV !== "production" || Boolean(stored?.is_test);
+    if (!allowSelfBook) {
+      res.status(400).json({ error: "Cannot book yourself" });
+      return;
+    }
   }
 
   const profile = await getProfile(masterId);
