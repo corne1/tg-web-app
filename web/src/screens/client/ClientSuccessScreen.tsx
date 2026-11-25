@@ -5,6 +5,7 @@ import {
   cancelBooking,
   fetchClientBooking,
 } from "../../api";
+import { ClientCancelBookingModal } from "../../components/client/ClientCancelBookingModal";
 import { ClientFlowShell } from "../../components/client/ClientFlowShell";
 import { PlaceModeIcon } from "../../components/master/PlaceModeIcon";
 import { ServiceSparkIcon } from "../../components/master/ServiceSparkIcon";
@@ -21,7 +22,7 @@ import {
 } from "../../lib/clientBookingDraft";
 import { resolvePublicMasterAvatarSrc } from "../../lib/masterAvatar";
 import type { ClientBooking } from "../../types";
-import { BottomSheet, Button, cx, SheetSimpleHeader } from "../../ui";
+import { cx } from "../../ui";
 
 type BookingState = {
   booking?: {
@@ -348,33 +349,24 @@ export function ClientSuccessScreen() {
         </div>
       </ClientFlowShell>
 
-      <BottomSheet open={cancelOpen} onClose={() => setCancelOpen(false)}>
-        <SheetSimpleHeader title="Отменить запись?" />
-        <p className="ms-client-cancel-copy">
-          {(booking?.date ?? state.booking?.date ?? draft.dateLabel) || "—"}
-          {", "}
-          {(booking?.time ?? state.booking?.time ?? draft.timeLabel) || "—"}
-          {" · "}
-          {masterName}
-        </p>
-        <div className="ms-client-cancel-actions">
-          <Button
-            className="ms-btn"
-            variant="primary"
-            disabled={busy}
-            onClick={() => void onCancelConfirm()}
-          >
-            {busy ? "Отменяем…" : "Да, отменить запись"}
-          </Button>
-          <Button
-            className="ms-btn"
-            variant="ghost"
-            onClick={() => setCancelOpen(false)}
-          >
-            Оставить запись
-          </Button>
-        </div>
-      </BottomSheet>
+      <ClientCancelBookingModal
+        open={cancelOpen}
+        onClose={() => setCancelOpen(false)}
+        onConfirm={() => void onCancelConfirm()}
+        busy={busy}
+        dateLabel={
+          booking?.date ?? state.booking?.date ?? draft.dateLabel ?? ""
+        }
+        timeLabel={
+          booking?.time ?? state.booking?.time ?? draft.timeLabel ?? ""
+        }
+        serviceTitles={
+          booking?.serviceTitles ??
+          state.booking?.serviceTitles ??
+          services.map((s) => s.title)
+        }
+        masterName={masterName}
+      />
     </>
   );
 }

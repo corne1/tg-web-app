@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { cancelBooking, fetchClientBooking } from "../../api";
+import { ClientCancelBookingModal } from "../../components/client/ClientCancelBookingModal";
 import { ClientFlowShell } from "../../components/client/ClientFlowShell";
 import { useBackButton } from "../../hooks/useBackButton";
 import { useMainButton } from "../../hooks/useMainButton";
 import { useTelegram } from "../../hooks/useTelegram";
 import { formatDuration } from "../../lib/clientBookingDraft";
 import type { ClientBooking } from "../../types";
-import { BottomSheet, Button, cx, SheetSimpleHeader } from "../../ui";
+import { cx } from "../../ui";
 
 export function ClientBookingDetailScreen() {
   const { bookingId = "" } = useParams();
@@ -188,31 +189,16 @@ export function ClientBookingDetailScreen() {
         ) : null}
       </ClientFlowShell>
 
-      <BottomSheet open={cancelOpen} onClose={() => setCancelOpen(false)}>
-        <SheetSimpleHeader title="Отменить запись?" />
-        {booking ? (
-          <p className="ms-client-cancel-copy">
-            {booking.date}, {booking.time} · {booking.masterName}
-          </p>
-        ) : null}
-        <div className="ms-client-cancel-actions">
-          <Button
-            className="ms-btn"
-            variant="primary"
-            disabled={busy}
-            onClick={() => void onCancelConfirm()}
-          >
-            {busy ? "Отменяем…" : "Да, отменить запись"}
-          </Button>
-          <Button
-            className="ms-btn"
-            variant="ghost"
-            onClick={() => setCancelOpen(false)}
-          >
-            Оставить запись
-          </Button>
-        </div>
-      </BottomSheet>
+      <ClientCancelBookingModal
+        open={cancelOpen}
+        onClose={() => setCancelOpen(false)}
+        onConfirm={() => void onCancelConfirm()}
+        busy={busy}
+        dateLabel={booking?.date ?? ""}
+        timeLabel={booking?.time ?? ""}
+        serviceTitles={booking?.serviceTitles ?? []}
+        masterName={booking?.masterName ?? ""}
+      />
     </>
   );
 }
