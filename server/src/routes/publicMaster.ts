@@ -35,7 +35,8 @@ async function handleGetSlots(req: AuthedRequest, res: import("express").Respons
     res.status(404).json({ error: "Master not found" });
     return;
   }
-  const days = Math.min(14, Math.max(1, Number(req.query.days ?? 7)));
+  // Client calendar requests up to 42 days; keep a hard ceiling.
+  const days = Math.min(42, Math.max(1, Number(req.query.days ?? 7)));
   const durationRaw = Number(req.query.duration);
   const durationMin =
     Number.isFinite(durationRaw) && durationRaw > 0 ? durationRaw : undefined;

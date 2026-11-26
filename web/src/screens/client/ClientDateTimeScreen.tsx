@@ -23,7 +23,14 @@ import {
 } from "../../lib/clientBookingDraft";
 import { monthTitle, sameDay } from "../../lib/scheduleUi";
 import type { ClientBooking, TimeSlot } from "../../types";
-import { BottomSheet, Button, SheetSimpleHeader, cx } from "../../ui";
+import {
+  BottomSheet,
+  Button,
+  SheetFooter,
+  SheetHeader,
+  SheetSimpleHeader,
+  cx,
+} from "../../ui";
 
 type DayGroup = {
   key: string;
@@ -477,8 +484,15 @@ export function ClientDateTimeScreen() {
         </div>
       </ClientFlowShell>
 
-      <BottomSheet open={calOpen} onClose={() => setCalOpen(false)}>
-        <SheetSimpleHeader title="Выберите дату" />
+      <BottomSheet
+        open={calOpen}
+        onClose={() => setCalOpen(false)}
+        sheetClassName="ms-sheet-picker ms-client-cal-sheet-root"
+      >
+        <SheetHeader
+          title="Выберите дату"
+          onClose={() => setCalOpen(false)}
+        />
         <div className="ms-nb-cal ms-client-cal-sheet">
           <div className="ms-nb-cal-head">
             <button
@@ -553,6 +567,8 @@ export function ClientDateTimeScreen() {
             <span className="ms-client-cal-legend-dot" aria-hidden />
             Есть свободное время
           </p>
+        </div>
+        <SheetFooter>
           <button
             type="button"
             className={cx("ms-btn", "ms-btn-primary", "ms-nb-continue")}
@@ -560,7 +576,7 @@ export function ClientDateTimeScreen() {
           >
             Готово
           </button>
-        </div>
+        </SheetFooter>
       </BottomSheet>
 
       <BottomSheet open={confirmOpen} onClose={() => setConfirmOpen(false)}>

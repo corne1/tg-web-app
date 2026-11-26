@@ -1261,7 +1261,24 @@
   cursor: pointer;
 }
 
+/* Figma 21467 — calendar bottom sheet taller than default 70vh sheet */
+.ms-client-cal-sheet-root.ms-sheet-picker {
+  max-height: min(92dvh, 720px);
+}
+
 .ms-client-cal-sheet {
-  padding: 0 16px 20px;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 8px 16px 12px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ms-client-cal-sheet-root .ms-sheet-footer {
+  padding: 8px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+}
+
+.ms-client-cal-sheet-root .ms-sheet-footer .ms-nb-continue {
+  width: 100%;
 }
 
