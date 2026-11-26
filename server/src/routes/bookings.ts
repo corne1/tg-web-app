@@ -161,10 +161,12 @@ bookingsRouter.post("/", requireSession, async (req: AuthedRequest, res) => {
       visitJson: resolvedPlace === "visit" ? visitAddress : null,
     });
 
+    // After commit only; never await into the response path for notify failures.
     void notifyBookingCreated({
       booking,
       masterName: profile.name,
       masterTimezone: profile.timezone,
+      serviceTitles: built.titles,
     });
 
     const view = serializeClientBooking(booking, profile);

@@ -25,6 +25,7 @@ import {
 } from "../lib/bookingServices.js";
 import { readCabinetBookingBody, readCabinetClientBody, readNoteBody } from "../lib/cabinetRequest.js";
 import { requireSession, type AuthedRequest } from "../middleware.js";
+import { notifyBookingCreated } from "../services/notify.js";
 import { generateSlots } from "../services/slots.js";
 import {
   addLocalDays,
@@ -346,6 +347,14 @@ cabinetRouter.post(
         services: built.services,
         masterClientId: clientRow.id,
       });
+      if (clientRow.telegram_user_id) {
+        void notifyBookingCreated({
+          booking,
+          masterName: profile.name,
+          masterTimezone: profile.timezone,
+          serviceTitles: built.titles,
+        });
+      }
       res.status(201).json({
         booking: {
           id: booking.id,

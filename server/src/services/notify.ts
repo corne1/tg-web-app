@@ -1,33 +1,75 @@
+import { InlineKeyboard } from "grammy";
+import { clientBookingDeepLink } from "../config.js";
 import type { BookingRow } from "../db/types.js";
+import { bookingServiceTitles } from "../db/bookingRows.js";
 import { createBot } from "../bot.js";
 import { formatDateLabel, formatTime } from "./time.js";
 
+function clientBookingCreatedText(opts: {
+  masterName: string;
+  date: string;
+  time: string;
+  serviceTitles: string[];
+}): string {
+  const services =
+    opts.serviceTitles.filter((t) => t.trim()).join(", ") || "Услуга";
+  return [
+    `Вы записаны к мастеру ${opts.masterName}!`,
+    "",
+    `📅 ${opts.date}`,
+    `🕒 ${opts.time}`,
+    `💅 ${services}`,
+    "",
+    "Подробности и управление записью доступны по кнопке ниже.",
+  ].join("\n");
+}
+
+/**
+ * Fire-and-forget after a successful create. Failures are logged only —
+ * they must never roll back or block the booking response.
+ */
 export async function notifyBookingCreated(opts: {
   booking: BookingRow;
   masterName: string;
   masterTimezone: string;
+  /** Prefer explicit titles from create payload; falls back to booking.services. */
+  serviceTitles?: string[];
 }): Promise<void> {
   const bot = createBot();
   if (!bot) return;
 
   const { booking, masterName, masterTimezone } = opts;
-  const when = `${formatDateLabel(booking.starts_at, masterTimezone)} · ${formatTime(booking.starts_at, masterTimezone)}`;
+  const date = formatDateLabel(booking.starts_at, masterTimezone);
+  const time = formatTime(booking.starts_at, masterTimezone);
+  const serviceTitles =
+    opts.serviceTitles?.filter((t) => t.trim()) ??
+    bookingServiceTitles(booking);
 
   try {
     await bot.api.sendMessage(
       booking.master_id,
-      `Новая запись: ${booking.client_name}, ${when}.`,
+      `Новая запись: ${booking.client_name}, ${date} · ${time}.`,
     );
   } catch (err) {
     console.error("[notify] master", err);
   }
 
   try {
-    await bot.api.sendMessage(
-      booking.client_id,
-      `Вы записаны к ${masterName}: ${when}.`,
-    );
+    const text = clientBookingCreatedText({
+      masterName,
+      date,
+      time,
+      serviceTitles,
+    });
+    const deepLink = booking.access_token
+      ? clientBookingDeepLink(booking.access_token)
+      : null;
+    const reply_markup = deepLink
+      ? new InlineKeyboard().url("Моя запись", deepLink)
+      : undefined;
+    await bot.api.sendMessage(booking.client_id, text, { reply_markup });
   } catch (err) {
+    // Bot blocked / user never started bot — booking stays created.
     console.error("[notify] client", err);
   }
 }
