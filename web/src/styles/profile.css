@@ -289,33 +289,6 @@
   border-top: 1px solid var(--ms-line-soft);
 }
 
-/* Figma 21654:20487 — floating actions on cover */
-.ms-pub-cover-actions {
-  position: absolute;
-  top: 16px;
-  left: 16px;
-  right: 16px;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  pointer-events: none;
-}
-
-.ms-pub-cover-actions > * {
-  pointer-events: auto;
-}
-
-.ms-pub-cover-back {
-  width: 44px;
-  height: 44px;
-  border-radius: var(--ms-radius-full);
-  border: 1px solid var(--ms-line-soft);
-  background: #fff;
-  color: var(--ms-ink);
-  box-shadow: var(--ms-shadow-e1);
-}
-
 /* Figma 21416:129888 — Button-Primary Strong / Icon Only / pencil */
 .ms-pub-edit {
   background: var(--ms-purple) !important;
@@ -323,7 +296,6 @@
   color: #fff !important;
   box-shadow: none !important;
   padding: 12px;
-  border-radius: var(--ms-radius-full) !important;
 }
 
 .ms-pub-edit:active {
@@ -337,26 +309,10 @@
   height: 20px;
 }
 
+/* Figma 21416:93335 — no cover; white body from toolbar */
 .ms-pub-body {
-  gap: 0;
-  padding: 0 0 24px;
-}
-
-.ms-pub-body.ms-prof-body {
-  padding-bottom: 24px;
-}
-
-.ms-pub .ms-prof-hero {
-  position: relative;
-}
-
-.ms-pub-sheet-content {
   gap: 16px;
-}
-
-.ms-pub-master-block .ms-prof-status {
-  margin-top: 6px;
-  align-self: flex-start;
+  padding: 8px 16px 24px;
 }
 
 .ms-pub-hero {
