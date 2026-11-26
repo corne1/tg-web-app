@@ -90,11 +90,68 @@
   border-bottom: none;
 }
 
+/* Figma 21654:19541 — white sheet overlaps cover (-64), rounded top */
+.ms-client-profile-sheet {
+  position: relative;
+  z-index: 1;
+  margin-top: -64px;
+  padding: 20px 0 8px;
+  border-radius: 24px 24px 0 0;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.ms-client-master-block {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 0 16px;
+  padding: 16px;
+  border-radius: 20px;
+  background: var(--ms-soft);
+  box-sizing: border-box;
+}
+
+.ms-client-master-avatar {
+  flex: 0 0 auto;
+  width: 72px;
+  height: 72px;
+  border-radius: var(--ms-radius-full);
+  object-fit: cover;
+  background: #fff;
+}
+
+.ms-client-master-copy {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ms-client-master-name {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  line-height: 28px;
+  color: var(--ms-ink);
+}
+
+.ms-client-master-role {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  color: var(--ms-muted);
+}
+
 .ms-client-profile-content {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 24px 16px 16px;
+  padding: 16px 16px 16px;
   box-sizing: border-box;
 }
 

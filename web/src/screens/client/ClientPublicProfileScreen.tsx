@@ -141,7 +141,8 @@ export function ClientPublicProfileScreen() {
         </div>
       }
     >
-      <section className="ms-prof-hero ms-client-hero">
+      {/* Figma 21654:19541 — cover + cohesive white sheet (rounded top) */}
+      <section className="ms-client-hero">
         <div className="ms-prof-cover" aria-hidden>
           <img src={coverDemo} alt="" />
         </div>
@@ -156,111 +157,112 @@ export function ClientPublicProfileScreen() {
             </IconButton>
           </div>
         ) : null}
-        <div className="ms-prof-identity">
-          <div className="ms-prof-avatar-wrap">
-            <img
-              className="ms-prof-avatar"
-              src={resolvePublicMasterAvatarSrc(master.avatarUrl)}
-              width={100}
-              height={100}
-              alt=""
-            />
-          </div>
-          <div className="ms-prof-identity-text">
-            <h1 className="ms-prof-name">{master.name}</h1>
-            <p className="ms-prof-role">{role}</p>
-          </div>
-        </div>
       </section>
 
-      <div className="ms-client-profile-content">
-        {master.about?.trim() ? (
-          <section className="ms-client-block">
-            <h2 className="ms-client-section-title">О мастере</h2>
-            <p className="ms-client-about">{master.about.trim()}</p>
-          </section>
-        ) : null}
+      <div className="ms-client-profile-sheet">
+        <div className="ms-client-master-block">
+          <img
+            className="ms-client-master-avatar"
+            src={resolvePublicMasterAvatarSrc(master.avatarUrl)}
+            width={72}
+            height={72}
+            alt=""
+          />
+          <div className="ms-client-master-copy">
+            <h1 className="ms-client-master-name">{master.name}</h1>
+            {role ? <p className="ms-client-master-role">{role}</p> : null}
+          </div>
+        </div>
 
-        {services.length > 0 ? (
-          <section className="ms-client-block">
-            <h2 className="ms-client-section-title">Услуги</h2>
-            <ul className="ms-client-svc-preview">
-              {visibleServices.map((s) => (
-                <li key={s.id} className="ms-client-svc-row">
+        <div className="ms-client-profile-content">
+          {master.about?.trim() ? (
+            <section className="ms-client-block">
+              <h2 className="ms-client-section-title">О мастере</h2>
+              <p className="ms-client-about">{master.about.trim()}</p>
+            </section>
+          ) : null}
+
+          {services.length > 0 ? (
+            <section className="ms-client-block">
+              <h2 className="ms-client-section-title">Услуги</h2>
+              <ul className="ms-client-svc-preview">
+                {visibleServices.map((s) => (
+                  <li key={s.id} className="ms-client-svc-row">
+                    <div className="ms-service-avatar" aria-hidden>
+                      <ServiceSparkIcon className="ms-service-spark" />
+                    </div>
+                    <div className="ms-client-svc-copy">
+                      <span className="ms-client-svc-name">{s.title}</span>
+                      <span className="ms-client-svc-meta">
+                        <img
+                          className="ms-service-timer"
+                          src={clockIcon}
+                          width={16}
+                          height={16}
+                          alt=""
+                          aria-hidden
+                        />
+                        <span className="ms-client-svc-duration">
+                          {formatDuration(s.durationMin)}
+                        </span>
+                        <span className="ms-service-sep" aria-hidden>
+                          ·
+                        </span>
+                        <span className="ms-client-svc-price">
+                          {formatPrice(s)}
+                        </span>
+                      </span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              {services.length > SERVICES_PREVIEW ? (
+                <button
+                  type="button"
+                  className="ms-review-show-all"
+                  onClick={() => setShowAllServices((v) => !v)}
+                >
+                  <span>{showAllServices ? "Свернуть" : "Показать все"}</span>
+                </button>
+              ) : null}
+            </section>
+          ) : null}
+
+          {master.place && (master.place.studio || master.place.visit) ? (
+            <section className="ms-client-block">
+              <h2 className="ms-client-section-title">Место приёма</h2>
+              {master.place.studio ? (
+                <div className="ms-client-place-card">
                   <div className="ms-service-avatar" aria-hidden>
-                    <ServiceSparkIcon className="ms-service-spark" />
+                    <PlaceModeIcon mode="studio" />
                   </div>
-                  <div className="ms-client-svc-copy">
-                    <span className="ms-client-svc-name">{s.title}</span>
-                    <span className="ms-client-svc-meta">
-                      <img
-                        className="ms-service-timer"
-                        src={clockIcon}
-                        width={16}
-                        height={16}
-                        alt=""
-                        aria-hidden
-                      />
-                      <span className="ms-client-svc-duration">
-                        {formatDuration(s.durationMin)}
-                      </span>
-                      <span className="ms-service-sep" aria-hidden>
-                        ·
-                      </span>
-                      <span className="ms-client-svc-price">
-                        {formatPrice(s)}
-                      </span>
-                    </span>
+                  <div>
+                    <p className="ms-client-place-title">В кабинете у мастера</p>
+                    {placeLine ? (
+                      <p className="ms-client-place-sub">{placeLine}</p>
+                    ) : null}
                   </div>
-                </li>
-              ))}
-            </ul>
-            {services.length > SERVICES_PREVIEW ? (
-              <button
-                type="button"
-                className="ms-review-show-all"
-                onClick={() => setShowAllServices((v) => !v)}
-              >
-                <span>{showAllServices ? "Свернуть" : "Показать все"}</span>
-              </button>
-            ) : null}
-          </section>
-        ) : null}
-
-        {master.place && (master.place.studio || master.place.visit) ? (
-          <section className="ms-client-block">
-            <h2 className="ms-client-section-title">Место приёма</h2>
-            {master.place.studio ? (
-              <div className="ms-client-place-card">
-                <div className="ms-service-avatar" aria-hidden>
-                  <PlaceModeIcon mode="studio" />
                 </div>
-                <div>
-                  <p className="ms-client-place-title">В кабинете у мастера</p>
-                  {placeLine ? (
-                    <p className="ms-client-place-sub">{placeLine}</p>
-                  ) : null}
+              ) : null}
+              {master.place.visit ? (
+                <div className="ms-client-place-card">
+                  <div className="ms-service-avatar" aria-hidden>
+                    <PlaceModeIcon mode="visit" />
+                  </div>
+                  <div>
+                    <p className="ms-client-place-title">С выездом к вам</p>
+                    <p className="ms-client-place-sub">
+                      {[master.place.visit.city, master.place.visit.areas]
+                        .filter(Boolean)
+                        .join(" · ") ||
+                        "Мастер приедет по указанному вами адресу"}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ) : null}
-            {master.place.visit ? (
-              <div className="ms-client-place-card">
-                <div className="ms-service-avatar" aria-hidden>
-                  <PlaceModeIcon mode="visit" />
-                </div>
-                <div>
-                  <p className="ms-client-place-title">С выездом к вам</p>
-                  <p className="ms-client-place-sub">
-                    {[master.place.visit.city, master.place.visit.areas]
-                      .filter(Boolean)
-                      .join(" · ") ||
-                      "Мастер приедет по указанному вами адресу"}
-                  </p>
-                </div>
-              </div>
-            ) : null}
-          </section>
-        ) : null}
+              ) : null}
+            </section>
+          ) : null}
+        </div>
       </div>
     </ClientFlowShell>
   );
