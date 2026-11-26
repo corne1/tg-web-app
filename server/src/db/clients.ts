@@ -137,8 +137,14 @@ function statusLabel(status: string, paid: boolean): string {
   return "Подтверждён";
 }
 
-function tgClientId(telegramUserId: number): string {
-  return `tg-${telegramUserId}`;
+/** Per-master id — same Telegram user can book several masters. */
+function tgClientId(masterId: number, telegramUserId: number): string {
+  return `tg-${masterId}-${telegramUserId}`;
+}
+
+function isUniqueConstraintError(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err);
+  return /UNIQUE constraint failed/i.test(msg) || /SQLITE_CONSTRAINT/i.test(msg);
 }
 
 /** Upsert a master client when a Telegram user books. */
@@ -149,43 +155,52 @@ export async function ensureClientFromBooking(input: {
 }): Promise<MasterClientRow> {
   return withDb(async (db) => {
     const now = new Date().toISOString();
-    const existing = await db.execute({
-      sql: `SELECT * FROM master_clients
-        WHERE master_id = ? AND telegram_user_id = ?`,
-      args: [input.masterId, input.telegramUserId],
-    });
-    const prev = existing.rows[0];
+    const name = input.name.trim() || "Клиент";
+
+    const loadExisting = async () => {
+      const existing = await db.execute({
+        sql: `SELECT * FROM master_clients
+          WHERE master_id = ? AND telegram_user_id = ?`,
+        args: [input.masterId, input.telegramUserId],
+      });
+      return existing.rows[0]
+        ? mapClient(existing.rows[0] as unknown as Record<string, unknown>)
+        : null;
+    };
+
+    const prev = await loadExisting();
     if (prev) {
-      const row = mapClient(prev as unknown as Record<string, unknown>);
-      if (row.name !== input.name && input.name.trim()) {
+      if (prev.name !== name) {
         await db.execute({
           sql: `UPDATE master_clients SET name = ?, updated_at = ? WHERE id = ?`,
-          args: [input.name.trim(), now, row.id],
+          args: [name, now, prev.id],
         });
-        return { ...row, name: input.name.trim(), updated_at: now };
+        return { ...prev, name, updated_at: now };
       }
-      return row;
+      return prev;
     }
 
-    const id = tgClientId(input.telegramUserId);
-    await db.execute({
-      sql: `INSERT INTO master_clients (
-        id, master_id, telegram_user_id, name, phone, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, '', ?, ?)`,
-      args: [
-        id,
-        input.masterId,
-        input.telegramUserId,
-        input.name.trim() || "Клиент",
-        now,
-        now,
-      ],
-    });
+    const id = tgClientId(input.masterId, input.telegramUserId);
+    try {
+      await db.execute({
+        sql: `INSERT INTO master_clients (
+          id, master_id, telegram_user_id, name, phone, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, '', ?, ?)`,
+        args: [id, input.masterId, input.telegramUserId, name, now, now],
+      });
+    } catch (err) {
+      // Concurrent insert or legacy row for this (master, tg) pair.
+      if (!isUniqueConstraintError(err)) throw err;
+      const raced = await loadExisting();
+      if (raced) return raced;
+      throw err;
+    }
+
     return {
       id,
       master_id: input.masterId,
       telegram_user_id: input.telegramUserId,
-      name: input.name.trim() || "Клиент",
+      name,
       phone: "",
       created_at: now,
       updated_at: now,
@@ -216,19 +231,23 @@ export async function syncClientsFromBookings(
         args: [masterId, telegramUserId],
       });
       if (existing.rows[0]) continue;
-      await db.execute({
-        sql: `INSERT INTO master_clients (
-          id, master_id, telegram_user_id, name, phone, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, '', ?, ?)`,
-        args: [
-          tgClientId(telegramUserId),
-          masterId,
-          telegramUserId,
-          name,
-          firstAt,
-          now,
-        ],
-      });
+      try {
+        await db.execute({
+          sql: `INSERT INTO master_clients (
+            id, master_id, telegram_user_id, name, phone, created_at, updated_at
+          ) VALUES (?, ?, ?, ?, '', ?, ?)`,
+          args: [
+            tgClientId(masterId, telegramUserId),
+            masterId,
+            telegramUserId,
+            name,
+            firstAt,
+            now,
+          ],
+        });
+      } catch (err) {
+        if (!isUniqueConstraintError(err)) throw err;
+      }
     }
   });
 }
