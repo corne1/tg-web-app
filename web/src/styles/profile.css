@@ -42,14 +42,14 @@
   box-sizing: border-box;
 }
 
+/* Identity sits on white sheet (no soft card); avatar overlaps cover edge */
 .ms-prof-master-block {
   display: flex;
   align-items: center;
   gap: 16px;
   margin: -36px 16px 0;
-  padding: 16px;
-  border-radius: 20px;
-  background: var(--ms-soft);
+  padding: 0 0 4px;
+  background: transparent;
   box-sizing: border-box;
 }
 
