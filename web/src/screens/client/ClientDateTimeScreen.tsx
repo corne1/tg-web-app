@@ -366,27 +366,32 @@ export function ClientDateTimeScreen() {
 
           {!rescheduleId && services.length > 0 ? (
             <section className="ms-client-choice" aria-label="Ваш выбор">
-              <div className="ms-client-choice-head">
-                <span className="ms-client-choice-label">Ваш выбор</span>
-                <button
-                  type="button"
-                  className="ms-client-choice-edit"
-                  onClick={() =>
-                    navigate(`/client/${encodeURIComponent(masterKey)}/services`)
-                  }
-                >
-                  <ChoiceEditIcon />
-                  <span>Изменить</span>
-                </button>
-              </div>
-              {/* Figma 21467:22769 — soft fill2 card */}
+              {/* Figma 21467:22769 — fill2 card: head + rule + services row */}
               <div className="ms-client-choice-card">
-                <span className="ms-service-avatar" aria-hidden>
-                  <ServiceSparkIcon className="ms-service-spark" />
-                </span>
-                <div className="ms-client-choice-copy">
-                  <p className="ms-client-choice-meta">{choiceMeta}</p>
-                  <p className="ms-client-choice-titles">{totals.titles}</p>
+                <div className="ms-client-choice-head">
+                  <span className="ms-client-choice-label">Ваш выбор</span>
+                  <button
+                    type="button"
+                    className="ms-client-choice-edit"
+                    onClick={() =>
+                      navigate(
+                        `/client/${encodeURIComponent(masterKey)}/services`,
+                      )
+                    }
+                  >
+                    <ChoiceEditIcon />
+                    <span>Изменить</span>
+                  </button>
+                </div>
+                <hr className="ms-client-choice-rule" />
+                <div className="ms-client-choice-body">
+                  <span className="ms-service-avatar" aria-hidden>
+                    <ServiceSparkIcon className="ms-service-spark" />
+                  </span>
+                  <div className="ms-client-choice-copy">
+                    <p className="ms-client-choice-meta">{choiceMeta}</p>
+                    <p className="ms-client-choice-titles">{totals.titles}</p>
+                  </div>
                 </div>
               </div>
             </section>

@@ -412,13 +412,24 @@
   gap: 12px;
 }
 
-/* Figma 21467:22769 — eyebrow + soft fill2 card */
+/* Figma 21467:22769 — fill2 card with head, divider, services row */
 .ms-client-choice {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 0;
   padding: 0;
   background: transparent;
+  box-sizing: border-box;
+}
+
+.ms-client-choice-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  padding: 16px;
+  border-radius: 20px;
+  background: var(--ms-fill2);
   box-sizing: border-box;
 }
 
@@ -454,15 +465,20 @@
   cursor: pointer;
 }
 
-.ms-client-choice-card {
+.ms-client-choice-rule {
+  display: block;
+  width: 100%;
+  height: 0;
+  margin: 0;
+  border: 0;
+  border-top: 1px solid var(--ms-line-soft);
+}
+
+.ms-client-choice-body {
   display: flex;
   align-items: center;
   gap: 12px;
   min-width: 0;
-  padding: 16px;
-  border-radius: 20px;
-  background: var(--ms-fill2);
-  box-sizing: border-box;
 }
 
 .ms-client-choice-copy {
