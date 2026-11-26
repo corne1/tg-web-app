@@ -16,9 +16,9 @@ function clientBookingCreatedText(opts: {
   return [
     `Вы записаны к мастеру ${opts.masterName}!`,
     "",
-    `📅 ${opts.date}`,
-    `🕒 ${opts.time}`,
-    `💅 ${services}`,
+    `📅 Когда: ${opts.date}`,
+    `🕒 Во сколько: ${opts.time}`,
+    `💅 Услуги: ${services}`,
     "",
     "Подробности и управление записью доступны по кнопке ниже.",
   ].join("\n");

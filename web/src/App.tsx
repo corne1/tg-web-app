@@ -88,17 +88,14 @@ export function App() {
 
   if (error && !user) {
     return (
-      <div className="app-frame">
-        <main className="screen">
-          <h1 className="screen-title">Календарь</h1>
-          <p className="error">{error}</p>
-          {tgUser && (
-            <p className="screen-subtitle">
-              Client user: {tgUser.first_name} (not verified by server)
-            </p>
-          )}
-        </main>
-      </div>
+      <BootSplash
+        framed
+        label={
+          tgUser
+            ? `${error} · ${tgUser.first_name}`
+            : error
+        }
+      />
     );
   }
 

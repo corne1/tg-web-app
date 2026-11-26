@@ -3,23 +3,20 @@ import { useNavigate, useParams } from "react-router-dom";
 import { cancelBooking, fetchClientBooking } from "../../api";
 import { ClientCancelBookingModal } from "../../components/client/ClientCancelBookingModal";
 import { ClientFlowShell } from "../../components/client/ClientFlowShell";
+import { ClientMyBookingView } from "../../components/client/ClientMyBookingView";
 import { useBackButton } from "../../hooks/useBackButton";
 import { useMainButton } from "../../hooks/useMainButton";
-import { useTelegram } from "../../hooks/useTelegram";
-import { formatDuration } from "../../lib/clientBookingDraft";
 import type { ClientBooking } from "../../types";
 import { cx } from "../../ui";
 
 export function ClientBookingDetailScreen() {
   const { bookingId = "" } = useParams();
   const navigate = useNavigate();
-  const { webApp } = useTelegram();
   const [booking, setBooking] = useState<ClientBooking | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -66,87 +63,36 @@ export function ClientBookingDetailScreen() {
     }
   }, [booking, busy, load]);
 
-  const copyLink = useCallback(async () => {
-    const link = booking?.bookingLink;
-    if (!link) return;
-    try {
-      await navigator.clipboard.writeText(link);
-      setCopied(true);
-      webApp?.HapticFeedback?.notificationOccurred("success");
-      window.setTimeout(() => setCopied(false), 2000);
-    } catch {
-      webApp?.showAlert?.(link);
-    }
-  }, [booking?.bookingLink, webApp]);
-
   useBackButton(goBack);
   useMainButton({ text: "", visible: false, onClick: () => undefined });
 
   const cancelled = booking?.status === "cancelled";
+  const priceLabel =
+    booking?.priceLabel ??
+    (booking?.price != null
+      ? `${booking.price.toLocaleString("ru-RU")} ₽`
+      : null);
 
   return (
     <>
-      <ClientFlowShell title="Моя запись" onBack={goBack}>
-        {loading ? (
-          <p className="ms-client-muted">Загрузка…</p>
-        ) : error && !booking ? (
-          <p className="ms-client-error">{error}</p>
-        ) : booking ? (
-          <div className="ms-client-detail">
-            <div
-              className={cx(
-                "ms-client-detail-status",
-                cancelled && "is-cancelled",
-              )}
-            >
-              {cancelled ? "Отменена" : "Подтверждена"}
-            </div>
-
-            <dl className="ms-client-summary">
-              <div className="ms-client-summary-row">
-                <dt>Дата и время</dt>
-                <dd>
-                  {booking.date} · {booking.time}
-                </dd>
+      <ClientFlowShell
+        title="Моя запись"
+        onBack={goBack}
+        footer={
+          booking && !loading ? (
+            cancelled ? (
+              <div className="ms-nb-footer">
+                <button
+                  type="button"
+                  className={cx("ms-btn", "ms-btn-primary", "ms-client-cta")}
+                  onClick={() => navigate(`/client/${booking.masterId}`)}
+                >
+                  Записаться снова
+                </button>
               </div>
-              <div className="ms-client-summary-row">
-                <dt>Мастер</dt>
-                <dd>{booking.masterName}</dd>
-              </div>
-              {booking.serviceTitles && booking.serviceTitles.length > 0 ? (
-                <div className="ms-client-summary-row">
-                  <dt>Услуги</dt>
-                  <dd>{booking.serviceTitles.join(" · ")}</dd>
-                </div>
-              ) : null}
-              {booking.duration ? (
-                <div className="ms-client-summary-row">
-                  <dt>Длительность</dt>
-                  <dd>{formatDuration(booking.duration)}</dd>
-                </div>
-              ) : null}
-              {booking.price != null ? (
-                <div className="ms-client-summary-row">
-                  <dt>Стоимость</dt>
-                  <dd>{booking.price.toLocaleString("ru-RU")} ₽</dd>
-                </div>
-              ) : null}
-            </dl>
-
-            {error ? <p className="ms-client-error">{error}</p> : null}
-
-            {booking.bookingLink ? (
-              <button
-                type="button"
-                className="ms-btn ms-btn-outline"
-                onClick={() => void copyLink()}
-              >
-                {copied ? "Ссылка скопирована" : "Скопировать ссылку на запись"}
-              </button>
-            ) : null}
-
-            {!cancelled ? (
-              <div className="ms-client-success-footer ms-client-detail-actions">
+            ) : (
+              <div className="ms-nb-footer ms-client-success-footer">
+                {error ? <p className="ms-client-error">{error}</p> : null}
                 {booking.canReschedule ? (
                   <button
                     type="button"
@@ -155,11 +101,11 @@ export function ClientBookingDetailScreen() {
                   >
                     Перенести мою запись
                   </button>
-                ) : (
+                ) : booking.rescheduleBlockedReason ? (
                   <p className="ms-client-rule-hint">
                     {booking.rescheduleBlockedReason}
                   </p>
-                )}
+                ) : null}
                 {booking.canCancel ? (
                   <button
                     type="button"
@@ -168,24 +114,31 @@ export function ClientBookingDetailScreen() {
                   >
                     Отменить запись
                   </button>
-                ) : (
+                ) : booking.cancelBlockedReason ? (
                   <p className="ms-client-rule-hint">
                     {booking.cancelBlockedReason}
                   </p>
-                )}
+                ) : null}
               </div>
-            ) : (
-              <button
-                type="button"
-                className={cx("ms-btn", "ms-btn-primary")}
-                onClick={() =>
-                  navigate(`/client/${booking.masterId}`)
-                }
-              >
-                Записаться снова
-              </button>
-            )}
-          </div>
+            )
+          ) : undefined
+        }
+      >
+        {loading ? (
+          <p className="ms-client-muted">Загрузка…</p>
+        ) : error && !booking ? (
+          <p className="ms-client-error">{error}</p>
+        ) : booking ? (
+          <ClientMyBookingView
+            cancelled={cancelled}
+            masterName={booking.masterName}
+            masterAvatarUrl={booking.masterAvatarUrl}
+            serviceTitles={booking.serviceTitles}
+            priceLabel={priceLabel}
+            placeChoice={booking.placeChoice}
+            placeLine={booking.placeAddress}
+            cancelHours={booking.cancelHours ?? 24}
+          />
         ) : null}
       </ClientFlowShell>
 

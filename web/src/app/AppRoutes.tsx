@@ -22,7 +22,6 @@ import { ClientCardScreen } from "../screens/ClientCardScreen";
 import { CreateClientNoteScreen } from "../screens/CreateClientNoteScreen";
 import { EditClientNoteScreen } from "../screens/EditClientNoteScreen";
 import { ClientsScreen } from "../screens/ClientsScreen";
-import { EmptyStateScreen } from "../screens/EmptyStateScreen";
 import { MyBookingsScreen } from "../screens/MyBookingsScreen";
 import { NotificationsScreen } from "../screens/NotificationsScreen";
 import { OnboardingScreen } from "../screens/OnboardingScreen";
@@ -159,7 +158,10 @@ export function AppRoutes({
               path="/cabinet/profile/:stubKey"
               element={<ProfileStubScreen />}
             />
-            <Route path="/cabinet/empty" element={<EmptyStateScreen />} />
+            <Route
+              path="/cabinet/empty"
+              element={<Navigate to="/cabinet" replace />}
+            />
             <Route
               path="/cabinet/booking/new"
               element={<NewBookingClientScreen />}

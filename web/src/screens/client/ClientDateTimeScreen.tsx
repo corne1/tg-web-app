@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import calendarIcon from "../../assets/cabinet/calendar.svg";
 import {
@@ -10,6 +10,7 @@ import { ClientFlowShell } from "../../components/client/ClientFlowShell";
 import { MsArrowRight } from "../../components/master/MsArrowRight";
 import { ServiceSparkIcon } from "../../components/master/ServiceSparkIcon";
 import { useBackButton } from "../../hooks/useBackButton";
+import { useHorizontalDragScroll } from "../../hooks/useHorizontalDragScroll";
 import { useMainButton } from "../../hooks/useMainButton";
 import {
   clientBookingTotals,
@@ -144,6 +145,8 @@ export function ClientDateTimeScreen() {
   const [currentBooking, setCurrentBooking] = useState<ClientBooking | null>(
     null,
   );
+  const dateStripRef = useRef<HTMLDivElement>(null);
+  useHorizontalDragScroll(dateStripRef);
 
   const today = useMemo(() => {
     const d = new Date();
@@ -445,6 +448,7 @@ export function ClientDateTimeScreen() {
                   </button>
                 </div>
                 <div
+                  ref={dateStripRef}
                   className="ms-client-date-strip"
                   role="tablist"
                   aria-label="Ближайшие две недели"

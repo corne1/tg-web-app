@@ -1,18 +1,16 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { fetchMyBookings } from "../api";
-import { ScreenShell } from "../components/calendar/ScreenShell";
 import { BookingsListSkeleton } from "../components/calendar/Skeleton";
-import { UiMainButton } from "../components/calendar/UiMainButton";
+import { ClientFlowShell } from "../components/client/ClientFlowShell";
 import { useBackButton } from "../hooks/useBackButton";
 import { useMainButton } from "../hooks/useMainButton";
-import { useTelegram } from "../hooks/useTelegram";
 import type { ClientBooking } from "../types";
+import { ChevronRightIcon } from "../ui";
 
 export function MyBookingsScreen() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isTelegram } = useTelegram();
   const [bookings, setBookings] = useState<ClientBooking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -44,70 +42,62 @@ export function MyBookingsScreen() {
   }, [location.state, navigate]);
 
   const goHome = useCallback(() => navigate("/"), [navigate]);
-  const bookAgain = useCallback(() => navigate("/client/bookings"), [navigate]);
 
   useBackButton(goHome);
-  useMainButton({
-    text: "Записаться",
-    visible: isTelegram && !loading && bookings.length === 0,
-    onClick: bookAgain,
-  });
+  useMainButton({ text: "", visible: false, onClick: () => undefined });
 
   return (
-    <ScreenShell
-      title="Мои записи"
-      subtitle="Предстоящие визиты"
-      footer={
-        <div className="footer-links">
-          <Link to="/" className="text-link">
-            На главную
-          </Link>
+    <ClientFlowShell title="Мои записи" onBack={goHome}>
+      <div className="ms-nb">
+        <div className="ms-nb-intro">
+          <h2 className="ms-nb-title">Мои записи</h2>
+          <p className="ms-nb-lead">Предстоящие визиты</p>
         </div>
-      }
-    >
-      {error && <p className="error">{error}</p>}
-      {loading ? (
-        <BookingsListSkeleton />
-      ) : bookings.length === 0 ? (
-        <div className="empty-inline">
-          <p>Нет предстоящих записей</p>
-          <p className="screen-subtitle">
-            Откройте ссылку мастера в Telegram, чтобы записаться.
-          </p>
-          {!isTelegram && (
-            <UiMainButton onClick={bookAgain}>Как записаться</UiMainButton>
-          )}
-        </div>
-      ) : (
-        <ul className="booking-list">
-          {bookings.map((b) => (
-            <li key={b.id}>
-              <button
-                type="button"
-                className="booking-card ms-client-booking-card"
-                onClick={() =>
-                  navigate(`/client/bookings/${encodeURIComponent(b.id)}`)
-                }
-              >
-                <div className="booking-meta">
-                  <p className="booking-when">
-                    {b.date}, {b.time}
-                  </p>
-                  <p className="booking-who">с {b.masterName}</p>
-                  {b.serviceTitles && b.serviceTitles.length > 0 ? (
-                    <p className="ms-client-booking-svcs">
-                      {b.serviceTitles.join(" · ")}
+
+        {error ? <p className="ms-client-error">{error}</p> : null}
+
+        {loading ? (
+          <BookingsListSkeleton />
+        ) : bookings.length === 0 ? (
+          <div className="ms-client-bookings-empty">
+            <p className="ms-client-bookings-empty-title">
+              Нет предстоящих записей
+            </p>
+            <p className="ms-client-bookings-empty-sub">
+              Откройте ссылку мастера в Telegram, чтобы записаться.
+            </p>
+          </div>
+        ) : (
+          <ul className="ms-client-bookings">
+            {bookings.map((b) => (
+              <li key={b.id}>
+                <button
+                  type="button"
+                  className="ms-client-booking-card"
+                  onClick={() =>
+                    navigate(`/client/bookings/${encodeURIComponent(b.id)}`)
+                  }
+                >
+                  <div className="ms-client-booking-copy">
+                    <p className="ms-client-booking-when">
+                      {b.date}, {b.time}
                     </p>
-                  ) : null}
-                </div>
-                <span className="ms-client-booking-chevron" aria-hidden>
-                  ›
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </ScreenShell>
+                    <p className="ms-client-booking-who">с {b.masterName}</p>
+                    {b.serviceTitles && b.serviceTitles.length > 0 ? (
+                      <p className="ms-client-booking-svcs">
+                        {b.serviceTitles.join(" · ")}
+                      </p>
+                    ) : null}
+                  </div>
+                  <span className="ms-client-booking-chevron" aria-hidden>
+                    <ChevronRightIcon />
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </ClientFlowShell>
   );
 }

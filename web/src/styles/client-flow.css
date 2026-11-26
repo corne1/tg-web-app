@@ -548,17 +548,27 @@
   cursor: pointer;
 }
 
-/* Bleed to screen right so ~5th day circle is half-clipped; swipe scrolls. */
+/* Bleed to screen right so ~5th day circle is half-clipped; swipe / wheel / drag scrolls. */
 .ms-client-date-strip {
   display: flex;
   gap: 12px;
   overflow-x: auto;
   overscroll-behavior-x: contain;
-  padding: 2px 0 4px;
+  padding: 2px 16px 4px 0;
   margin-right: -16px;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   touch-action: pan-x;
+  cursor: grab;
+}
+
+.ms-client-date-strip.is-dragging {
+  cursor: grabbing;
+  user-select: none;
+}
+
+.ms-client-date-strip.is-dragging .ms-client-date-dot {
+  pointer-events: none;
 }
 
 .ms-client-date-strip::-webkit-scrollbar {
@@ -863,7 +873,7 @@
   box-sizing: border-box;
 }
 
-/* Figma 21477:18678 — Запись подтверждена */
+/* Figma 21477:18678 — Моя запись */
 .ms-client-flow:has(.ms-client-success) .ms-client-body {
   background: #fff;
 }
@@ -1219,25 +1229,119 @@
   color: var(--ms-muted);
 }
 
+.ms-client-bookings {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .ms-client-booking-card {
+  appearance: none;
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  margin: 0;
+  padding: 16px;
+  border: 0;
+  border-radius: 20px;
+  background: var(--ms-fill2);
   text-align: left;
   cursor: pointer;
+  box-sizing: border-box;
+}
+
+.ms-client-booking-card:active {
+  filter: brightness(0.98);
+}
+
+.ms-client-booking-copy {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ms-client-booking-when {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.16px;
+  line-height: 24px;
+  color: var(--ms-ink);
+}
+
+.ms-client-booking-who {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  color: var(--ms-ink);
 }
 
 .ms-client-booking-svcs {
   margin: 4px 0 0;
   font-size: 13px;
-  color: var(--ms-muted, #6b7280);
+  font-weight: 400;
+  letter-spacing: -0.13px;
+  line-height: 18px;
+  color: var(--ms-muted);
 }
 
 .ms-client-booking-chevron {
-  font-size: 22px;
-  color: var(--ms-muted, #9ca3af);
+  flex: 0 0 auto;
+  display: inline-flex;
+  color: var(--ms-muted);
+}
+
+.ms-client-bookings-empty {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 24px 16px;
+  border-radius: 20px;
+  background: var(--ms-fill2);
+  box-sizing: border-box;
+}
+
+.ms-client-bookings-empty-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.16px;
+  line-height: 24px;
+  color: var(--ms-ink);
+}
+
+.ms-client-bookings-empty-sub {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: -0.14px;
+  line-height: 20px;
+  color: var(--ms-muted);
+}
+
+.ms-client-bookings-skel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ms-client-bookings-skel-card {
+  padding: 16px;
+  border-radius: 20px;
+  background: var(--ms-fill2);
+  box-sizing: border-box;
 }
 
 .ms-client-zone-note {

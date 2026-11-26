@@ -1,26 +1,21 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import infoIcon from "../../assets/cabinet/profile/info.svg";
 import {
   cancelBooking,
   fetchClientBooking,
 } from "../../api";
 import { ClientCancelBookingModal } from "../../components/client/ClientCancelBookingModal";
 import { ClientFlowShell } from "../../components/client/ClientFlowShell";
-import { PlaceModeIcon } from "../../components/master/PlaceModeIcon";
-import { ServiceSparkIcon } from "../../components/master/ServiceSparkIcon";
+import { ClientMyBookingView } from "../../components/client/ClientMyBookingView";
 import { useBackButton } from "../../hooks/useBackButton";
 import { useMainButton } from "../../hooks/useMainButton";
 import { useServiceTypes } from "../../hooks/useServiceTypes";
 import {
   clientBookingTotals,
-  formatDuration,
-  formatPrice,
   readClientDraft,
   resolveClientServices,
   studioAddressLine,
 } from "../../lib/clientBookingDraft";
-import { resolvePublicMasterAvatarSrc } from "../../lib/masterAvatar";
 import type { ClientBooking } from "../../types";
 import { cx } from "../../ui";
 
@@ -38,42 +33,6 @@ type BookingState = {
     placeChoice?: "studio" | "visit" | null;
   };
 };
-
-/** Figma 21477:18684 — 96px ring badge + white disc + green check. */
-function SuccessCheckBadge() {
-  return (
-    <div className="ms-client-success-badge" aria-hidden>
-      <span className="ms-client-success-badge-inner">
-        <svg
-          className="ms-client-success-badge-check"
-          width="34"
-          height="34"
-          viewBox="0 0 34 34"
-          fill="none"
-        >
-          <path
-            d="M7.5 17.2 13.8 23.5 26.5 10.5"
-            stroke="currentColor"
-            strokeWidth="2.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </span>
-    </div>
-  );
-}
-
-function ruHoursLabel(hours: number): string {
-  const n = Math.max(0, Math.round(hours));
-  const mod10 = n % 10;
-  const mod100 = n % 100;
-  let word = "часов";
-  if (mod10 === 1 && mod100 !== 11) word = "час";
-  else if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20))
-    word = "часа";
-  return `${n} ${word}`;
-}
 
 export function ClientSuccessScreen() {
   const { masterId: masterKey = "" } = useParams();
@@ -187,7 +146,8 @@ export function ClientSuccessScreen() {
   return (
     <>
       <ClientFlowShell
-        hideHeader
+        title="Моя запись"
+        onBack={goHome}
         footer={
           cancelled ? (
             <div className="ms-nb-footer">
@@ -232,121 +192,27 @@ export function ClientSuccessScreen() {
           )
         }
       >
-        {/* Figma 21477:18678 — Запись подтверждена */}
-        <div className="ms-client-success">
-          <div className="ms-client-success-hero">
-            <SuccessCheckBadge />
-            <h1 className="ms-client-success-title">Запись подтверждена</h1>
-            <p className="ms-client-success-lead">Вы записаны к мастеру</p>
-          </div>
-
-          <section className="ms-client-review-section">
-            <h2 className="ms-client-review-label">Мастер</h2>
-            <div className="ms-client-review-row">
-              <img
-                className="ms-client-review-avatar"
-                src={resolvePublicMasterAvatarSrc(
-                  booking?.masterAvatarUrl ?? draft.masterAvatarUrl,
-                )}
-                alt=""
-                width={48}
-                height={48}
-              />
-              <div className="ms-client-review-copy">
-                <p className="ms-client-review-title">{masterName}</p>
-                <p className="ms-client-review-sub">{roleLabel}</p>
-              </div>
-            </div>
-          </section>
-
-          <section className="ms-client-review-section">
-            <h2 className="ms-client-review-label">Услуги и стоимость</h2>
-            <ul className="ms-client-review-svc-list">
-              {services.length > 0
-                ? services.map((svc) => (
-                    <li key={svc.id} className="ms-client-success-svc">
-                      <span className="ms-service-avatar" aria-hidden>
-                        <ServiceSparkIcon className="ms-service-spark" />
-                      </span>
-                      <span className="ms-client-review-copy">
-                        <span className="ms-client-review-title">
-                          {svc.title}
-                        </span>
-                        <span className="ms-client-review-sub">
-                          {formatDuration(svc.durationMin)}
-                        </span>
-                      </span>
-                      <span className="ms-client-success-svc-price">
-                        {formatPrice(svc)}
-                      </span>
-                    </li>
-                  ))
-                : (booking?.serviceTitles ?? state.booking?.serviceTitles)?.map(
-                    (title) => (
-                      <li key={title} className="ms-client-success-svc">
-                        <span className="ms-service-avatar" aria-hidden>
-                          <ServiceSparkIcon className="ms-service-spark" />
-                        </span>
-                        <span className="ms-client-review-copy">
-                          <span className="ms-client-review-title">{title}</span>
-                        </span>
-                      </li>
-                    ),
-                  )}
-            </ul>
-            {priceLabel ? (
-              <div className="ms-client-success-total">
-                <span>Итого</span>
-                <span>{priceLabel}</span>
-              </div>
-            ) : null}
-          </section>
-
-          <section className="ms-client-review-section">
-            <h2 className="ms-client-review-label">Место приёма</h2>
-            <div className="ms-client-review-row">
-              <span
-                className="ms-service-avatar ms-client-review-place-ico"
-                aria-hidden
-              >
-                <PlaceModeIcon
-                  mode={placeChoice === "visit" ? "visit" : "studio"}
-                  size={20}
-                />
-              </span>
-              <div className="ms-client-review-copy">
-                <p className="ms-client-review-title">
-                  {placeChoice === "visit"
-                    ? "Выезд к вам"
-                    : "В кабинете у мастера"}
-                </p>
-                {placeLine ? (
-                  <p className="ms-client-review-sub">{placeLine}</p>
-                ) : null}
-                {placeExtra ? (
-                  <p className="ms-client-review-sub">{placeExtra}</p>
-                ) : null}
-              </div>
-            </div>
-          </section>
-
-          <section className="ms-client-review-section ms-client-success-rules">
-            <div className="ms-client-success-rules-row">
-              <img
-                className="ms-client-success-rules-ico"
-                src={infoIcon}
-                width={20}
-                height={20}
-                alt=""
-                aria-hidden
-              />
-              <p className="ms-client-success-rules-text">
-                Перенести или отменить запись можно не позднее чем за{" "}
-                {ruHoursLabel(cancelHours)} до визита.
-              </p>
-            </div>
-          </section>
-        </div>
+        <ClientMyBookingView
+          cancelled={cancelled}
+          masterName={masterName}
+          roleLabel={roleLabel}
+          masterAvatarUrl={
+            booking?.masterAvatarUrl ?? draft.masterAvatarUrl
+          }
+          services={services.map((svc) => ({
+            id: svc.id,
+            title: svc.title,
+            service: svc,
+          }))}
+          serviceTitles={
+            booking?.serviceTitles ?? state.booking?.serviceTitles
+          }
+          priceLabel={priceLabel}
+          placeChoice={placeChoice}
+          placeLine={placeLine}
+          placeExtra={placeExtra}
+          cancelHours={cancelHours}
+        />
       </ClientFlowShell>
 
       <ClientCancelBookingModal
