@@ -95,19 +95,19 @@
   position: relative;
   z-index: 1;
   margin-top: -64px;
-  padding: 0 0 8px;
+  padding: 20px 0 8px;
   border-radius: 24px 24px 0 0;
   background: #fff;
   box-sizing: border-box;
 }
 
-/* Identity on white sheet (no soft card); avatar overlaps cover edge */
+/* Identity on white sheet with top inset — no soft card, no cover overlap */
 .ms-client-master-block {
   display: flex;
   align-items: center;
   gap: 16px;
-  margin: -36px 16px 0;
-  padding: 0 0 4px;
+  margin: 0 16px;
+  padding: 0;
   background: transparent;
   box-sizing: border-box;
 }
@@ -117,10 +117,8 @@
   width: 72px;
   height: 72px;
   border-radius: var(--ms-radius-full);
-  border: 3px solid #fff;
-  box-sizing: border-box;
   object-fit: cover;
-  background: #fff;
+  background: var(--ms-fill2);
 }
 
 .ms-client-master-copy {
