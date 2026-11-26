@@ -329,6 +329,25 @@
   display: block;
 }
 
+/* Hint + char count on one row (client «Проверьте свои данные») */
+.ms-field-under {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.ms-field-under .ms-field-hint {
+  margin-top: 0;
+  min-width: 0;
+}
+
+.ms-field-under .ms-char-count {
+  margin-top: 0;
+  flex-shrink: 0;
+}
+
 .ms-place-client-info {
   margin-top: 8px;
   width: 100%;

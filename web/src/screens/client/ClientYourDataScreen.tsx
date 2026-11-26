@@ -107,17 +107,23 @@ export function ClientYourDataScreen() {
               placeholder="Например, пожелания или важные уточнения"
               rows={3}
               maxLength={TEXTAREA_MAX_LEN}
+              showCount={false}
             />
-            <span className="ms-field-hint">
-              <img
-                src={infoIcon}
-                alt=""
-                className="ms-field-hint-icon"
-                width={16}
-                height={16}
-              />
-              Необязательно
-            </span>
+            <div className="ms-field-under">
+              <span className="ms-field-hint">
+                <img
+                  src={infoIcon}
+                  alt=""
+                  className="ms-field-hint-icon"
+                  width={16}
+                  height={16}
+                />
+                Необязательно
+              </span>
+              <span className="ms-char-count" aria-live="polite">
+                {Math.min(comment.length, TEXTAREA_MAX_LEN)}/{TEXTAREA_MAX_LEN}
+              </span>
+            </div>
           </Field>
         </div>
       </div>
