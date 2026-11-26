@@ -412,7 +412,7 @@
   gap: 12px;
 }
 
-/* Figma 21467:29729 — eyebrow + Primary Elevated card (drop shadow) */
+/* Figma 21467:22769 — eyebrow + soft fill2 card */
 .ms-client-choice {
   display: flex;
   flex-direction: column;
@@ -460,9 +460,8 @@
   gap: 12px;
   min-width: 0;
   padding: 16px;
-  border-radius: var(--ms-radius-card);
-  background: #fff;
-  box-shadow: var(--ms-shadow-e1);
+  border-radius: 20px;
+  background: var(--ms-fill2);
   box-sizing: border-box;
 }
 

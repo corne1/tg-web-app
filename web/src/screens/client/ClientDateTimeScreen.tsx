@@ -379,7 +379,7 @@ export function ClientDateTimeScreen() {
                   <span>Изменить</span>
                 </button>
               </div>
-              {/* Figma 21467:29729 — Primary Elevated + drop shadow */}
+              {/* Figma 21467:22769 — soft fill2 card */}
               <div className="ms-client-choice-card">
                 <span className="ms-service-avatar" aria-hidden>
                   <ServiceSparkIcon className="ms-service-spark" />
