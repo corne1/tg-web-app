@@ -15,7 +15,6 @@ import {
   clientBookingTotals,
   formatDurationLong,
   needsClientAddressStep,
-  needsClientPlaceStep,
   patchClientDraft,
   readClientDraft,
   resolveClientServices,
@@ -44,6 +43,8 @@ type DayGroup = {
 
 const DOW = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 const DOW_SHORT = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
+/** Horizontal strip: nearest two weeks; calendar covers the full slots horizon. */
+const STRIP_DAYS = 14;
 
 function parseSlotDate(slot: TimeSlot): Date | null {
   const d = new Date(slot.startsAt);
@@ -239,15 +240,31 @@ export function ClientDateTimeScreen() {
     [days],
   );
 
+  const stripEnd = useMemo(() => {
+    const d = new Date(today);
+    d.setDate(d.getDate() + (STRIP_DAYS - 1));
+    return d;
+  }, [today]);
+
+  /** Figma 21467:23199 — strip scrolls only ~2 weeks; farther dates via calendar. */
+  const stripDays = useMemo(() => {
+    return days.filter((day) => {
+      const d = parseISODate(day.dateISO);
+      if (!d) return false;
+      return d >= today && d <= stripEnd;
+    });
+  }, [days, stripEnd, today]);
+
   useEffect(() => {
     if (days.length === 0) {
       setDayKey(null);
       return;
     }
     if (!dayKey || !days.some((d) => d.key === dayKey)) {
-      setDayKey(days[0]!.key);
+      // Prefer first day inside the strip; else first available (calendar-only).
+      setDayKey((stripDays[0] ?? days[0]!).key);
     }
-  }, [dayKey, days]);
+  }, [dayKey, days, stripDays]);
 
   const activeDay = days.find((d) => d.key === dayKey) ?? null;
   const selected = slots.find((s) => s.id === selectedId);
@@ -276,12 +293,8 @@ export function ClientDateTimeScreen() {
       navigate(`/client/${encodeURIComponent(masterKey)}/address`);
       return;
     }
-    if (needsClientPlaceStep(draft.place)) {
-      navigate(`/client/${encodeURIComponent(masterKey)}/place`);
-      return;
-    }
-    navigate(`/client/${encodeURIComponent(masterKey)}/services`);
-  }, [draft.place, draft.placeChoice, masterKey, navigate, rescheduleId]);
+    navigate(`/client/${encodeURIComponent(masterKey)}/place`);
+  }, [draft.placeChoice, masterKey, navigate, rescheduleId]);
 
   const continueNext = useCallback(() => {
     if (!selected || submitting) return;
@@ -434,9 +447,9 @@ export function ClientDateTimeScreen() {
                 <div
                   className="ms-client-date-strip"
                   role="tablist"
-                  aria-label="Даты"
+                  aria-label="Ближайшие две недели"
                 >
-                  {days.map((day) => {
+                  {stripDays.map((day) => {
                     const on = day.key === dayKey;
                     return (
                       <button
