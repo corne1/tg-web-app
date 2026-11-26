@@ -113,7 +113,8 @@ bookingsRouter.post("/", requireSession, async (req: AuthedRequest, res) => {
 
   const travelBufferMin =
     resolvedPlace === "visit" ? (profile.travel_buffer_min ?? 30) : undefined;
-  const slots = await generateSlots(profile, 14, {
+  // Must cover the same horizon as GET /:id/slots (client books from calendar).
+  const slots = await generateSlots(profile, 90, {
     durationMin: built.durationMin,
     travelBufferMin,
   });
@@ -304,7 +305,7 @@ bookingsRouter.post(
       return;
     }
 
-    const slots = await generateSlots(profile, 14, {
+    const slots = await generateSlots(profile, 90, {
       durationMin: existing.duration_min || undefined,
       excludeBookingId: existing.id,
     });

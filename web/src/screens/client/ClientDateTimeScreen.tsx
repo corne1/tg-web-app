@@ -186,7 +186,7 @@ export function ClientDateTimeScreen() {
       setError(null);
       try {
         const data = await fetchSlots(masterKey, {
-          days: 42,
+          days: 90,
           durationMin: totals.totalMin || undefined,
           visit: isVisit,
         });
