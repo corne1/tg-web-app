@@ -1,9 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { fetchMe } from "../api";
+import coverDemo from "../assets/cabinet/profile/cover.jpg";
 import pencilIcon from "../assets/cabinet/profile/pencil.svg";
 import copyIcon from "../assets/onboarding/action-copy.svg";
-import { MasterHeroSkeleton, Skeleton } from "../components/calendar/Skeleton";
+import {
+  CabinetProfileIdentitySkeleton,
+  Skeleton,
+} from "../components/calendar/Skeleton";
 import { MasterAvatar } from "../components/master/MasterAvatar";
 import { MsToast } from "../components/master/MsToast";
 import { useBackButton } from "../hooks/useBackButton";
@@ -71,7 +75,7 @@ function ShareIcon() {
   );
 }
 
-/** Figma — «Публичный профиль» to the right of Profile tab. */
+/** Figma 21654:20487 — cover + sheet «Публичный профиль» (master management). */
 export function PublicProfileScreen() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -199,101 +203,116 @@ export function PublicProfileScreen() {
           onDismiss={() => setToast(null)}
         />
       ) : null}
-      <header className="ms-bd-toolbar">
-        <IconButton label="Назад" onClick={goBack}>
-          <BackIcon />
-        </IconButton>
-        <h1 className="ms-bd-toolbar-title">Публичный профиль</h1>
-        <IconButton
-          label="Редактировать"
-          className="ms-pub-edit"
-          onClick={() => navigate("/cabinet/profile/edit")}
-        >
-          {/* Figma 21416:129888 — Button-Primary Strong 44 / Lead Icon pencil */}
-          <img src={pencilIcon} width={20} height={20} alt="" />
-        </IconButton>
-      </header>
 
-      <div className="ms-body ms-cab-body ms-pub-body">
-        {loading ? (
-          <MasterHeroSkeleton />
-        ) : (
-          <div className="ms-pub-hero">
-            <MasterAvatar
-              className="ms-pub-avatar"
-              remote={profile?.avatarUrl}
-              width={88}
-              height={88}
-            />
-            <h2 className="ms-pub-name">
-              {profile?.name?.trim() || "Мастер"}
-            </h2>
-            <p className="ms-pub-role">{title}</p>
-            {published ? (
-              <span className="ms-prof-status">
-                <span className="ms-prof-status-dot" aria-hidden />
-                Опубликован
-              </span>
-            ) : (
-              <span className="ms-prof-status is-draft">Черновик</span>
-            )}
+      <div className="ms-body ms-cab-body ms-pub-body ms-prof-body">
+        <section className="ms-prof-hero">
+          <div className="ms-prof-cover" aria-hidden>
+            <img src={coverDemo} alt="" />
           </div>
-        )}
-
-        <section className="ms-pub-link-card" aria-label="Ссылка для клиентов">
-          <div className="ms-pub-link-head">
-            <span className="ms-success-globe" aria-hidden>
-              <GlobeIcon />
-            </span>
-            <h3 className="ms-pub-link-title">Ссылка для клиентов</h3>
-          </div>
-          <div className="ms-pub-url-row">
-            <div className="ms-pub-url" title={bookingLink ?? undefined}>
-              {loading ? <Skeleton width="70%" height="16px" /> : linkLabel}
-            </div>
-            <button
-              type="button"
-              className={cx("ms-pub-copy", copied && "is-copied")}
-              aria-label={copied ? "Скопировано" : "Копировать"}
-              disabled={!bookingLink}
-              onClick={() => void copyLink()}
+          <div className="ms-pub-cover-actions">
+            <IconButton
+              label="Назад"
+              className="ms-pub-cover-back"
+              onClick={goBack}
             >
-              {copied ? (
-                <CopyCheckIcon />
-              ) : (
-                <img src={copyIcon} width={16} height={16} alt="" />
-              )}
-            </button>
+              <BackIcon />
+            </IconButton>
+            <IconButton
+              label="Редактировать"
+              className="ms-pub-edit"
+              onClick={() => navigate("/cabinet/profile/edit")}
+            >
+              {/* Figma 21416:129888 — Button-Primary Strong 44 / Lead Icon pencil */}
+              <img src={pencilIcon} width={20} height={20} alt="" />
+            </IconButton>
           </div>
-          <Button
-            variant="secondary"
-            className="ms-pub-share"
-            disabled={!bookingLink}
-            onClick={() => void shareLink()}
-          >
-            <ShareIcon />
-            Поделиться
-          </Button>
         </section>
 
-        <button
-          type="button"
-          className="ms-success-preview ms-pub-preview"
-          onClick={viewAsClient}
-          disabled={!(profile?.slug || profile?.userId)}
-        >
-          <span className="ms-success-preview-text">
-            <span className="ms-success-preview-title">
-              Посмотреть как клиент
-            </span>
-            <span className="ms-success-preview-sub">
-              Открыть свою опубликованную страницу
-            </span>
-          </span>
-          <span className="ms-success-preview-chevron" aria-hidden>
-            <ChevronRightIcon />
-          </span>
-        </button>
+        <div className="ms-prof-sheet">
+          {loading ? (
+            <CabinetProfileIdentitySkeleton />
+          ) : (
+            <div className="ms-prof-master-block ms-pub-master-block">
+              <MasterAvatar
+                className="ms-prof-master-avatar"
+                remote={profile?.avatarUrl}
+                width={72}
+                height={72}
+              />
+              <div className="ms-prof-master-copy">
+                <h1 className="ms-prof-name">
+                  {profile?.name?.trim() || "Мастер"}
+                </h1>
+                {title ? <p className="ms-prof-role">{title}</p> : null}
+                {published ? (
+                  <span className="ms-prof-status">
+                    <span className="ms-prof-status-dot" aria-hidden />
+                    Опубликован
+                  </span>
+                ) : (
+                  <span className="ms-prof-status is-draft">Черновик</span>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="ms-prof-content ms-pub-sheet-content">
+            <section className="ms-pub-link-card" aria-label="Ссылка для клиентов">
+              <div className="ms-pub-link-head">
+                <span className="ms-success-globe" aria-hidden>
+                  <GlobeIcon />
+                </span>
+                <h2 className="ms-pub-link-title">Ссылка для клиентов</h2>
+              </div>
+              <div className="ms-pub-url-row">
+                <div className="ms-pub-url" title={bookingLink ?? undefined}>
+                  {loading ? <Skeleton width="70%" height="16px" /> : linkLabel}
+                </div>
+                <button
+                  type="button"
+                  className={cx("ms-pub-copy", copied && "is-copied")}
+                  aria-label={copied ? "Скопировано" : "Копировать"}
+                  disabled={!bookingLink}
+                  onClick={() => void copyLink()}
+                >
+                  {copied ? (
+                    <CopyCheckIcon />
+                  ) : (
+                    <img src={copyIcon} width={16} height={16} alt="" />
+                  )}
+                </button>
+              </div>
+              <Button
+                variant="secondary"
+                className="ms-pub-share"
+                disabled={!bookingLink}
+                onClick={() => void shareLink()}
+              >
+                <ShareIcon />
+                Поделиться
+              </Button>
+            </section>
+
+            <button
+              type="button"
+              className="ms-success-preview ms-pub-preview"
+              onClick={viewAsClient}
+              disabled={!(profile?.slug || profile?.userId)}
+            >
+              <span className="ms-success-preview-text">
+                <span className="ms-success-preview-title">
+                  Посмотреть как клиент
+                </span>
+                <span className="ms-success-preview-sub">
+                  Открыть свою опубликованную страницу
+                </span>
+              </span>
+              <span className="ms-success-preview-chevron" aria-hidden>
+                <ChevronRightIcon />
+              </span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -31,6 +31,47 @@
   object-position: center;
 }
 
+/* Figma 21654:20188 / 21654:20487 — white sheet overlaps cover, rounded top */
+.ms-prof-sheet {
+  position: relative;
+  z-index: 1;
+  margin-top: -64px;
+  padding: 0 0 8px;
+  border-radius: 24px 24px 0 0;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.ms-prof-master-block {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: -36px 16px 0;
+  padding: 16px;
+  border-radius: 20px;
+  background: var(--ms-soft);
+  box-sizing: border-box;
+}
+
+.ms-prof-master-avatar {
+  flex: 0 0 auto;
+  width: 72px;
+  height: 72px;
+  border-radius: var(--ms-radius-full);
+  border: 3px solid #fff;
+  box-sizing: border-box;
+  object-fit: cover;
+  background: #fff;
+}
+
+.ms-prof-master-copy {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .ms-prof-identity {
   display: flex;
   align-items: flex-end;
@@ -98,7 +139,11 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 32px 16px 8px;
+  padding: 16px 16px 8px;
+}
+
+.ms-prof-sheet .ms-prof-content {
+  padding-top: 16px;
 }
 
 .ms-prof-public-card {
@@ -246,6 +291,33 @@
   border-top: 1px solid var(--ms-line-soft);
 }
 
+/* Figma 21654:20487 — floating actions on cover */
+.ms-pub-cover-actions {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.ms-pub-cover-actions > * {
+  pointer-events: auto;
+}
+
+.ms-pub-cover-back {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--ms-radius-full);
+  border: 1px solid var(--ms-line-soft);
+  background: #fff;
+  color: var(--ms-ink);
+  box-shadow: var(--ms-shadow-e1);
+}
+
 /* Figma 21416:129888 — Button-Primary Strong / Icon Only / pencil */
 .ms-pub-edit {
   background: var(--ms-purple) !important;
@@ -253,6 +325,7 @@
   color: #fff !important;
   box-shadow: none !important;
   padding: 12px;
+  border-radius: var(--ms-radius-full) !important;
 }
 
 .ms-pub-edit:active {
@@ -267,8 +340,25 @@
 }
 
 .ms-pub-body {
+  gap: 0;
+  padding: 0 0 24px;
+}
+
+.ms-pub-body.ms-prof-body {
+  padding-bottom: 24px;
+}
+
+.ms-pub .ms-prof-hero {
+  position: relative;
+}
+
+.ms-pub-sheet-content {
   gap: 16px;
-  padding: 8px 16px 24px;
+}
+
+.ms-pub-master-block .ms-prof-status {
+  margin-top: 6px;
+  align-self: flex-start;
 }
 
 .ms-pub-hero {

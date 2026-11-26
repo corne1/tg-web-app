@@ -90,22 +90,23 @@
   border-bottom: none;
 }
 
-/* Figma 21654:19541 — white sheet overlaps cover (-64), rounded top */
+/* Figma 21654:19541 / 21654:20487 — white sheet overlaps cover (-64), rounded top */
 .ms-client-profile-sheet {
   position: relative;
   z-index: 1;
   margin-top: -64px;
-  padding: 20px 0 8px;
+  padding: 0 0 8px;
   border-radius: 24px 24px 0 0;
   background: #fff;
   box-sizing: border-box;
 }
 
+/* Soft cohesive master card; negative margin overlaps sheet into cover */
 .ms-client-master-block {
   display: flex;
   align-items: center;
   gap: 16px;
-  margin: 0 16px;
+  margin: -36px 16px 0;
   padding: 16px;
   border-radius: 20px;
   background: var(--ms-soft);
@@ -117,6 +118,8 @@
   width: 72px;
   height: 72px;
   border-radius: var(--ms-radius-full);
+  border: 3px solid #fff;
+  box-sizing: border-box;
   object-fit: cover;
   background: #fff;
 }
@@ -151,7 +154,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 16px 16px 16px;
+  padding: 16px;
   box-sizing: border-box;
 }
 

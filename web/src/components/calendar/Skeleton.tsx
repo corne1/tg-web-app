@@ -152,14 +152,12 @@ export function ClientCardSkeleton() {
 export function CabinetProfileIdentitySkeleton() {
   return (
     <div
-      className="ms-prof-identity"
+      className="ms-prof-master-block"
       aria-busy="true"
       aria-label="Загрузка профиля"
     >
-      <div className="ms-prof-avatar-wrap">
-        <Skeleton width="100%" height="100%" className="is-round" />
-      </div>
-      <div className="ms-prof-identity-text">
+      <Skeleton width="72px" height="72px" className="is-round" />
+      <div className="ms-prof-master-copy">
         <Skeleton width="56%" height="22px" />
         <Skeleton width="42%" height="14px" className="mt-2" />
       </div>
@@ -193,20 +191,28 @@ export function MasterHeroSkeleton({
 export function ClientMasterProfileSkeleton() {
   return (
     <div aria-busy="true" aria-label="Загрузка профиля мастера">
-      <section className="ms-prof-hero ms-client-hero">
+      <section className="ms-client-hero">
         <div className="ms-prof-cover ms-prof-skel-cover" aria-hidden />
-        <CabinetProfileIdentitySkeleton />
       </section>
-      <div className="ms-client-profile-content">
-        <div className="ms-cab-skel-slot-card">
-          <Skeleton width="40%" height="14px" />
-          <Skeleton width="90%" height="14px" className="mt-2" />
-          <Skeleton width="70%" height="14px" className="mt-2" />
+      <div className="ms-client-profile-sheet">
+        <div className="ms-client-master-block">
+          <Skeleton width="72px" height="72px" className="is-round" />
+          <div className="ms-client-master-copy">
+            <Skeleton width="56%" height="22px" />
+            <Skeleton width="42%" height="14px" className="mt-2" />
+          </div>
         </div>
-        <div className="ms-cab-skel-slot-card mt-3">
-          <Skeleton width="32%" height="14px" />
-          <Skeleton width="75%" height="16px" className="mt-2" />
-          <Skeleton width="50%" height="14px" className="mt-2" />
+        <div className="ms-client-profile-content">
+          <div className="ms-cab-skel-slot-card">
+            <Skeleton width="40%" height="14px" />
+            <Skeleton width="90%" height="14px" className="mt-2" />
+            <Skeleton width="70%" height="14px" className="mt-2" />
+          </div>
+          <div className="ms-cab-skel-slot-card mt-3">
+            <Skeleton width="32%" height="14px" />
+            <Skeleton width="75%" height="16px" className="mt-2" />
+            <Skeleton width="50%" height="14px" className="mt-2" />
+          </div>
         </div>
       </div>
     </div>

@@ -157,23 +157,25 @@ export function CabinetProfileScreen() {
   return (
     <div className="master-setup ms-cabinet ms-prof">
       <div className="ms-body ms-cab-body ms-prof-body">
+        {/* Figma 21654:20188 — cover + cohesive white sheet */}
         <section className="ms-prof-hero">
           <div className="ms-prof-cover" aria-hidden>
             <img src={coverDemo} alt="" />
           </div>
+        </section>
+
+        <div className="ms-prof-sheet">
           {loading ? (
             <CabinetProfileIdentitySkeleton />
           ) : (
-            <div className="ms-prof-identity">
-              <div className="ms-prof-avatar-wrap">
-                <MasterAvatar
-                  className="ms-prof-avatar"
-                  remote={profile?.avatarUrl}
-                  width={100}
-                  height={100}
-                />
-              </div>
-              <div className="ms-prof-identity-text">
+            <div className="ms-prof-master-block">
+              <MasterAvatar
+                className="ms-prof-master-avatar"
+                remote={profile?.avatarUrl}
+                width={72}
+                height={72}
+              />
+              <div className="ms-prof-master-copy">
                 <h1 className="ms-prof-name">
                   {profile?.name?.trim() || "Мастер"}
                 </h1>
@@ -181,49 +183,49 @@ export function CabinetProfileScreen() {
               </div>
             </div>
           )}
-        </section>
 
-        <div className="ms-prof-content">
-          <section className="ms-prof-public-card">
-            <div className="ms-prof-public-head">
-              <div className="ms-prof-public-copy">
-                <div className="ms-prof-public-title-row">
-                  <h2 className="ms-prof-public-title">Публичный профиль</h2>
-                  {loading ? (
-                    <Skeleton width="96px" height="22px" className="is-round" />
-                  ) : published ? (
-                    <span className="ms-prof-status">
-                      <span className="ms-prof-status-dot" aria-hidden />
-                      Опубликован
-                    </span>
-                  ) : (
-                    <span className="ms-prof-status is-draft">Черновик</span>
-                  )}
+          <div className="ms-prof-content">
+            <section className="ms-prof-public-card">
+              <div className="ms-prof-public-head">
+                <div className="ms-prof-public-copy">
+                  <div className="ms-prof-public-title-row">
+                    <h2 className="ms-prof-public-title">Публичный профиль</h2>
+                    {loading ? (
+                      <Skeleton width="96px" height="22px" className="is-round" />
+                    ) : published ? (
+                      <span className="ms-prof-status">
+                        <span className="ms-prof-status-dot" aria-hidden />
+                        Опубликован
+                      </span>
+                    ) : (
+                      <span className="ms-prof-status is-draft">Черновик</span>
+                    )}
+                  </div>
+                  <p className="ms-prof-public-lead">Так вас видят клиенты</p>
                 </div>
-                <p className="ms-prof-public-lead">Так вас видят клиенты</p>
               </div>
-            </div>
-            <button
-              type="button"
-              className="ms-prof-manage"
-              onClick={() => navigate("/cabinet/profile/public")}
-            >
-              <span>Управление</span>
-              <ChevronRightIcon />
-            </button>
-          </section>
+              <button
+                type="button"
+                className="ms-prof-manage"
+                onClick={() => navigate("/cabinet/profile/public")}
+              >
+                <span>Управление</span>
+                <ChevronRightIcon />
+              </button>
+            </section>
 
-          <MenuGroup items={MENU_PRIMARY} />
-          <MenuGroup items={MENU_SECONDARY} />
-          {isTestUser ? (
-            <Button
-              variant="secondary"
-              disabled={resetting}
-              onClick={restartOnboarding}
-            >
-              Сбросить онбординг
-            </Button>
-          ) : null}
+            <MenuGroup items={MENU_PRIMARY} />
+            <MenuGroup items={MENU_SECONDARY} />
+            {isTestUser ? (
+              <Button
+                variant="secondary"
+                disabled={resetting}
+                onClick={restartOnboarding}
+              >
+                Сбросить онбординг
+              </Button>
+            ) : null}
+          </div>
         </div>
       </div>
 
